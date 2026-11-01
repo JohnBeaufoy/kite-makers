@@ -569,17 +569,17 @@ const RIVALS1=[
   {name:'Sgt. Pell',title:'S.4 Scout',date:1914.6,skill:.25,blurb:'A Bristol Scout-style biplane with a Lewis gun firing over the propeller.',
    d:{paint:'linen',layout:'bi',control:'ail',airfoil:'thin',frame:'wood',engine:'lr9c',arm:'lewis',span:7.4,chord:1.55,gap:1.4,stagger:.25,dihedral:2,wingPos:1.15,fusLen:6.1,tailArea:2.4,cockpitPos:2.5,fuelPos:'fwd',fuelL:110,ammo:400,armour:NOARM,doctrine:'balanced'}},
   {name:'Ltn. Kessler',title:'E.7',date:1915.6,skill:.6,blurb:'An Eindecker-style monoplane with the new synchronised gun. Dives, fires, climbs away.',
-   d:{paint:'linen',layout:'mono',control:'warp',airfoil:'thin',frame:'steel',engine:'ou1',arm:'sync1',span:9.5,chord:1.75,gap:1.2,stagger:0,dihedral:1,wingPos:1.05,fusLen:7.2,tailArea:2.2,cockpitPos:2.4,fuelPos:'fwd',fuelL:100,ammo:500,armour:NOARM,doctrine:'energy'}},
+   d:{paint:'linen',layout:'mono',control:'warp',airfoil:'thin',frame:'steel',engine:'ou1',arm:'sync1',span:9.5,chord:1.75,gap:1.2,stagger:0,dihedral:1,wingPos:1.05,fusLen:7.2,tailArea:2.2,cockpitPos:2.4,fuelPos:'fwd',fuelL:100,ammo:500,armour:NOARM,doctrine:'balanced'}},
   {name:'Lt. Ostrander',title:'N.14',date:1916.3,skill:.52,blurb:'A Nieuport-style sesquiplane with a Lewis on the top wing. Wants a turning fight.',
    d:{paint:'linen',layout:'sesqui',control:'ail',airfoil:'thin',frame:'wood',engine:'lr9j',arm:'foster',span:8.2,chord:1.25,gap:1.2,stagger:.35,dihedral:1.5,wingPos:.95,fusLen:5.8,tailArea:2.1,cockpitPos:2.15,fuelPos:'fwd',fuelL:90,ammo:500,armour:NOARM,doctrine:'turn'}},
   {name:'Maj. Vogt',title:'D.IX',date:1917.0,skill:.6,blurb:'An Albatros-style plywood biplane: big six-cylinder engine and twin guns.',
    d:{paint:'ply',layout:'bi',control:'ail',airfoil:'thin',frame:'ply',engine:'md3',arm:'sync2',span:8.5,chord:1.7,gap:1.35,stagger:.4,dihedral:1,wingPos:1.25,fusLen:7.4,tailArea:2.8,cockpitPos:2.75,fuelPos:'fwd',fuelL:120,ammo:500,armour:NOARM,doctrine:'balanced'}},
   {name:'Capt. Harrow',title:'F.3',date:1917.4,skill:.66,blurb:'A Camel-style biplane: a big Clerget rotary, twin guns and the weight packed forward. Vicious, and the best turner of its day.',
    d:{paint:'pc10',layout:'bi',control:'ail',airfoil:'thin',frame:'wood',engine:'cl9b',arm:'sync2',span:8.5,chord:1.37,gap:1.5,stagger:.45,dihedral:5,wingPos:.85,fusLen:5.7,tailArea:2.3,cockpitPos:2.0,fuelPos:'fwd',fuelL:140,ammo:500,armour:NOARM,doctrine:'turn'}},
-  {name:'Lt. Moreau',title:'Tr.4',date:1917.8,skill:.7,blurb:'A Dreidecker-style triplane with thick wings. Climbs and turns like nothing else.',
+  {name:'Lt. Moreau',title:'Tr.4',date:1917.8,skill:.78,blurb:'A Dreidecker-style triplane with thick wings. Climbs and turns like nothing else.',
    d:{paint:'red',layout:'tri',control:'ail',airfoil:'thick',frame:'steel',engine:'lr9j',arm:'sync2',span:7.2,chord:1.0,gap:.9,stagger:.2,dihedral:0,wingPos:.95,fusLen:5.8,tailArea:2.0,cockpitPos:2.2,fuelPos:'fwd',fuelL:90,ammo:500,armour:NOARM,doctrine:'turn'}},
   {name:'Col. Albrecht',title:'D.XIII',date:1918.5,skill:.84,blurb:'A D.VII-style biplane: thick wings, steel tube and the BMW engine.',
-   d:{paint:'lozenge',layout:'bi',control:'ail',airfoil:'thick',frame:'steel',engine:'bmw3a',arm:'sync2',span:8.9,chord:1.55,gap:1.4,stagger:.5,dihedral:1,wingPos:1.2,fusLen:6.9,tailArea:2.6,cockpitPos:2.6,fuelPos:'fwd',fuelL:120,ammo:600,armour:NOARM,doctrine:'energy'}},
+   d:{paint:'lozenge',layout:'bi',control:'ail',airfoil:'thick',frame:'steel',engine:'bmw3a',arm:'sync2',span:8.9,chord:1.7,gap:1.4,stagger:.5,dihedral:1,wingPos:1.2,fusLen:6.9,tailArea:2.6,cockpitPos:2.6,fuelPos:'fwd',fuelL:120,ammo:600,armour:NOARM,doctrine:'energy'}},
 ];
 RIVALS1.forEach((r,i)=>{r.id=i; r.d.name=r.title;});
 const ARMISTICE=1918.86;
@@ -787,24 +787,24 @@ const ROWS2=ROWS1.map(r=>Object.assign({},r,{
 }[r.k]||{}));
 const RIVALS2=[
   {name:'F/Lt. Ashby',title:'G.14',date:1939.7,skill:.2,blurb:'A Gladiator-style biplane: radial engine, four guns, fixed gear. The best of a passing breed.',
-   d:{paint:'silver',layout:'bi',planform:'rect',airfoil:'std',gear:'fixed',canopy:'hood',frame:'tube',engine:'mer9',arm:'mg4',span:9.8,chord:1.65,gap:1.25,dihedral:3,wingPos:2.05,fusLen:8.4,tailArea:3.2,cockpitPos:3.6,fuelPos:'fus',fuelL:380,ammo:600,ammoC:100,armour:{},doctrine:'energy'}},
+   d:{paint:'silver',layout:'bi',planform:'rect',airfoil:'std',gear:'fixed',canopy:'hood',frame:'tube',engine:'mer9',arm:'mg4',span:8.8,chord:1.5,gap:1.25,dihedral:3,wingPos:2.05,fusLen:8.4,tailArea:3.2,cockpitPos:3.6,fuelPos:'fus',fuelL:380,ammo:600,ammoC:100,armour:{},doctrine:'energy'}},
   {name:'Oblt. Reinholt',title:'Bk 119',date:1940.1,skill:.68,blurb:'A Bf 109E-style monoplane: small wing, fuel injection, wing cannon. Attacks from above and dives away.',
    d:{paint:'rlm',layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'db601',arm:'emil',span:9.9,chord:1.65,gap:1.2,dihedral:6.5,wingPos:2.35,fusLen:8.6,tailArea:2.8,cockpitPos:4.0,fuelPos:'rear',fuelL:400,ammo:1000,ammoC:60,armour:{},doctrine:'energy'}},
   {name:'F/O Tremayne',title:'S.29',date:1940.6,skill:.7,blurb:'A Spitfire-style fighter: elliptical wing and eight Brownings. Wants to out-turn you.',
    d:{paint:'raf',layout:'low',planform:'ellip',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'mer2',arm:'mg8',span:11.2,chord:2.0,gap:1.2,dihedral:6,wingPos:2.25,fusLen:9.1,tailArea:3.6,cockpitPos:4.3,fuelPos:'fus',fuelL:386,ammo:300,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy'}},
   {name:'Hptm. Falkenrath',title:'Ra 205',date:1941.8,skill:.76,blurb:'An Fw 190-style radial fighter: rolls like nothing else and carries four cannon.',
-   d:{paint:'ynose',layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'bmw801',arm:'fw',span:10.5,chord:1.75,gap:1.2,dihedral:5.5,wingPos:1.9,fusLen:8.9,tailArea:3.3,cockpitPos:3.9,fuelPos:'rear',fuelL:525,ammo:900,ammoC:200,armour:{pilot:true,fuel:true},doctrine:'energy'}},
+   d:{paint:'ynose',layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'bmw801',arm:'fw',span:10.5,chord:1.95,gap:1.2,dihedral:5.5,wingPos:1.9,fusLen:8.9,tailArea:3.3,cockpitPos:3.9,fuelPos:'rear',fuelL:525,ammo:900,ammoC:200,armour:{pilot:true,fuel:true},doctrine:'energy'}},
   {name:'Col. Whitlock',title:'P-74',date:1944.0,skill:.8,blurb:'A P-51D-style escort: laminar wing, two-stage Merlin, bubble canopy and six .50s.',
-   d:{paint:'rnose',layout:'low',planform:'taper',airfoil:'lam',gear:'retract',canopy:'bubble',frame:'skin',engine:'v1650',arm:'six50',span:11.3,chord:1.9,gap:1.2,dihedral:5,wingPos:2.0,fusLen:9.8,tailArea:3.9,cockpitPos:4.6,fuelPos:'wing',fuelL:700,ammo:400,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy'}},
+   d:{paint:'rnose',layout:'low',planform:'taper',airfoil:'lam',gear:'retract',canopy:'bubble',frame:'skin',engine:'v1650',arm:'six50',span:11.3,chord:2.2,gap:1.2,dihedral:5,wingPos:2.0,fusLen:9.8,tailArea:3.9,cockpitPos:4.6,fuelPos:'wing',fuelL:700,ammo:400,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy'}},
   {name:'Sqn Ldr. Rourke',title:'T.7',date:1944.6,skill:.88,blurb:'A Tempest-style brute: the 24-cylinder Sabre, a thin wing and four 20 mm Hispanos.',
    d:{paint:'raf',layout:'low',planform:'ellip',airfoil:'std',gear:'retract',canopy:'bubble',frame:'skin',engine:'sabre',arm:'hisp4',span:12.5,chord:2.25,gap:1.2,dihedral:5.5,wingPos:2.2,fusLen:10.3,tailArea:4.5,cockpitPos:4.9,fuelPos:'fus',fuelL:800,ammo:400,ammoC:150,armour:{pilot:true,engine:true,fuel:true},doctrine:'energy'}}
 ,
   {name:'Maj. Steuer',title:'Ja 410',date:1944.9,skill:.9,blurb:'A Me 262-style jet: two axial turbojets in nacelles, four 30 mm cannon, 150 km/h faster than anything with a propeller.',
-   d:{paint:'rlm',layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'jumo004',arm:'mk108x4',span:12.5,chord:1.74,gap:1.2,dihedral:6,wingPos:3.4,fusLen:10.6,tailArea:3.6,cockpitPos:4.8,fuelPos:'fus',fuelL:2500,ammo:300,ammoC:65,armour:{pilot:true,fuel:true},doctrine:'energy'}}];
+   d:{paint:'rlm',layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'jumo004',arm:'mk108x4',span:12.5,chord:2.1,gap:1.2,dihedral:6,wingPos:3.4,fusLen:10.6,tailArea:3.6,cockpitPos:4.8,fuelPos:'fus',fuelL:2500,ammo:300,ammoC:65,armour:{pilot:true,fuel:true},doctrine:'energy'}}];
 RIVALS2.forEach((r,i)=>{r.id=i; r.d.name=r.title;});
 const VEDAY=1945.35;
 const PRICE2=[[1939.7,10000],[1940.1,13000],[1940.6,14500],[1941.8,15000],[1944.0,19000],[1944.6,20000],[1944.9,24000],[VEDAY,25000]];
-const DESIGN2={conv:250,paint:'silver',layout:'low',planform:'rect',airfoil:'std',gear:'fixed',canopy:'open',frame:'tube',engine:'mer9',arm:'mg4',span:10.6,chord:1.8,gap:1.2,dihedral:5,
+const DESIGN2={conv:250,paint:'silver',layout:'low',planform:'rect',airfoil:'std',gear:'fixed',canopy:'open',frame:'tube',engine:'mer9',arm:'mg4',span:11.6,chord:2.05,gap:1.2,dihedral:5,
   wingPos:1.95,fusLen:8.4,tailArea:3.2,cockpitPos:3.9,fuelPos:'fus',fuelL:360,ammo:500,ammoC:100,armour:{pilot:false,engine:false,fuel:false},doctrine:'turn',name:'Interceptor Mk I'};
 function fixDesign2(d){
   if(part('arm',d.arm).needsJet&&part('engine',d.engine).type!=='jet') d.arm=available(part('arm','mg8'))?'mg8':'mg4';
@@ -1164,8 +1164,8 @@ const ROWS4=(()=>{ const rows=ROWS1.map(r=>Object.assign({},r,{
     why:(s,d)=>{const M=part('missiles',d.missiles); return M.loads.length?`${M.loads.map(l=>`${l.n} × ${MIS[l.m].name} (${MIS[l.m].seek==='ir'?`heat-seeking, from within ${MIS[l.m].aspect}° of the target's tail`:'radar-guided, from any angle, while your radar holds the target'}, ${f1(MIS[l.m].range/1000)} km, works ${f0(MIS[l.m].pk*100)}% of the time)`).join('; ')}.`:'No missiles: this machine fights with its gun.';}});
   return rows; })();
 const RIVALS4=[
-  {name:'Capt. Haldane',title:'F-83',date:1950.5,skill:.35,blurb:'An F-80-style straight-winged jet: one centrifugal engine, six .50s and a bubble canopy.',
-   d:{paint:'bare',layout:'straight',airfoil:'thick',controls:'manual',body:'plain',intake:'pitot',install:'single',engine:'j33',radar:'gyro',arm:'b50x6',missiles:'none',cm:'none',frame:'light',canopy:'bubble',span:11.8,chord:2.07,dihedral:3,wingPos:4.5,fusLen:10.5,tailArea:5,cockpitPos:2.7,fuelPos:'wing',fuelL:1600,ammo:300,ammoC:100,armour:{},doctrine:'energy'}},
+  {name:'Capt. Haldane',title:'F-83',date:1950.5,skill:.25,blurb:'An F-80-style straight-winged jet: one centrifugal engine, six .50s and a bubble canopy.',
+   d:{paint:'bare',layout:'straight',airfoil:'thick',controls:'manual',body:'plain',intake:'pitot',install:'single',engine:'j33',radar:'gyro',arm:'b50x6',missiles:'none',cm:'none',frame:'light',canopy:'bubble',span:11.8,chord:1.9,dihedral:3,wingPos:4.5,fusLen:10.5,tailArea:5,cockpitPos:2.7,fuelPos:'wing',fuelL:1600,ammo:300,ammoC:100,armour:{},doctrine:'energy'}},
   {name:'St. Lt. Orlov',title:'MiK-11',date:1950.9,skill:.5,blurb:'A MiG-15-style swept-wing fighter: light, climbs like a rocket, carries bomber-killing cannon.',
    d:{paint:'soviet',layout:'sw35',airfoil:'thin',controls:'manual',body:'plain',intake:'pitot',install:'single',engine:'nene',radar:'gyro',arm:'mig',missiles:'none',cm:'none',frame:'light',canopy:'bubble',span:10.1,chord:2.04,dihedral:-2,wingPos:2.45,fusLen:10.1,tailArea:4.5,cockpitPos:2.6,fuelPos:'fus',fuelL:1400,ammo:300,ammoC:80,armour:{},doctrine:'energy'}},
   {name:'Maj. Kincaid',title:'F-93',date:1951.6,skill:.6,blurb:'An F-86-style swept fighter with slats, an all-flying tail and a radar-ranging gunsight.',
@@ -1173,17 +1173,17 @@ const RIVALS4=[
   {name:'Polk. Voronin',title:'MiK-14',date:1953.0,skill:.7,blurb:'A MiG-17-style fighter: 45° wing and an afterburning engine.',
    d:{paint:'soviet',layout:'sw45',airfoil:'thin',controls:'boost',body:'plain',intake:'pitot',install:'single',engine:'vk1f',radar:'gyro',arm:'mig',missiles:'none',cm:'none',frame:'light',canopy:'bubble',span:9.6,chord:2.36,dihedral:-3,wingPos:2.4,fusLen:11.3,tailArea:4.8,cockpitPos:2.8,fuelPos:'fus',fuelL:1600,ammo:300,ammoC:80,armour:{},doctrine:'energy'}},
   {name:'Maj. Ruiz',title:'F-115',date:1956.5,skill:.78,blurb:'An F-100-style supersonic fighter: 45° wing, the J57 with reheat, four 20 mm cannon and no missiles.',
-   d:{paint:'bare',layout:'sw45',airfoil:'thin',controls:'flying',body:'plain',intake:'pitot',install:'single',engine:'j57',radar:'ranging',arm:'m39x4',missiles:'none',cm:'none',frame:'alloy',canopy:'bubble',span:11.8,chord:3.4,dihedral:0,wingPos:4.35,fusLen:14.4,tailArea:8,cockpitPos:4.2,fuelPos:'wing',fuelL:4400,ammo:300,ammoC:200,armour:{},doctrine:'energy'}},
+   d:{paint:'bare',layout:'sw45',airfoil:'thin',controls:'flying',body:'plain',intake:'pitot',install:'single',engine:'j57',radar:'ranging',arm:'m39x4',missiles:'none',cm:'none',frame:'alloy',canopy:'bubble',span:12.5,chord:4.2,dihedral:0,wingPos:4.35,fusLen:14.4,tailArea:8,cockpitPos:4.2,fuelPos:'wing',fuelL:4400,ammo:300,ammoC:200,armour:{},doctrine:'energy'}},
   {name:'Kpt. Belov',title:'MiK-23',date:1962.5,skill:.85,blurb:'A MiG-21-style tailed delta: light, fast, one 30 mm cannon and two K-13 heat-seekers.',
-   d:{paint:'soviet',layout:'delta',airfoil:'thin',controls:'flying',body:'area',intake:'cone',install:'single',engine:'r11',radar:'ranging',arm:'nr30x1',missiles:'k13x2',cm:'none',frame:'alloy',canopy:'framed',span:7.2,chord:3.2,dihedral:-2,wingPos:3.4,fusLen:13.5,tailArea:5,cockpitPos:3.8,fuelPos:'fus',fuelL:2400,ammo:300,ammoC:60,armour:{},doctrine:'balanced'}},
+   d:{paint:'soviet',layout:'delta',airfoil:'thin',controls:'flying',body:'area',intake:'cone',install:'single',engine:'r11',radar:'ranging',arm:'nr30x1',missiles:'k13x2',cm:'none',frame:'alloy',canopy:'framed',span:9.5,chord:4.4,dihedral:-2,wingPos:3.4,fusLen:13.5,tailArea:5,cockpitPos:3.8,fuelPos:'fus',fuelL:2400,ammo:300,ammoC:60,armour:{},doctrine:'balanced'}},
   {name:'Cdr. Hollis',title:'F-124',date:1966.5,skill:.9,blurb:'An F-4-style twin: big radar, four Sparrows and four Sidewinders, and no gun.',
    d:{paint:'sea',layout:'sw45',airfoil:'thin',controls:'flying',body:'area',intake:'ramps',install:'twin',engine:'j79',radar:'big',arm:'none',missiles:'f4late',cm:'chaff',frame:'strong',canopy:'framed',span:11.7,chord:4.6,dihedral:0,wingPos:6.35,fusLen:17.8,tailArea:12,cockpitPos:4.4,fuelPos:'wing',fuelL:7500,ammo:300,ammoC:200,armour:{fuel:true},doctrine:'missile'}},
 ];
 RIVALS4.forEach((r,i)=>{r.id=i; r.d.name=r.title;});
 const SUPEREND=1975.0;   // the jet era runs from Korea to the end of the Vietnam War
 const PRICE4=[[1956.5,400000],[1958.0,400000],[1959.8,450000],[1960.6,600000],[1962.5,650000],[1966.5,850000],[SUPEREND,900000]];
-const DESIGN4={paint:'bare',layout:'straight',airfoil:'thick',controls:'manual',body:'plain',intake:'pitot',install:'single',engine:'derwent',radar:'gyro',arm:'b50x6',missiles:'none',cm:'none',frame:'light',canopy:'bubble',
-  span:11,chord:2.3,dihedral:3,wingPos:4.25,fusLen:10.8,tailArea:5,cockpitPos:2.7,fuelPos:'fus',fuelL:1400,ammo:300,ammoC:100,armour:{fuel:false,engine:false},doctrine:'balanced',name:'Jet Mk I'};
+const DESIGN4={paint:'bare',layout:'straight',airfoil:'thick',controls:'manual',body:'plain',intake:'pitot',install:'single',engine:'j33',radar:'gyro',arm:'b50x6',missiles:'none',cm:'none',frame:'light',canopy:'bubble',
+  span:11,chord:2.5,dihedral:3,wingPos:4.72,fusLen:10.8,tailArea:5,cockpitPos:2.7,fuelPos:'fus',fuelL:1400,ammo:300,ammoC:100,armour:{fuel:false,engine:false},doctrine:'balanced',name:'Jet Mk I'};
 function fixDesign4(d){
   d.cockpitPos=Math.min(d.cockpitPos,d.fusLen-6);
   if(part('radar',d.radar).level>part('intake',d.intake).radarMax) d.radar=part('intake',d.intake).radarMax>=1&&available(part('radar','search'))?'search':'ranging';
@@ -1212,7 +1212,7 @@ function controls4(){
 const ERAS={
   ww1:{id:'ww1',parts:PARTS1,armour:ARMOUR1,dims:DIMS1,fus:FUS1,range:RANGE1,rows:ROWS1,rivals:RIVALS1,price:PRICE1,end:ARMISTICE,design:null,
     compute:compute1,paint:paintGA1,top:drawPlaneTop1,controls:controls1,fix:fixDesign1,block:blocked1,banks:banks1,
-    hills:70,vis:3000,arena:2400,alt0:1500,floor:150,ceiling:4500,muzzle:750,gunR:250,hitR:4.5,spread:.012,cone:.07,rollBase:1.6,sep:2800,maxT:170,camDist:22,nmax:4.5,
+    hills:70,vis:3000,arena:2400,alt0:1500,floor:150,ceiling:4500,muzzle:750,gunR:250,hitR:4.5,spread:.012,cone:.07,rollBase:1.6,sep:2800,maxT:170,burn:.6,camDist:22,nmax:4.5,
     dmgScale:1,jam:.0025,stop:.75,ckGap:2,ga:{plan:45,side:68,py:280,y0:150},
     hitK:{st:2.2,engR:.03,engI:.05,fuel:1.5,wk:3,pk:.05,ctrl:.08},
     sliders:[{k:'ammo',step:50,unit:''},{k:'fuelL',step:5,unit:'L'}],
@@ -1223,7 +1223,7 @@ const ERAS={
     armourLegend:'5 mm steel plate, by zone'},
   ww2:{id:'ww2',parts:PARTS2,armour:ARMOUR2,dims:DIMS2,fus:FUS2,range:RANGE2,rows:ROWS2,rivals:RIVALS2,price:PRICE2,end:VEDAY,design:DESIGN2,
     compute:compute2,paint:paintGA2,top:drawPlaneTop2,controls:controls2,fix:fixDesign2,block:blocked2,banks:banks2,
-    hills:260,vis:5000,arena:5500,alt0:3500,floor:250,ceiling:8000,muzzle:820,gunR:380,hitR:5.5,spread:.009,cone:.05,rollBase:2.2,sep:6000,maxT:170,camDist:30,nmax:6.5,
+    hills:260,vis:5000,arena:5500,alt0:3500,floor:250,ceiling:8000,muzzle:820,gunR:380,hitR:5.5,spread:.009,cone:.05,rollBase:2.2,sep:6000,maxT:170,burn:.8,camDist:30,nmax:6.5,
     dmgScale:1,jam:.0004,stop:.9,ckGap:3.5,ga:{plan:33,side:50,py:250,y0:135},
     hitK:{st:2.2,engR:.007,engI:.011,fuel:.3,wk:14,pk:.012,ctrl:.015},
     sliders:[SL2.ammo,SL2.ammoC,SL2.conv,SL2.fuelL],
@@ -1234,8 +1234,8 @@ const ERAS={
     armourLegend:'Protection, by zone'},
   super:{id:'super',parts:PARTS4,armour:ARMOUR4,dims:DIMS4,fus:FUS4,range:RANGE4,rows:ROWS4,rivals:RIVALS4,price:PRICE4,end:SUPEREND,design:DESIGN4,
     compute:compute4,paint:paintGA3,top:drawPlaneTop3,controls:controls4,fix:fixDesign4,block:blocked4,banks:banks2,jet:true,missiles:true,ga:{plan:24,side:33,py:230,y0:125},
-    hills:600,vis:8000,arena:14000,alt0:6500,floor:500,ceiling:15000,muzzle:950,gunR:700,hitR:6,spread:.01,cone:.045,rollBase:3,sep:22000,maxT:240,camDist:55,nmax:7.3,
-    dmgScale:.7,jam:.0004,stop:.9,ckGap:6,
+    hills:600,vis:8000,arena:10000,alt0:6500,floor:500,ceiling:15000,muzzle:950,gunR:700,hitR:9,spread:.01,cone:.045,rollBase:3,sep:20000,maxT:240,burn:.6,camDist:55,nmax:7.3,
+    dmgScale:1,jam:.0004,stop:.9,ckGap:6,
     hitK:{st:2.2,engR:.008,engI:.011,fuel:.3,wk:30,pk:.007,ctrl:.015},streamDiv:4000,wobble:.03,
     sliders:[SL4.ammo,SL4.ammoC,SL4.fuelL],
     first:rid=>400+110*rid,
@@ -1972,7 +1972,7 @@ function updatePlane(p,foe,dt){
     return;
   }
   if(p.burn>0){ p.burn-=dt; if(Math.random()<dt*40) particle(p.pos,'fire'); if(p.burn<=0) kill(p,'flames'); }
-  p.fuel-=dt;
+  p.fuel-=dt*ERA.burn;   // fights start far apart, so the tank is not spent just getting there
   // engine: misfires from unreliability, power lost to hits
   if(p.cut>0) p.cut-=dt; else if(Math.random()<dt*(1-p.rel)*.04){p.cut=2.5+Math.random()*2; p.cuts++;}
   const power=p.engineOut?0:p.eng*(p.cut>0?.3:1);
@@ -2108,7 +2108,9 @@ function decideSquad(){
   const fighters=F.planes, isLost=p=>!p.alive||p.reason==='forced down'||p.reason==='engine';
   const lost=sd=>fighters.filter(p=>p.side===sd&&isLost(p)).length, dmg=sd=>fighters.filter(p=>p.side===sd).reduce((s,p)=>s+p.dmg,0);
   const mine=lost(0), theirs=lost(1), n0=fighters.filter(p=>!p.side).length, n1=fighters.length-n0;
-  const res=theirs>mine?'win':mine>theirs?'loss':dmg(0)>dmg(1)*1.25?'win':dmg(1)>dmg(0)*1.25?'loss':'draw';
+  let res=theirs>mine?'win':mine>theirs?'loss':dmg(0)>dmg(1)*1.25?'win':dmg(1)>dmg(0)*1.25?'loss':'draw';
+  // out of time with neither side clearly ahead: nobody has won that
+  if(F.t>ERA.maxT*2&&Math.abs(theirs/n1-mine/n0)<.25) res='draw';
   return {res,how:`You lost ${mine} of ${n0}; they lost ${theirs} of ${n1}`};
 }
 function simStep(dt){
@@ -2472,12 +2474,13 @@ function frame(now){
   render(); hud();
   if(!F.finished) F.raf=requestAnimationFrame(frame);
 }
-const RIVAL_N=12, MAX_N=20;   // the rival's budget always buys exactly twelve; yours buys as many as it can, up to twenty
+const RIVAL_N=12, MAX_N=20;   // the rival always fields twelve; a cheaper machine than theirs gets you more, up to twenty
 // Once an engine is a few years old, spares and new airframes get scarce, and each further year adds to the cost of fielding the type.
-const OBSOLETE={ww1:[1,.6],ww2:[2.5,.5],super:[4,.45]};   // years before an engine counts as old, and the cost added for each year after
+const OBSOLETE={ww1:[1,.6],ww2:[2.5,.5],super:[4,.7]};   // years before an engine counts as old, and the cost added for each year after
 const ageFactor=(d,when)=>{ const E=part('engine',d.engine), [grace,rate]=OBSOLETE[ERA.id], yrs=when-E.from-grace; return yrs>0?Math.min(5,1+rate*yrs):1; };
 const fieldCost=(d,when)=>compute(d).cost*ageFactor(d,when);
-const squadSize=(d,r)=>clamp(Math.floor(RIVAL_N*fieldCost(r.d,r.date)/fieldCost(d,r.date)+1e-9),0,MAX_N);
+// Numbers count for more than their price (a bigger squadron wins by more than its share), so size follows cost less than one for one.
+const squadSize=(d,r)=>clamp(Math.floor(RIVAL_N*Math.pow(fieldCost(r.d,r.date)/fieldCost(d,r.date),.8)+1e-9),1,MAX_N);
 function startSortie(i,custom){
   if(!custom&&flyLocked()) return;
   const r=custom?custom.rival:RIVALS[i]; T=tokens(); F={sea:ERA.id!=='ww1'&&Math.random()<.2}; buildGround(F.sea); sctx=sky.getContext('2d');
@@ -2655,6 +2658,14 @@ const DROPS=[
     'Era dates are now WW1 1914–1918, WW2 1939–1945, Korea/Vietnam 1950–1975.',
     'Fights start further apart.',
   ]},
+  {at:'2026-11-02T12:39:00+13:00',items:[
+    "Balance: fuel lasts longer in a fight, so machines don't run dry just getting there.",
+    'Balance: jet fights are shorter, starting at 20 km in a tighter area, and hits are easier.',
+    'Balance: squadron size follows cost more closely, so cheap designs get fewer extra machines.',
+    'Balance: old jet engines cost more to field each year.',
+    'A fight that runs out of time with neither side clearly ahead is now a draw.',
+    'New WW2 and jet starter planes, with about an even chance against the first rival.',
+    'Rivals retuned: G.14 and F-83 are easier; E.7, D.XIII, Tr.4, Ra 205, P-74, Ja 410, F-115 and MiK-23 are tougher.']}
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
