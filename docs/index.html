@@ -168,12 +168,18 @@ legend{padding:0;margin-bottom:6px}
 .meter{height:8px;background:var(--surface);border:1px solid var(--line);position:relative}
 .meter i{position:absolute;top:0;bottom:0;left:0}
 .plate.r .meter i{left:auto;right:0}
-.meter.hp i{background:var(--olive)} .plate.r .meter.hp i{background:var(--rival)}
 .meter.fu i{background:var(--accent)}
 .clock{font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
 .skywrap{display:flex;justify-content:center;position:relative}
 #sky3{display:block;width:min(100%,calc(72vh * 1.6));aspect-ratio:2000/1250;border:1px solid var(--ink);background:#A7BED0;max-width:100%}
-.lbl{position:absolute;pointer-events:none;font:600 12px var(--f-body,sans-serif);color:#fff;text-shadow:0 1px 2px #000,0 0 4px #000;transform:translate(-50%,-100%);white-space:nowrap}
+.altread{position:absolute;top:8px;left:calc((100% - min(100%,115.2vh))/2 + 10px);pointer-events:none;font:600 13px var(--f-mono,monospace);color:#fff;text-shadow:0 1px 2px #000,0 0 4px #000}
+.squad{display:flex;flex-wrap:wrap;gap:2px;min-height:20px}
+.plate.r .squad{justify-content:flex-end}
+.pl{width:20px;height:20px;padding:1px;background:none;border:1px solid transparent;border-radius:3px;cursor:pointer;line-height:0}
+.pl svg{width:100%;height:100%;fill:currentColor}
+.squad.many .pl{width:15px;height:15px;padding:0}
+.pl.ok{color:#3DA64A} .pl.nick{color:#E6C820} .pl.hurt{color:#EE8A1E} .pl.down{color:#D8352A} .pl.left{color:#8B9096}
+.pl.on{border-color:var(--ink);background:var(--surface)} .pl.off{cursor:default}
 #sky{display:block;width:min(100%,calc(72vh * 1.6));aspect-ratio:2000/1250;border:1px solid var(--ink);background:var(--field-a);max-width:100%}
 .ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
 .ctl .btn.ghost[aria-pressed="true"]{border-color:var(--ink);background:var(--sel)}
@@ -251,7 +257,7 @@ legend{padding:0;margin-bottom:6px}
       <div class="ladderhead">
         <h2>Rival designers</h2>
         <button class="btn ghost" id="custom">Custom battle</button>
-        <span class="muted">Each sortie sends your budget's worth of your design against twelve of the rival's. Beating a rival moves the calendar on and releases that period's parts.</span>
+        <span class="muted">Each sortie sends your budget's worth of your design against the rival's squadron. Beating a rival moves the calendar on and releases that period's parts.</span>
       </div>
       <div class="rivals" id="rivals"></div>
     </section>
@@ -278,7 +284,7 @@ legend{padding:0;margin-bottom:6px}
       <div class="plate">
         <span class="label">You</span>
         <span class="nm" id="hudA">Your machine</span>
-        <div class="meter hp" title="Airframe"><i id="hpA"></i></div>
+        <div class="squad" id="sqA"></div>
         <div class="meter fu" title="Fuel"><i id="fuA"></i></div>
         <span class="mono muted" id="spA"></span>
       </div>
@@ -286,12 +292,12 @@ legend{padding:0;margin-bottom:6px}
       <div class="plate r">
         <span class="label">Rival</span>
         <span class="nm" id="hudB">Rival</span>
-        <div class="meter hp"><i id="hpB"></i></div>
+        <div class="squad" id="sqB"></div>
         <div class="meter fu"><i id="fuB"></i></div>
         <span class="mono muted" id="spB"></span>
       </div>
     </div>
-    <div class="skywrap"><canvas id="sky" aria-label="Map of the dogfight from above"></canvas><canvas id="sky3" hidden aria-label="The dogfight in 3D"></canvas><span class="lbl" id="lblA" hidden></span><span class="lbl" id="lblB" hidden></span></div>
+    <div class="skywrap"><canvas id="sky" aria-label="Map of the dogfight from above"></canvas><canvas id="sky3" hidden aria-label="The dogfight in 3D"></canvas><span class="altread" id="altread"></span></div>
     <div class="ctl" id="ctl">
       <span class="label">Speed</span>
       <button class="btn ghost" data-speed="1" aria-pressed="true">1×</button>
@@ -299,8 +305,7 @@ legend{padding:0;margin-bottom:6px}
       <button class="btn ghost" data-speed="4" aria-pressed="false">4×</button>
       <button class="btn ghost" id="skip">Skip to result</button>
       <span class="label">View</span>
-      <button class="btn ghost" data-cam="chase" aria-pressed="true">Behind you</button>
-      <button class="btn ghost" data-cam="rival" aria-pressed="false">Behind rival</button>
+      <button class="btn ghost" data-cam="chase" aria-pressed="true">Follow</button>
       <button class="btn ghost" data-cam="wide" aria-pressed="false">Both</button>
       <button class="btn ghost" data-cam="map" aria-pressed="false">Map</button>
     </div>
@@ -313,7 +318,11 @@ legend{padding:0;margin-bottom:6px}
     <fieldset style="border:0;padding:0;margin:0"><legend class="label">Appearance</legend>
       <div class="chips" style="margin-top:6px"><button class="chip" data-theme-set="system"><span class="n">Match my device</span></button><button class="chip" data-theme-set="light"><span class="n">Light</span></button><button class="chip" data-theme-set="dark"><span class="n">Dark</span></button></div></fieldset>
     <fieldset style="border:0;padding:0;margin:0"><legend class="label">Battles</legend>
-      <div class="chips" style="margin-top:6px"><button class="chip" id="soundset" aria-pressed="true"><span class="n">Sound</span><span class="d">Engines, guns and explosions in the 3D view.</span></button><button class="chip" id="realistic" aria-pressed="false"><span class="n">Realistic battles</span><span class="d">No coloured trails, and no names or heights over the aircraft. You find the fight by eye.</span></button></div></fieldset>
+      <div class="chips" style="margin-top:6px"><button class="chip" data-battle="arcade"><span class="n">Arcade battles</span><span class="d">Watch any aircraft on either side, use the map, and see coloured trails.</span></button><button class="chip" data-battle="realistic"><span class="n">Realistic battles</span><span class="d">Watch only your own aircraft, with no map and no trails. You find the fight by eye.</span></button></div></fieldset>
+    <fieldset style="border:0;padding:0;margin:0"><legend class="label">Squadron size</legend>
+      <div class="chips" style="margin-top:6px"><button class="chip" data-squad="s"><span class="n">Small</span><span class="d">Rival flies 6. Yours up to 10.</span></button><button class="chip" data-squad="m"><span class="n">Medium</span><span class="d">Rival flies 12. Yours up to 20.</span></button><button class="chip" data-squad="l"><span class="n">Large (not recommended)</span><span class="d">Rival flies 24. Yours up to 40. Slow on many devices.</span></button></div></fieldset>
+    <fieldset style="border:0;padding:0;margin:0"><legend class="label">Sound</legend>
+      <div class="chips" style="margin-top:6px"><button class="chip" id="soundset" aria-pressed="true"><span class="n">Sound</span><span class="d">Engines, guns and explosions in the 3D view.</span></button></div></fieldset>
     <div style="display:flex;flex-direction:column;gap:6px"><span class="label">Progress</span>
       <p style="margin:0">Resetting clears every era, your hangar and your points, and starts you again in 1914.</p>
       <div><button class="btn ghost" id="reset">Reset progress</button></div></div>
@@ -356,7 +365,7 @@ const angDiff=(a,b)=>{let d=(a-b)%TAU; if(d>Math.PI)d-=TAU; if(d<-Math.PI)d+=TAU
 const f0=v=>Math.round(v).toString(), f1=v=>(Math.round(v*10)/10).toFixed(1), f2=v=>v.toFixed(2);
 const WORDS=['no','one','two','three'];
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const dateText=v=>{const y=Math.floor(v+1e-6); return MONTHS[Math.min(11,Math.round((v-y)*12))]+' '+y;};
+const dateText=v=>{const y=Math.floor(v+1e-6); if(ERA.id==='super') return String(y); return MONTHS[Math.min(11,Math.round((v-y)*12))]+' '+y;};
 
 /* ---------- Parts, with the date each entered service (approximate, from period sources) ---------- */
 const PARTS1={
@@ -559,26 +568,26 @@ const ROWS1=[
    why:(s,d)=>`${d.fuelL} L of fuel (${f0(d.fuelL*.72)} kg).${s.rotary?' Rotaries run flat out and burn castor oil as well, so the fuel lasts about 15% less.':''} When it runs out the pilot must break off.`},
   {k:'rel',label:'Engine reliability',unit:'%',get:s=>s.rel,fmt:v=>f0(v*100),
    why:(s,d)=>`${part('engine',d.engine).name}: ${part('engine',d.engine).note} Less reliable engines cut out for a few seconds at a time in a fight.`},
-  {k:'cost',label:'Unit price',unit:'',hint:()=>`${squadSize(S.design,RIVALS[S.selected])} of yours against ${RIVAL_N} of theirs`,better:'down',get:s=>s.cost,fmt:v=>'£'+Math.round(v).toLocaleString(),
+  {k:'cost',label:'Unit price',unit:'',hint:()=>`${squadSize(S.design,RIVALS[S.selected])} of yours against ${rivalN(RIVALS[S.selected])} of theirs`,better:'down',get:s=>s.cost,fmt:v=>'£'+Math.round(v).toLocaleString(),
    why:(s,d)=>`Engine £${s.costParts.engine}, airframe £${s.costParts.airframe.toLocaleString()}, guns £${s.costParts.guns}${s.costParts.armour?`, armour £${s.costParts.armour}`:''}. Bigger wings, plywood or steel, extra wings, thick spars and ailerons cost more to build.  Each sortie your budget buys as many as it can, up to 20, against the rival's twelve: cheaper machines mean a bigger squadron.`},
 ];
 
 /* ---------- Rivals: period-typical machines ---------- */
 const NOARM={engine:false,pilot:false,fuel:false};
 const RIVALS1=[
-  {name:'Sgt. Pell',title:'S.4 Scout',date:1914.6,skill:.25,blurb:'A Bristol Scout-style biplane with a Lewis gun firing over the propeller.',
+  {title:'S.4 Scout',date:1914.6,skill:.25,blurb:'A Bristol Scout-style biplane with a Lewis gun firing over the propeller.',
    d:{paint:'linen',layout:'bi',control:'ail',airfoil:'thin',frame:'wood',engine:'lr9c',arm:'lewis',span:7.4,chord:1.55,gap:1.4,stagger:.25,dihedral:2,wingPos:1.15,fusLen:6.1,tailArea:2.4,cockpitPos:2.5,fuelPos:'fwd',fuelL:110,ammo:400,armour:NOARM,doctrine:'balanced'}},
-  {name:'Ltn. Kessler',title:'E.7',date:1915.6,skill:.6,blurb:'An Eindecker-style monoplane with the new synchronised gun. Dives, fires, climbs away.',
+  {title:'E.7',date:1915.6,n:1.5,skill:.6,blurb:'An Eindecker-style monoplane with the new synchronised gun. Dives, fires, climbs away.',
    d:{paint:'linen',layout:'mono',control:'warp',airfoil:'thin',frame:'steel',engine:'ou1',arm:'sync1',span:9.5,chord:1.75,gap:1.2,stagger:0,dihedral:1,wingPos:1.05,fusLen:7.2,tailArea:2.2,cockpitPos:2.4,fuelPos:'fwd',fuelL:100,ammo:500,armour:NOARM,doctrine:'balanced'}},
-  {name:'Lt. Ostrander',title:'N.14',date:1916.3,skill:.52,blurb:'A Nieuport-style sesquiplane with a Lewis on the top wing. Wants a turning fight.',
+  {title:'N.14',date:1916.3,skill:.52,blurb:'A Nieuport-style sesquiplane with a Lewis on the top wing. Wants a turning fight.',
    d:{paint:'linen',layout:'sesqui',control:'ail',airfoil:'thin',frame:'wood',engine:'lr9j',arm:'foster',span:8.2,chord:1.25,gap:1.2,stagger:.35,dihedral:1.5,wingPos:.95,fusLen:5.8,tailArea:2.1,cockpitPos:2.15,fuelPos:'fwd',fuelL:90,ammo:500,armour:NOARM,doctrine:'turn'}},
-  {name:'Maj. Vogt',title:'D.IX',date:1917.0,skill:.6,blurb:'An Albatros-style plywood biplane: big six-cylinder engine and twin guns.',
+  {title:'D.IX',date:1917.0,skill:.6,blurb:'An Albatros-style plywood biplane: big six-cylinder engine and twin guns.',
    d:{paint:'ply',layout:'bi',control:'ail',airfoil:'thin',frame:'ply',engine:'md3',arm:'sync2',span:8.5,chord:1.7,gap:1.35,stagger:.4,dihedral:1,wingPos:1.25,fusLen:7.4,tailArea:2.8,cockpitPos:2.75,fuelPos:'fwd',fuelL:120,ammo:500,armour:NOARM,doctrine:'balanced'}},
-  {name:'Capt. Harrow',title:'F.3',date:1917.4,skill:.66,blurb:'A Camel-style biplane: a big Clerget rotary, twin guns and the weight packed forward. Vicious, and the best turner of its day.',
+  {title:'F.3',date:1917.4,skill:.66,blurb:'A Camel-style biplane: a big Clerget rotary, twin guns and the weight packed forward. Vicious, and the best turner of its day.',
    d:{paint:'pc10',layout:'bi',control:'ail',airfoil:'thin',frame:'wood',engine:'cl9b',arm:'sync2',span:8.5,chord:1.37,gap:1.5,stagger:.45,dihedral:5,wingPos:.85,fusLen:5.7,tailArea:2.3,cockpitPos:2.0,fuelPos:'fwd',fuelL:140,ammo:500,armour:NOARM,doctrine:'turn'}},
-  {name:'Lt. Moreau',title:'Tr.4',date:1917.8,skill:.78,blurb:'A Dreidecker-style triplane with thick wings. Climbs and turns like nothing else.',
+  {title:'Tr.4',date:1917.8,skill:.78,blurb:'A Dreidecker-style triplane with thick wings. Climbs and turns like nothing else.',
    d:{paint:'red',layout:'tri',control:'ail',airfoil:'thick',frame:'steel',engine:'lr9j',arm:'sync2',span:7.2,chord:1.0,gap:.9,stagger:.2,dihedral:0,wingPos:.95,fusLen:5.8,tailArea:2.0,cockpitPos:2.2,fuelPos:'fwd',fuelL:90,ammo:500,armour:NOARM,doctrine:'turn'}},
-  {name:'Col. Albrecht',title:'D.XIII',date:1918.5,skill:.84,blurb:'A D.VII-style biplane: thick wings, steel tube and the BMW engine.',
+  {title:'D.XIII',date:1918.5,skill:.84,blurb:'A D.VII-style biplane: thick wings, steel tube and the BMW engine.',
    d:{paint:'lozenge',layout:'bi',control:'ail',airfoil:'thick',frame:'steel',engine:'bmw3a',arm:'sync2',span:8.9,chord:1.7,gap:1.4,stagger:.5,dihedral:1,wingPos:1.2,fusLen:6.9,tailArea:2.6,cockpitPos:2.6,fuelPos:'fwd',fuelL:120,ammo:600,armour:NOARM,doctrine:'energy'}},
 ];
 RIVALS1.forEach((r,i)=>{r.id=i; r.d.name=r.title;});
@@ -707,7 +716,6 @@ const FUS2=[
 const SL2={
   ammo:{k:'ammo',label:'Rounds per machine gun',unit:'',min:200,max:1000,step:25,hint:'From 28 g a round (.303) to 120 g (.50).'},
   ammoC:{k:'ammoC',label:'Rounds per cannon',unit:'',min:50,max:250,step:10,hint:'Shells weigh 0.2–0.5 kg each with their links.'},
-  conv:{k:'conv',label:'Gun convergence',unit:'m',min:150,max:500,step:10,hint:'Where the wing guns\' fire meets. Closer hits harder; further gives more chances.'},
   fuelL:{k:'fuelL',label:'Fuel load',unit:'L',min:250,max:2800,step:10,hint:'0.72 kg a litre. The trip out and back uses some; jets need far more.'},
 };
 // One stream of tracer per bank of guns; each stream carries several rounds, so busy batteries don't flood the sky.
@@ -786,25 +794,26 @@ const ROWS2=ROWS1.map(r=>Object.assign({},r,{
   cost:{why:(s,d)=>`Engine £${s.costParts.engine.toLocaleString()}, airframe £${s.costParts.airframe.toLocaleString()} (including £1,000 of radio and instruments), guns £${s.costParts.guns.toLocaleString()}${s.costParts.armour?`, armour £${s.costParts.armour}`:''}. Elliptical and laminar wings, metal skin and retractable gear cost more to build.  Each sortie your budget buys as many as it can, up to 20, against the rival's twelve: cheaper machines mean a bigger squadron.`},
 }[r.k]||{}));
 const RIVALS2=[
-  {name:'F/Lt. Ashby',title:'G.14',date:1939.7,skill:.2,blurb:'A Gladiator-style biplane: radial engine, four guns, fixed gear. The best of a passing breed.',
+  {title:'G.14',date:1939.7,skill:.2,blurb:'A Gladiator-style biplane: radial engine, four guns, fixed gear. The best of a passing breed.',
    d:{paint:'silver',layout:'bi',planform:'rect',airfoil:'std',gear:'fixed',canopy:'hood',frame:'tube',engine:'mer9',arm:'mg4',span:8.8,chord:1.5,gap:1.25,dihedral:3,wingPos:2.05,fusLen:8.4,tailArea:3.2,cockpitPos:3.6,fuelPos:'fus',fuelL:380,ammo:600,ammoC:100,armour:{},doctrine:'energy'}},
-  {name:'Oblt. Reinholt',title:'Bk 119',date:1940.1,skill:.68,blurb:'A Bf 109E-style monoplane: small wing, fuel injection, wing cannon. Attacks from above and dives away.',
+  {title:'Bk 119',date:1940.4,skill:.68,blurb:'A Bf 109E-style monoplane: small wing, fuel injection, wing cannon. Attacks from above and dives away.',
    d:{paint:'rlm',layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'db601',arm:'emil',span:9.9,chord:1.65,gap:1.2,dihedral:6.5,wingPos:2.35,fusLen:8.6,tailArea:2.8,cockpitPos:4.0,fuelPos:'rear',fuelL:400,ammo:1000,ammoC:60,armour:{},doctrine:'energy'}},
-  {name:'F/O Tremayne',title:'S.29',date:1940.6,skill:.7,blurb:'A Spitfire-style fighter: elliptical wing and eight Brownings. Wants to out-turn you.',
+  {title:'S.29',date:1941.2,skill:.7,blurb:'A Spitfire-style fighter: elliptical wing and eight Brownings. Wants to out-turn you.',
    d:{paint:'raf',layout:'low',planform:'ellip',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'mer2',arm:'mg8',span:11.2,chord:2.0,gap:1.2,dihedral:6,wingPos:2.25,fusLen:9.1,tailArea:3.6,cockpitPos:4.3,fuelPos:'fus',fuelL:386,ammo:300,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy'}},
-  {name:'Hptm. Falkenrath',title:'Ra 205',date:1941.8,skill:.76,blurb:'An Fw 190-style radial fighter: rolls like nothing else and carries four cannon.',
+  {title:'Ra 205',date:1942.3,skill:.76,blurb:'An Fw 190-style radial fighter: rolls like nothing else and carries four cannon.',
    d:{paint:'ynose',layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'bmw801',arm:'fw',span:10.5,chord:1.95,gap:1.2,dihedral:5.5,wingPos:1.9,fusLen:8.9,tailArea:3.3,cockpitPos:3.9,fuelPos:'rear',fuelL:525,ammo:900,ammoC:200,armour:{pilot:true,fuel:true},doctrine:'energy'}},
-  {name:'Col. Whitlock',title:'P-74',date:1944.0,skill:.8,blurb:'A P-51D-style escort: laminar wing, two-stage Merlin, bubble canopy and six .50s.',
+  {title:'P-58',date:1943.4,skill:.78,blurb:'A P-47-style heavyweight: the huge R-2800 radial, eight .50s and an airframe that shrugs off hits. It dives like a brick.',
+   d:{paint:'rnose',layout:'low',planform:'ellip',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'r2800',arm:'eight50',span:12.4,chord:2.3,gap:1.2,dihedral:5,wingPos:1.85,fusLen:10.9,tailArea:4.6,cockpitPos:4.8,fuelPos:'fus',fuelL:1000,ammo:400,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy'}},
+  {title:'P-74',date:1944.4,n:1.35,skill:.8,blurb:'A P-51D-style escort: laminar wing, two-stage Merlin, bubble canopy and six .50s.',
    d:{paint:'rnose',layout:'low',planform:'taper',airfoil:'lam',gear:'retract',canopy:'bubble',frame:'skin',engine:'v1650',arm:'six50',span:11.3,chord:2.2,gap:1.2,dihedral:5,wingPos:2.0,fusLen:9.8,tailArea:3.9,cockpitPos:4.6,fuelPos:'wing',fuelL:700,ammo:400,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy'}},
-  {name:'Sqn Ldr. Rourke',title:'T.7',date:1944.6,skill:.88,blurb:'A Tempest-style brute: the 24-cylinder Sabre, a thin wing and four 20 mm Hispanos.',
-   d:{paint:'raf',layout:'low',planform:'ellip',airfoil:'std',gear:'retract',canopy:'bubble',frame:'skin',engine:'sabre',arm:'hisp4',span:12.5,chord:2.25,gap:1.2,dihedral:5.5,wingPos:2.2,fusLen:10.3,tailArea:4.5,cockpitPos:4.9,fuelPos:'fus',fuelL:800,ammo:400,ammoC:150,armour:{pilot:true,engine:true,fuel:true},doctrine:'energy'}}
-,
-  {name:'Maj. Steuer',title:'Ja 410',date:1944.9,skill:.9,blurb:'A Me 262-style jet: two axial turbojets in nacelles, four 30 mm cannon, 150 km/h faster than anything with a propeller.',
+  {title:'Ta 152',date:1945.0,skill:.88,blurb:'A Ta 152-style high-altitude fighter: the long-span wing, a Jumo 213 and a 30 mm cannon through the hub. The last and best of the piston fighters.',
+   d:{paint:'rlm',layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'j213',arm:'mk108',span:13.5,chord:2.05,gap:1.2,dihedral:5,wingPos:2.4,fusLen:10.7,tailArea:3.8,cockpitPos:4.6,fuelPos:'rear',fuelL:800,ammo:400,ammoC:85,armour:{pilot:true,fuel:true},doctrine:'energy'}},
+  {title:'Ja 410',date:1945.2,skill:.9,blurb:'A Me 262-style jet: two axial turbojets in nacelles, four 30 mm cannon, 150 km/h faster than anything with a propeller.',
    d:{paint:'rlm',layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',engine:'jumo004',arm:'mk108x4',span:12.5,chord:2.1,gap:1.2,dihedral:6,wingPos:3.4,fusLen:10.6,tailArea:3.6,cockpitPos:4.8,fuelPos:'fus',fuelL:2500,ammo:300,ammoC:65,armour:{pilot:true,fuel:true},doctrine:'energy'}}];
 RIVALS2.forEach((r,i)=>{r.id=i; r.d.name=r.title;});
 const VEDAY=1945.35;
-const PRICE2=[[1939.7,10000],[1940.1,13000],[1940.6,14500],[1941.8,15000],[1944.0,19000],[1944.6,20000],[1944.9,24000],[VEDAY,25000]];
-const DESIGN2={conv:250,paint:'silver',layout:'low',planform:'rect',airfoil:'std',gear:'fixed',canopy:'open',frame:'tube',engine:'mer9',arm:'mg4',span:11.6,chord:2.05,gap:1.2,dihedral:5,
+const PRICE2=[[1939.7,10000],[1940.4,13000],[1941.2,14500],[1942.3,15000],[1943.4,17000],[1944.4,19000],[1945.0,20000],[1945.2,24000],[VEDAY,25000]];
+const DESIGN2={paint:'silver',layout:'low',planform:'rect',airfoil:'std',gear:'fixed',canopy:'open',frame:'tube',engine:'mer9',arm:'mg4',span:11.6,chord:2.05,gap:1.2,dihedral:5,
   wingPos:1.95,fusLen:8.4,tailArea:3.2,cockpitPos:3.9,fuelPos:'fus',fuelL:360,ammo:500,ammoC:100,armour:{pilot:false,engine:false,fuel:false},doctrine:'turn',name:'Interceptor Mk I'};
 function fixDesign2(d){
   if(part('arm',d.arm).needsJet&&part('engine',d.engine).type!=='jet') d.arm=available(part('arm','mg8'))?'mg8':'mg4';
@@ -826,7 +835,7 @@ function controls2(){
       <div class="dims">${DIMS.filter(x=>!x.multi||bi).map(slider).join('')}</div></section>`,
     `<section class="group"><h3>Fuselage</h3>${chips('frame','Structure')}${chips('canopy','Cockpit')}${chips('gear','Undercarriage')}<div class="dims">${FUS.map(slider).join('')}</div></section>`,
     `<section class="group"><h3>Engine</h3>${chips('engine','Engine')}</section>`,
-    `<section class="group"><h3>Armament</h3>${chips('arm','Guns and mounting')}<div class="dims">${kinds.has('mg')?slider(SL2.ammo):''}${kinds.has('cannon')?slider(SL2.ammoC):''}${part('arm',d.arm).banks.some(b=>b.at==='wing')?slider(SL2.conv):''}</div></section>`,
+    `<section class="group"><h3>Armament</h3>${chips('arm','Guns and mounting')}<div class="dims">${kinds.has('mg')?slider(SL2.ammo):''}${kinds.has('cannon')?slider(SL2.ammoC):''}</div></section>`,
     `<section class="group"><h3>Fuel</h3>${chips('fuelPos','Tank position')}<div class="dims">${slider(SL2.fuelL)}</div></section>`,
     ...commonGroups()];
 }
@@ -1164,26 +1173,29 @@ const ROWS4=(()=>{ const rows=ROWS1.map(r=>Object.assign({},r,{
     why:(s,d)=>{const M=part('missiles',d.missiles); return M.loads.length?`${M.loads.map(l=>`${l.n} × ${MIS[l.m].name} (${MIS[l.m].seek==='ir'?`heat-seeking, from within ${MIS[l.m].aspect}° of the target's tail`:'radar-guided, from any angle, while your radar holds the target'}, ${f1(MIS[l.m].range/1000)} km, works ${f0(MIS[l.m].pk*100)}% of the time)`).join('; ')}.`:'No missiles: this machine fights with its gun.';}});
   return rows; })();
 const RIVALS4=[
-  {name:'Capt. Haldane',title:'F-83',date:1950.5,skill:.25,blurb:'An F-80-style straight-winged jet: one centrifugal engine, six .50s and a bubble canopy.',
+  {title:'F-83',date:1950.5,skill:.25,blurb:'An F-80-style straight-winged jet: one centrifugal engine, six .50s and a bubble canopy.',
    d:{paint:'bare',layout:'straight',airfoil:'thick',controls:'manual',body:'plain',intake:'pitot',install:'single',engine:'j33',radar:'gyro',arm:'b50x6',missiles:'none',cm:'none',frame:'light',canopy:'bubble',span:11.8,chord:1.9,dihedral:3,wingPos:4.5,fusLen:10.5,tailArea:5,cockpitPos:2.7,fuelPos:'wing',fuelL:1600,ammo:300,ammoC:100,armour:{},doctrine:'energy'}},
-  {name:'St. Lt. Orlov',title:'MiK-11',date:1950.9,skill:.5,blurb:'A MiG-15-style swept-wing fighter: light, climbs like a rocket, carries bomber-killing cannon.',
+  {title:'MiK-11',date:1950.9,skill:.5,blurb:'A MiG-15-style swept-wing fighter: light, climbs like a rocket, carries bomber-killing cannon.',
    d:{paint:'soviet',layout:'sw35',airfoil:'thin',controls:'manual',body:'plain',intake:'pitot',install:'single',engine:'nene',radar:'gyro',arm:'mig',missiles:'none',cm:'none',frame:'light',canopy:'bubble',span:10.1,chord:2.04,dihedral:-2,wingPos:2.45,fusLen:10.1,tailArea:4.5,cockpitPos:2.6,fuelPos:'fus',fuelL:1400,ammo:300,ammoC:80,armour:{},doctrine:'energy'}},
-  {name:'Maj. Kincaid',title:'F-93',date:1951.6,skill:.6,blurb:'An F-86-style swept fighter with slats, an all-flying tail and a radar-ranging gunsight.',
+  {title:'F-93',date:1951.6,n:1.35,skill:.6,blurb:'An F-86-style swept fighter with slats, an all-flying tail and a radar-ranging gunsight.',
    d:{paint:'bare',layout:'sw35',airfoil:'slats',controls:'flying',body:'plain',intake:'pitot',install:'single',engine:'j47',radar:'ranging',arm:'m3x6',missiles:'none',cm:'none',frame:'light',canopy:'bubble',span:11.3,chord:2.46,dihedral:3,wingPos:2.8,fusLen:11.4,tailArea:5.5,cockpitPos:2.9,fuelPos:'fus',fuelL:1650,ammo:300,ammoC:100,armour:{fuel:true},doctrine:'balanced'}},
-  {name:'Polk. Voronin',title:'MiK-14',date:1953.0,skill:.7,blurb:'A MiG-17-style fighter: 45° wing and an afterburning engine.',
+  {title:'MiK-14',date:1953.0,skill:.7,blurb:'A MiG-17-style fighter: 45° wing and an afterburning engine.',
    d:{paint:'soviet',layout:'sw45',airfoil:'thin',controls:'boost',body:'plain',intake:'pitot',install:'single',engine:'vk1f',radar:'gyro',arm:'mig',missiles:'none',cm:'none',frame:'light',canopy:'bubble',span:9.6,chord:2.36,dihedral:-3,wingPos:2.4,fusLen:11.3,tailArea:4.8,cockpitPos:2.8,fuelPos:'fus',fuelL:1600,ammo:300,ammoC:80,armour:{},doctrine:'energy'}},
-  {name:'Maj. Ruiz',title:'F-115',date:1956.5,skill:.78,blurb:'An F-100-style supersonic fighter: 45° wing, the J57 with reheat, four 20 mm cannon and no missiles.',
+  {title:'F-115',date:1956.5,skill:.78,blurb:'An F-100-style supersonic fighter: 45° wing, the J57 with reheat, four 20 mm cannon and no missiles.',
    d:{paint:'bare',layout:'sw45',airfoil:'thin',controls:'flying',body:'plain',intake:'pitot',install:'single',engine:'j57',radar:'ranging',arm:'m39x4',missiles:'none',cm:'none',frame:'alloy',canopy:'bubble',span:12.5,chord:4.2,dihedral:0,wingPos:4.35,fusLen:14.4,tailArea:8,cockpitPos:4.2,fuelPos:'wing',fuelL:4400,ammo:300,ammoC:200,armour:{},doctrine:'energy'}},
-  {name:'Kpt. Belov',title:'MiK-23',date:1962.5,skill:.85,blurb:'A MiG-21-style tailed delta: light, fast, one 30 mm cannon and two K-13 heat-seekers.',
-   d:{paint:'soviet',layout:'delta',airfoil:'thin',controls:'flying',body:'area',intake:'cone',install:'single',engine:'r11',radar:'ranging',arm:'nr30x1',missiles:'k13x2',cm:'none',frame:'alloy',canopy:'framed',span:9.5,chord:4.4,dihedral:-2,wingPos:3.4,fusLen:13.5,tailArea:5,cockpitPos:3.8,fuelPos:'fus',fuelL:2400,ammo:300,ammoC:60,armour:{},doctrine:'balanced'}},
-  {name:'Cdr. Hollis',title:'F-124',date:1966.5,skill:.9,blurb:'An F-4-style twin: big radar, four Sparrows and four Sidewinders, and no gun.',
+  {title:'MiK-23',date:1962.5,skill:.85,blurb:'A MiG-21-style tailed delta: light, fast, three 30 mm cannon and two K-13 heat-seekers.',
+   d:{paint:'soviet',layout:'delta',airfoil:'thin',controls:'flying',body:'area',intake:'cone',install:'single',engine:'r11',radar:'ranging',arm:'nr30x3',missiles:'k13x2',cm:'none',frame:'alloy',canopy:'framed',span:9.5,chord:4.4,dihedral:-2,wingPos:3.4,fusLen:13.5,tailArea:5,cockpitPos:3.8,fuelPos:'fus',fuelL:2400,ammo:300,ammoC:100,armour:{},doctrine:'balanced'}},
+  {title:'F-124',date:1966.5,skill:.9,blurb:'An F-4-style twin: big radar, four Sparrows and four Sidewinders, and no gun.',
    d:{paint:'sea',layout:'sw45',airfoil:'thin',controls:'flying',body:'area',intake:'ramps',install:'twin',engine:'j79',radar:'big',arm:'none',missiles:'f4late',cm:'chaff',frame:'strong',canopy:'framed',span:11.7,chord:4.6,dihedral:0,wingPos:6.35,fusLen:17.8,tailArea:12,cockpitPos:4.4,fuelPos:'wing',fuelL:7500,ammo:300,ammoC:200,armour:{fuel:true},doctrine:'missile'}},
 ];
 RIVALS4.forEach((r,i)=>{r.id=i; r.d.name=r.title;});
+// 25 years is too long for months to matter: everything in the jet era arrives on the year.
+for(const list of Object.values(PARTS4)) for(const q of list) if(q.from) q.from=Math.floor(q.from);
+ARMOUR4.forEach(a=>{a.from=Math.floor(a.from);}); RIVALS4.forEach(r=>{r.date=Math.floor(r.date);});
 const SUPEREND=1975.0;   // the jet era runs from Korea to the end of the Vietnam War
-const PRICE4=[[1956.5,400000],[1958.0,400000],[1959.8,450000],[1960.6,600000],[1962.5,650000],[1966.5,850000],[SUPEREND,900000]];
+const PRICE4=[[1956,400000],[1958,400000],[1959,450000],[1960,600000],[1962,650000],[1966,850000],[SUPEREND,900000]];
 const DESIGN4={paint:'bare',layout:'straight',airfoil:'thick',controls:'manual',body:'plain',intake:'pitot',install:'single',engine:'j33',radar:'gyro',arm:'b50x6',missiles:'none',cm:'none',frame:'light',canopy:'bubble',
-  span:11,chord:2.5,dihedral:3,wingPos:4.72,fusLen:10.8,tailArea:5,cockpitPos:2.7,fuelPos:'fus',fuelL:1400,ammo:300,ammoC:100,armour:{fuel:false,engine:false},doctrine:'balanced',name:'Jet Mk I'};
+  span:11,chord:2.5,dihedral:3,wingPos:4.85,fusLen:10.8,tailArea:5,cockpitPos:2.7,fuelPos:'fus',fuelL:1400,ammo:300,ammoC:100,armour:{fuel:false,engine:false},doctrine:'balanced',name:'Jet Mk I'};
 function fixDesign4(d){
   d.cockpitPos=Math.min(d.cockpitPos,d.fusLen-6);
   if(part('radar',d.radar).level>part('intake',d.intake).radarMax) d.radar=part('intake',d.intake).radarMax>=1&&available(part('radar','search'))?'search':'ranging';
@@ -1212,7 +1224,7 @@ function controls4(){
 const ERAS={
   ww1:{id:'ww1',parts:PARTS1,armour:ARMOUR1,dims:DIMS1,fus:FUS1,range:RANGE1,rows:ROWS1,rivals:RIVALS1,price:PRICE1,end:ARMISTICE,design:null,
     compute:compute1,paint:paintGA1,top:drawPlaneTop1,controls:controls1,fix:fixDesign1,block:blocked1,banks:banks1,
-    hills:70,vis:3000,arena:2400,alt0:1500,floor:150,ceiling:4500,muzzle:750,gunR:250,hitR:4.5,spread:.012,cone:.07,rollBase:1.6,sep:2800,maxT:170,burn:.6,camDist:22,nmax:4.5,
+    vis:3000,arena:2400,alt0:1500,floor:150,ceiling:4500,muzzle:750,gunR:250,hitR:4.5,spread:.012,cone:.07,rollBase:1.6,sep:2800,maxT:170,burn:.6,camDist:22,nmax:4.5,
     dmgScale:1,jam:.0025,stop:.75,ckGap:2,ga:{plan:45,side:68,py:280,y0:150},
     hitK:{st:2.2,engR:.03,engI:.05,fuel:1.5,wk:3,pk:.05,ctrl:.08},
     sliders:[{k:'ammo',step:50,unit:''},{k:'fuelL',step:5,unit:'L'}],
@@ -1223,10 +1235,10 @@ const ERAS={
     armourLegend:'5 mm steel plate, by zone'},
   ww2:{id:'ww2',parts:PARTS2,armour:ARMOUR2,dims:DIMS2,fus:FUS2,range:RANGE2,rows:ROWS2,rivals:RIVALS2,price:PRICE2,end:VEDAY,design:DESIGN2,
     compute:compute2,paint:paintGA2,top:drawPlaneTop2,controls:controls2,fix:fixDesign2,block:blocked2,banks:banks2,
-    hills:260,vis:5000,arena:5500,alt0:3500,floor:250,ceiling:8000,muzzle:820,gunR:380,hitR:5.5,spread:.009,cone:.05,rollBase:2.2,sep:6000,maxT:170,burn:.8,camDist:30,nmax:6.5,
+    vis:5000,arena:5500,alt0:3500,floor:250,ceiling:8000,muzzle:820,gunR:380,hitR:5.5,spread:.009,cone:.05,rollBase:2.2,sep:6000,maxT:170,burn:.8,camDist:30,nmax:6.5,
     dmgScale:1,jam:.0004,stop:.9,ckGap:3.5,ga:{plan:33,side:50,py:250,y0:135},
     hitK:{st:2.2,engR:.007,engI:.011,fuel:.3,wk:14,pk:.012,ctrl:.015},
-    sliders:[SL2.ammo,SL2.ammoC,SL2.conv,SL2.fuelL],
+    sliders:[SL2.ammo,SL2.ammoC,SL2.fuelL],
     first:rid=>200+80*rid,
     eyebrow:'Fighter design office · Second World War · 1939–1945',
     sub:'Monoplanes, retractable gear, supercharged engines, cannon and the first jets. Design a fighter and send a squadron up against a rival designer\'s machine.',
@@ -1234,7 +1246,7 @@ const ERAS={
     armourLegend:'Protection, by zone'},
   super:{id:'super',parts:PARTS4,armour:ARMOUR4,dims:DIMS4,fus:FUS4,range:RANGE4,rows:ROWS4,rivals:RIVALS4,price:PRICE4,end:SUPEREND,design:DESIGN4,
     compute:compute4,paint:paintGA3,top:drawPlaneTop3,controls:controls4,fix:fixDesign4,block:blocked4,banks:banks2,jet:true,missiles:true,ga:{plan:24,side:33,py:230,y0:125},
-    hills:600,vis:8000,arena:10000,alt0:6500,floor:500,ceiling:15000,muzzle:950,gunR:700,hitR:9,spread:.01,cone:.045,rollBase:3,sep:20000,maxT:240,burn:.6,camDist:55,nmax:7.3,
+    vis:8000,arena:10000,alt0:6500,floor:500,ceiling:15000,muzzle:950,gunR:700,hitR:9,spread:.01,cone:.045,rollBase:3,sep:20000,maxT:240,burn:.6,camDist:55,nmax:7.3,
     dmgScale:1,jam:.0004,stop:.9,ckGap:6,
     hitK:{st:2.2,engR:.008,engI:.011,fuel:.3,wk:30,pk:.007,ctrl:.015},streamDiv:4000,wobble:.03,
     sliders:[SL4.ammo,SL4.ammoC,SL4.fuelL],
@@ -1257,7 +1269,7 @@ const fixDesign=d=>ERA.fix(d), blocked=(c,p,d)=>ERA.block(c,p,d);
 
 /* ---------- Save state ---------- */
 const KEY='drawing-office-1917-v2';
-const DEFAULT={v:3,points:0,career:0,beaten:[],selected:0,log:[],plays:{},pinned:null,ghost:false,era:'ww1',stash:{},lib:[],pilots:null,
+const DEFAULT={v:3,points:0,career:0,beaten:[],selected:0,log:[],plays:{},pinned:null,ghost:false,era:'ww1',stash:{},lib:[],pilots:null,ww2v:2,
   design:{paint:'linen',layout:'bi',control:'ail',airfoil:'thin',frame:'wood',engine:'lr9c',arm:'lewis',span:7.8,chord:1.5,gap:1.4,stagger:.3,dihedral:2.5,
     wingPos:1.15,fusLen:6.3,tailArea:2.5,cockpitPos:2.4,fuelPos:'fwd',fuelL:100,ammo:400,armour:{engine:false,pilot:false,fuel:false},doctrine:'balanced',name:'Scout Mk I'}};
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -1269,6 +1281,9 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 // Saves from before the campaign and the modern era were removed.
 function dropRemoved(s){
   const st=s.stash=s.stash||{};
+  if(!s.ww2v){ s.ww2v=2; const k=s.era==='ww2'?s:st.ww2;   // seven WW2 rivals became eight: progress carries over, nothing is lost
+    if(k){ const on=[[0],[1],[2],[3],[4,5],[4,5,6],[4,5,6,7]], b=new Set(); (k.beaten||[]).forEach(i=>(on[i]||[]).forEach(n=>b.add(n))); k.beaten=[...b].sort((x,y)=>x-y);
+      const pl={}; for(const [i,n] of Object.entries(k.plays||{})) pl[{4:5,5:6,6:7}[i]||i]=n; k.plays=pl; if(k.selected>3) k.selected=Math.min(7,k.selected+1); } }
   if(s.camp){ if(s.camp.era===s.era) s.design=s.camp.saved; else if(st[s.camp.era]) st[s.camp.era].design=s.camp.saved; }
   delete s.camp;
   if(s.era==='modern'){ const k=st.super||{}; s.era='super'; s.beaten=k.beaten||[]; s.plays=k.plays||{}; s.design=k.design||clone(DESIGN4); s.pinned=k.pinned||null; s.selected=k.selected||0; s.lib=k.lib||[]; }
@@ -1703,7 +1718,7 @@ function verdictText(st){
 const whyOpen=new Set();
 function renderSheet(){
   const d=S.design, st=compute(d), r=RIVALS[S.selected], rst=compute(r.d), pst=S.pinned?compute(S.pinned):null;
-  $('#rivlegend').textContent=`${r.name}'s machine`;
+  $('#rivlegend').textContent=r.title;
   $('#pinlegend').hidden=!pst; $('#pin').textContent=pst?'Unpin':'Pin these numbers'; $('#pin').setAttribute('aria-pressed',String(!!pst)); $('#ghost').checked=!!S.ghost;
   const pc=(k,v)=>(norm(k,v)*100).toFixed(1);
   $('#stats').innerHTML=ROWS.map(row=>{
@@ -1716,7 +1731,7 @@ function renderSheet(){
       <span class="v">${row.fmt(v)} <em>/ ${row.fmt(rv)}</em> ${row.unit}${delta}</span>${whyOpen.has(row.k)?`<p class="why">${row.why(st,d)}</p>`:''}`;
   }).join('');
   const n=squadSize(d,r), af=ageFactor(d,r.date);
-  $('#summary').textContent=`Wing loading ${f1(st.mass/st.area)} kg/m² · aspect ratio ${f1(st.AR)} · against ${RIVAL_N} × ${r.title} your budget buys ${n} of these${n>=MAX_N?' (the most a squadron takes)':''}${af>1?` · its ${part('engine',d.engine).name} is out of production by ${dateText(r.date)}, so it costs ×${f1(af)} to field`:''}`;
+  $('#summary').textContent=`Wing loading ${f1(st.mass/st.area)} kg/m² · aspect ratio ${f1(st.AR)} · against ${rivalN(r)} × ${r.title} your budget buys ${n} of these${n>=MAX_N?' (the most a squadron takes)':''}${af>1?` · its ${part('engine',d.engine).name} is out of production by ${dateText(r.date)}, so it costs ×${f1(af)} to field`:''}`;
   let v=verdictText(st);
   $('#verdict').textContent=v.t; $('#verdict').className='warn'+(v.bad?'':' ok');
   drawGA($('#ga'),d,{annotate:true,plan:true,ghost:S.ghost?r.d:null});
@@ -1728,15 +1743,15 @@ function renderRivals(){
     const tag=won?'<span class="tag won">Beaten</span>':open?'<span class="tag next">Open</span>':'<span class="tag locked">Locked</span>';
     const d=r.d, spec=`${part('layout',d.layout).name} · ${part('engine',d.engine).name} · ${part('arm',d.arm).name}`;
     return `<article class="rival${S.selected===i?' sel':''}${open?'':' lock'}">
-      <div class="who"><span class="nm">${r.name}</span>${tag}</div>
-      <span class="ep">${r.title} · ${dateText(r.date)}</span>
-      <canvas data-rc="${i}" aria-label="${r.name}'s machine in side elevation"></canvas>
+      <div class="who"><span class="nm">${r.title}</span>${tag}</div>
+      <span class="ep">${dateText(r.date)}</span>
+      <canvas data-rc="${i}" aria-label="${r.title} in side elevation"></canvas>
       <p>${r.blurb}</p>
       <p class="mono" style="font-size:12px">${spec}</p>
-      ${open?`<p class="mono" style="font-size:12px">${squadSize(S.design,r)} of yours against ${RIVAL_N} · ${S.beaten.includes(i)?'replay':'first win'} pays ${reward(i,'win')} points${S.plays&&S.plays[i]?` · ${S.plays[i]} sortie${S.plays[i]>1?'s':''} flown`:''}</p>`:''}
+      ${open?`<p class="mono" style="font-size:12px">${squadSize(S.design,r)} of yours against ${rivalN(r)} · ${S.beaten.includes(i)?'replay':'first win'} pays ${reward(i,'win')} points${S.plays&&S.plays[i]?` · ${S.plays[i]} sortie${S.plays[i]>1?'s':''} flown`:''}</p>`:''}
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn ghost" data-pick="${i}">${S.selected===i?'Compared above':'Compare'}</button>
-        <button class="btn" data-fly="${i}" ${open&&!unfly&&!pre&&squadSize(S.design,r)>0?'':'disabled'}>${pre?`Win ${ERAS[ORDER[ORDER.indexOf(ERA.id)-1]].label} first`:!open?'Beat '+RIVALS[i-1].name+' first':unfly?'Design is unflyable':squadSize(S.design,r)<1?'Too dear to field':'Fly sortie'}</button>
+        <button class="btn" data-fly="${i}" ${open&&!unfly&&!pre&&squadSize(S.design,r)>0?'':'disabled'}>${pre?`Win ${ERAS[ORDER[ORDER.indexOf(ERA.id)-1]].label} first`:!open?'Beat '+RIVALS[i-1].title+' first':unfly?'Design is unflyable':squadSize(S.design,r)<1?'Too dear to field':'Fly sortie'}</button>
       </div></article>`;
   }).join('');
   document.querySelectorAll('[data-rc]').forEach(cv=>drawGA(cv,RIVALS[+cv.dataset.rc].d,{annotate:false,plan:false}));
@@ -1793,8 +1808,8 @@ let F=null;
 // Air thins with height. Piston engines hold their power up to a rated altitude set by their supercharger (Great War engines had
 // none, so they lose power from the ground up); above it, power falls with the air. Jet thrust falls more gently.
 const sigma=h=>Math.exp(-Math.max(0,h)/9000);
-// Gentle hills under land battles: a few overlapping waves, higher in later eras' wider arenas. The sea is flat.
-const groundAt=(x,y)=>F&&F.sea?0:ERA.hills*Math.max(0,.55+.25*Math.sin(x/2300+1.3)*Math.cos(y/1900-.7)+.2*Math.sin((x+y)/1100)+.12*Math.cos((x-2*y)/700));
+// The ground is flat and goes on for ever: grass, or open ocean.
+const groundAt=()=>0, GRASS='#4E8F3A', OCEAN='#1F5F99';
 const RATED={bmw3a:2000,mer9:4500,j210:3000,mer2:5000,db601:4500,v1710:3500,mer45:5800,bmw801:5500,ash82:4000,db605:5800,vk105:3000,mer61:8500,r2800:9000,sabre:4500,v1650:8000,grif65:7500,j213:6000};
 const ratedAlt=E=>E.kn||E.type==='jet'?null:(RATED[E.id]||0);
 const powerAt=(E,h)=>{ if(E.kn||E.type==='jet') return Math.pow(sigma(h),.75); const c=ratedAlt(E); return h<=c?1:Math.pow(sigma(h)/sigma(c),1.1); };
@@ -1898,9 +1913,12 @@ function pilot(p,foe){
   const gz=groundAt(p.pos[0],p.pos[1]), floor=gz+ERA.floor+p.v*3*Math.max(0,-u[2]);
   if(p.pos[2]<floor){ dir=vnorm([u[0],u[1],Math.max(.5,dir[2])]); tau=.35; fire=false; }
   if(p.pos[2]>ERA.ceiling&&dir[2]>0) dir=vnorm([dir[0],dir[1],0]);
-  // before the fight is joined, head for the height where this engine gives its best
-  if(foe.alive&&!foe.gone&&!fire&&vlen(vsub(foe.pos,p.pos))>ERA.gunR*2.5&&!outOfFight(p)){ const ra=ratedAlt(p.eng0), pref=clamp(ra==null?ERA.ceiling*.65:ra||ERA.alt0*.6,ERA.floor*3,ERA.ceiling*.85);
-    dir=vnorm(vadd(dir,[0,0,clamp((pref-p.pos[2])/3000,-.25,.3)])); }
+  // from the moment the sortie starts, head straight for the height where this engine gives its best
+  const fd=!foe.alive||foe.gone?1e9:vlen(vsub(foe.pos,p.pos));
+  if(!outOfFight(p)&&!fire&&!p.extending&&!(p.evadeT>0)&&fd>ERA.gunR*2.5){ const ra=ratedAlt(p.eng0), pref=clamp(ra==null?ERA.ceiling*.65:ra||ERA.alt0*.6,ERA.floor*3,ERA.ceiling*.85);
+    if(fd>ERA.gunR*8) dir=vnorm([dir[0],dir[1],clamp((pref-p.pos[2])/600,-.35,p.v>.72*p.vmax?.55:.12)]);
+    else dir=vnorm(vadd(dir,[0,0,clamp((pref-p.pos[2])/3000,-.25,.3)]));   // closing with an enemy: go to him, only leaning towards the best height
+  }
   // collision avoidance: if another machine will pass very close in the next two seconds, pull away from it
   for(const q of F.planes){ if(q===p||!q.alive||q.gone) continue; const r0=vsub(q.pos,p.pos), d0=vlen(r0); if(d0>ERA.camDist*6) continue;
     const rv=vsub(q.V,p.V), tc=clamp(-vdot(r0,rv)/(vdot(rv,rv)||1),0,2), miss=vlen(vadd(r0,vmul(rv,tc)));
@@ -1942,7 +1960,8 @@ function particle(pos,type,n=1){
     F.parts.push({p:pos.slice(),V:vmul(d,s),life,max:life,type});
   }
 }
-function kill(p,fate){ if(!p.alive) return; p.alive=false; p.fate=fate; p.downT=0; credit(p); }
+function kill(p,fate){ if(!p.alive) return; p.alive=false; p.fate=fate; p.downT=0; credit(p);
+  if(ERA.id!=='ww1'&&fate!=='ground'&&fate!=='collision'&&Math.random()<.6) p.chuteAt=F.t+.8+Math.random()*1.5; }
 const credit=p=>{ if(p.lastHit&&p.lastHit.side!==p.side&&!p.credited){ p.credited=true; p.lastHit.kills=(p.lastHit.kills||0)+1; if(!knows(p,p.lastHit)) p.lastHit.surprise=(p.lastHit.surprise||0)+1; } };
 // b.dmg is in rifle-round units: a .303 hit is 1, a 20 mm shell about 8.
 function hit(t,shooter,b){
@@ -1962,6 +1981,7 @@ function hit(t,shooter,b){
 function updatePlane(p,foe,dt){
   if(p.gone) return;
   if(!p.alive){
+    if(p.chuteAt&&F.t>=p.chuteAt){ p.chuteAt=0; if(p.pos[2]>100) F.chutes.push({p:p.pos.slice(),V:vmul(p.V,.1),down:false}); }
     p.downT+=dt; p.V=vadd(p.V,[0,0,-GRAV*.7*dt]); p.v=vlen(p.V); p.pos=vadd(p.pos,vmul(p.V,dt));
     const u=vnorm(p.V), side=vcross(u,p.up); p.up=vnorm(vadd(vmul(p.up,Math.cos(3*dt)),vmul(side,Math.sin(3*dt))));
     if(Math.random()<dt*30) particle(p.pos,'smoke');
@@ -1990,9 +2010,9 @@ function updatePlane(p,foe,dt){
     if(!ai.fire||g.rounds<=0||g.cool>0) continue;
     const n=Math.min(g.stream,g.rounds); g.cool=60*g.stream/(g.rpm*g.n); g.rounds-=n; p.shots+=n;
     const sg=ERA.spread*(1.7-p.skill)*g.aim*p.aimMul*(p.novice?2:1), jit=()=>(Math.random()+Math.random()-1)*sg;
-    // wing guns sit out on the wings and are angled in to meet at the convergence range
-    const lat=g.at==='wing'?(g.flip=-(g.flip||1))*p.design.span*.28:g.lat, conv=p.design.conv||250;
-    const d=vnorm(vadd(u,vadd(vmul(right,jit()-(g.at==='wing'?lat/conv:0)),vmul(p.up,jit())))), mv=ERA.muzzle*g.vel;
+    // wing guns sit out on the wings and are angled in to meet at 250 m
+    const lat=g.at==='wing'?(g.flip=-(g.flip||1))*p.design.span*.28:g.lat;
+    const d=vnorm(vadd(u,vadd(vmul(right,jit()-(g.at==='wing'?lat/250:0)),vmul(p.up,jit())))), mv=ERA.muzzle*g.vel;
     F.bullets.push({p:vadd(vadd(p.pos,vmul(u,4)),vmul(right,lat)),V:vadd(vmul(d,mv),p.V),life:ERA.gunR*1.4/mv,owner:p,target:foe,n,dmg:g.dmg*n,pen:g.pen,big:g.dmg>4});
     if(p.selfHit&&Math.random()<p.selfHit){p.eng=Math.max(.5,p.eng-.01); p.ownProp++;}
     if(g.mag){ g.inMag--; if(g.inMag<=0&&g.rounds>0){g.reload=5; p.drums++;} }
@@ -2135,6 +2155,7 @@ function simStep(dt){
   F.missiles=F.missiles.filter(x=>!x.done);
   for(const q of F.parts){q.p=vadd(q.p,vmul(q.V,dt)); q.V=vmul(q.V,.97); if(q.type==='smoke') q.V[2]+=.6*dt; q.life-=dt;}
   F.parts=F.parts.filter(q=>q.life>0);
+  for(const ch of F.chutes) if(!ch.down){ ch.V=vmul(ch.V,.99); ch.p=vadd(ch.p,vmul(ch.V,dt)); ch.p[2]-=7*dt; if(ch.p[2]<=0) ch.down=true; }
   if(!F.outcome){ squadMorale(); const act=sd=>F.planes.some(p=>p.side===sd&&!p.gone&&p.alive&&!outOfFight(p));
     if(!act(0)||!act(1)||F.t>ERA.maxT*2) F.outcome=decideSquad(); }
   if(F.outcome&&!F.finished){ F.endT+=dt; if(F.endT>2) finish(); }
@@ -2143,36 +2164,7 @@ const FATE={collision:'collided in mid-air',missile:'was brought down by a missi
 const BREAK={morale:'lost heart and broke off',fuel:'ran out of fuel',ammo:'ran out of ammunition',engine:'lost its engine'};
 
 /* ---------- Sortie rendering ---------- */
-const sky=$('#sky'), sky3=$('#sky3'); let sctx=null, ground=null, T=null;
-function buildGround(sea){
-  ground=document.createElement('canvas'); ground.width=W/2; ground.height=H/2;
-  const g=ground.getContext('2d'); g.scale(.5,.5);
-  g.fillStyle=sea?T.water:T.fa; g.fillRect(0,0,W,H);
-  let seed=7; const rnd=()=>(seed=(seed*9301+49297)%233280)/233280;
-  if(sea){ g.strokeStyle='rgba(255,255,255,.35)'; g.lineWidth=2; for(let i=0;i<900;i++){ const x=rnd()*W, y=rnd()*H, l=6+rnd()*14; g.beginPath(); g.moveTo(x,y); g.lineTo(x+l,y-1); g.stroke(); } return; }
-  const cols=[T.fa,T.fb,T.fc];
-  for(let gx=0;gx<24;gx++)for(let gy=0;gy<16;gy++){
-    const x=gx*W/24+(rnd()-.5)*40,y=gy*H/16+(rnd()-.5)*40,w=W/24+rnd()*30,h=H/16+rnd()*30;
-    g.fillStyle=cols[Math.floor(rnd()*3)]; g.save(); g.translate(x+w/2,y+h/2); g.rotate((rnd()-.5)*.2); g.fillRect(-w/2,-h/2,w,h);
-    g.strokeStyle=T.hedge; g.lineWidth=4; g.strokeRect(-w/2,-h/2,w,h); g.restore();
-  }
-  g.strokeStyle=T.water; g.lineWidth=30; g.beginPath(); g.moveTo(-20,H*.72); g.bezierCurveTo(W*.3,H*.55,W*.55,H*.92,W+20,H*.62); g.stroke();
-  if(ERA.id==='ww1'){
-  g.fillStyle=T.mud; g.globalAlpha=.85; g.beginPath(); g.moveTo(W*.46,-10);
-  for(let y=0;y<=H+20;y+=60) g.lineTo(W*.44+Math.sin(y*.01)*40+(rnd()-.5)*20,y);
-  for(let y=H+20;y>=-10;y-=60) g.lineTo(W*.56+Math.sin(y*.01)*40+(rnd()-.5)*20,y);
-  g.closePath(); g.fill(); g.globalAlpha=1;
-  for(let i=0;i<320;i++){const y=rnd()*H,x=W*.44+Math.sin(y*.01)*40+rnd()*W*.12; g.fillStyle=T.hedge; g.globalAlpha=.5; g.beginPath(); g.arc(x,y,3+rnd()*7,0,TAU); g.fill();}
-  g.globalAlpha=1; g.strokeStyle=T.hedge; g.lineWidth=3;
-  for(const off of [-.035,.035]){ g.beginPath(); for(let y=0,i=0;y<=H;y+=24,i++){const x=W*(.5+off)+Math.sin(y*.01)*40+(i%2?12:-12); y?g.lineTo(x,y):g.moveTo(x,y);} g.stroke(); }
-  } else {   // 1940s: roads, a railway and two market towns instead of the trench lines
-    g.strokeStyle=T.mud; g.globalAlpha=.6; g.lineWidth=10;
-    for(const [ax,ay,bx,by] of [[0,H*.3,W,H*.42],[W*.2,0,W*.35,H],[W*.7,0,W*.62,H]]){ g.beginPath(); g.moveTo(ax,ay); g.lineTo(bx,by); g.stroke(); }
-    g.globalAlpha=.8; g.strokeStyle=T.hedge; g.lineWidth=3; g.setLineDash([14,8]); g.beginPath(); g.moveTo(0,H*.8); g.bezierCurveTo(W*.3,H*.7,W*.6,H*.88,W,H*.75); g.stroke(); g.setLineDash([]);
-    g.globalAlpha=1; g.fillStyle=T.hedge;
-    for(const [cx,cy] of [[W*.33,H*.36],[W*.65,H*.41]]) for(let i=0;i<110;i++) g.fillRect(cx+rnd()*180-90,cy+rnd()*150-75,8+rnd()*14,8+rnd()*10);
-  }
-}
+const sky=$('#sky'), sky3=$('#sky3'); let sctx=null, T=null;
 function drawPlaneTop1(c,p){
   const d=p.design, L=part('layout',d.layout), E=part('engine',d.engine);
   const span=d.span*3.6, chord=d.chord*4.6, len=d.fusLen*3.2;
@@ -2221,6 +2213,11 @@ function drawPlaneTop2(c,p){
 }
 // The map view from above: drawing units, north up. Also the fallback when 3D is not available.
 const MPX=()=>W/(2.6*ERA.arena);
+const SIDEPAINT=[{body:'#3F8CFF',dark:'#0B2A66'},{body:'#E23B2E',dark:'#6E120B'}], OUTLINE={body:'#fff',dark:'#fff',nose:'#fff'};
+// A white edge round the machine being viewed: its shape in white, nudged out in every direction, under the real thing.
+function outlinePlane(c,p){ const keep=p.paint, x=p.x, y=p.y, r=3.5*MAPSC; p.paint=OUTLINE;
+  for(let i=0;i<8;i++){ p.x=x+r*Math.cos(i*TAU/8); p.y=y+r*Math.sin(i*TAU/8); drawPlaneTop(c,p); }
+  p.x=x; p.y=y; p.paint=keep; }
 let MAPSC=1;
 const toMap=q=>[W/2+q[0]*MPX(), H/2-q[1]*MPX()];
 function render2D(){
@@ -2236,10 +2233,9 @@ function render2D(){
   if(!F.cam) F.cam={x:tx,y:ty,z}; else { const e=F.snap?1:.08; F.cam.x+=(tx-F.cam.x)*e; F.cam.y+=(ty-F.cam.y)*e; F.cam.z+=(z-F.cam.z)*e; }
   const k=s*F.cam.z;
   MAPSC=Math.max(1,Math.pow(.5/F.cam.z,.7));   // keep machines visible when the map zooms far out
-  c.setTransform(1,0,0,1,0,0); c.fillStyle=F.sea?T.water:T.fa; c.fillRect(0,0,sky.width,sky.height);
+  c.setTransform(1,0,0,1,0,0); c.fillStyle=F.sea?OCEAN:GRASS; c.fillRect(0,0,sky.width,sky.height);
   c.setTransform(k,0,0,k,-F.cam.x*k,-F.cam.y*k);
-  c.drawImage(ground,0,0,W,H);
-  for(const p of F.planes){ if(p.trail.length<2||S.realistic) continue; c.strokeStyle=p.side?T.rv:T.you; c.globalAlpha=.45; c.lineWidth=2.5; c.setLineDash([10,8]);
+  for(const p of F.planes){ if(p.trail.length<2||S.realistic) continue; c.strokeStyle=SIDEPAINT[p.side].body; c.globalAlpha=.45; c.lineWidth=2.5; c.setLineDash([10,8]);
     c.beginPath(); p.trail.forEach((q,i)=>{const [x,y]=toMap(q); i?c.lineTo(x,y):c.moveTo(x,y);}); if(!p.gone) c.lineTo(p.x,p.y); c.stroke(); c.setLineDash([]); c.globalAlpha=1; }
   c.strokeStyle=T.tracer;
   for(const big of [false,true]){ c.lineWidth=big?4.5:2.5; c.beginPath(); for(const b of F.bullets) if(!!b.big===big){const [x,y]=toMap(b.p), l=Math.hypot(b.V[0],b.V[1])||1; c.moveTo(x,y); c.lineTo(x-b.V[0]/l*14,y+b.V[1]/l*14);} c.stroke(); }
@@ -2248,12 +2244,10 @@ function render2D(){
     else {c.fillStyle=q.type==='fire'?(t>.5?T.tracer:T.accent):T.tracer; c.globalAlpha=t; c.beginPath(); c.arc(x,y,q.type==='fire'?5*(.5+t):2,0,TAU); c.fill();} }
   c.globalAlpha=1; c.strokeStyle=T.ink; c.lineWidth=3;
   for(const ms of F.missiles){ const [x,y]=toMap(ms.p), l=Math.hypot(ms.V[0],ms.V[1])||1; c.beginPath(); c.moveTo(x,y); c.lineTo(x-ms.V[0]/l*20,y+ms.V[1]/l*20); c.stroke(); }
-  for(const p of F.planes) if(!p.gone) drawPlaneTop(c,p);
+  for(const ch of F.chutes) if(!ch.down){ const [x,y]=toMap(ch.p), r=9*MAPSC; c.fillStyle='#fff'; c.strokeStyle='#555'; c.lineWidth=1.5*MAPSC; c.beginPath(); c.arc(x,y,r,0,TAU); c.fill(); c.stroke(); }
+  for(const p of F.planes) if(!p.gone){ if(p===F.watch) outlinePlane(c,p); drawPlaneTop(c,p); }
   if(!F.mapClouds) F.mapClouds=Array.from({length:30},()=>({x:Math.random()*W*1.6-W*.3,y:Math.random()*H*1.6-H*.3,r:120+Math.random()*200}));
   for(const cl of F.mapClouds){ const g=c.createRadialGradient(cl.x,cl.y,0,cl.x,cl.y,cl.r); g.addColorStop(0,T.cloud); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.beginPath(); c.arc(cl.x,cl.y,cl.r,0,TAU); c.fill(); }
-  c.font=`600 ${f0(26*MAPSC)}px "Barlow", sans-serif`; c.textAlign='center';
-  const firstOf=sd=>F.planes.find(q=>q.side===sd&&q.alive&&!q.gone), keyed=new Set([firstOf(0),firstOf(1)]);
-  for(const p of F.planes) if(!S.realistic&&!p.gone&&p.alive&&(F.planes.length<=8||keyed.has(p))){ c.fillStyle=T.ink; c.globalAlpha=.85; c.fillText(`${plabel(p)} · ${f0(p.pos[2]/10)*10} m`,p.x,p.y-48*MAPSC); c.globalAlpha=1; }
 }
 
 /* 3D view (three.js). Every machine is built from its own design: fuselage, wings, tail, engine, guns and paint. */
@@ -2362,12 +2356,8 @@ function setupScene(){
   const glow=document.createElement('canvas'); glow.width=glow.height=128; { const g=glow.getContext('2d'), gr=g.createRadialGradient(64,64,0,64,64,64);
     gr.addColorStop(0,'rgba(255,255,240,1)'); gr.addColorStop(.18,'rgba(255,250,220,.95)'); gr.addColorStop(.45,'rgba(255,240,200,.25)'); gr.addColorStop(1,'rgba(255,240,200,0)'); g.fillStyle=gr; g.fillRect(0,0,128,128); }
   const sunS=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(glow),fog:false,depthWrite:false,transparent:true})); sunS.scale.set(A*1.6,A*1.6,1); scene.add(sunS); G3.sun=sunS;
-  // ground: the map's fields, roads and trenches draped over rolling hills; at sea, open water that catches the sun
-  const gw=W/MPX(), gh=H/MPX(), tex=new THREE.CanvasTexture(ground), gg=new THREE.PlaneGeometry(gw,gh,F.sea?1:120,F.sea?1:80);
-  if(!F.sea){ const ps=gg.attributes.position; for(let i=0;i<ps.count;i++) ps.setZ(i,groundAt(ps.getX(i),ps.getY(i))); gg.computeVertexNormals(); }
-  if(F.sea){ tex.wrapS=tex.wrapT=THREE.RepeatWrapping; tex.repeat.set(3,3); G3.seaTex=tex; }
-  const gm=new THREE.Mesh(gg,F.sea?new THREE.MeshPhongMaterial({map:tex,color:0xbfd3e0,specular:0x9fb4c4,shininess:60}):new THREE.MeshLambertMaterial({map:tex})); gm.rotation.x=-Math.PI/2; scene.add(gm);
-  const far=new THREE.Mesh(new THREE.PlaneGeometry(gw*10,gh*10),new THREE.MeshLambertMaterial({color:new THREE.Color(F.sea?T.water:T.fa)})); far.rotation.x=-Math.PI/2; far.position.y=-3; scene.add(far);
+  // ground: a plain sheet that follows the camera, so it never ends
+  const gm=new THREE.Mesh(new THREE.PlaneGeometry(A*60,A*60),new THREE.MeshBasicMaterial({color:F.sea?OCEAN:GRASS})); gm.rotation.x=-Math.PI/2; scene.add(gm); G3.floor=gm;
   // clouds: soft billboards, thickest high up
   const puffC=document.createElement('canvas'); puffC.width=puffC.height=128; { const g=puffC.getContext('2d'), gr=g.createRadialGradient(64,64,4,64,64,64);
     gr.addColorStop(0,'rgba(255,255,255,.9)'); gr.addColorStop(.55,'rgba(250,252,255,.55)'); gr.addColorStop(1,'rgba(240,245,250,0)'); g.fillStyle=gr; g.fillRect(0,0,128,128); }
@@ -2376,17 +2366,20 @@ function setupScene(){
     for(let k=0;k<6;k++){ const m=new THREE.Sprite(cm); m.position.set(x+(Math.random()-.5)*cs*3,y+(Math.random()-.5)*cs*.5,z+(Math.random()-.5)*cs*2); const sc=cs*(1.4+Math.random()*1.4); m.scale.set(sc,sc*.6,1); scene.add(m); } }
   const planes=F.planes.map(p=>{ const m=meshFor(p); scene.add(m);
     const tg=new THREE.BufferGeometry(); tg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(60*3),3));
-    const tr=new THREE.Line(tg,new THREE.LineBasicMaterial({color:new THREE.Color(p.side?T.rv:T.you),transparent:true,opacity:.5})); tr.frustumCulled=false; scene.add(tr);
+    const tr=new THREE.Line(tg,new THREE.LineBasicMaterial({color:new THREE.Color(SIDEPAINT[p.side].body),transparent:true,opacity:.5})); tr.frustumCulled=false; scene.add(tr);
     return {m,tr}; });
   const seg=(n,c,o)=>{ const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*6),3)); const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:c,transparent:true,opacity:o})); l.frustumCulled=false; scene.add(l); return l; };
   const pts=(c,size,o)=>{ const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(1500*3),3)); const m=new THREE.Points(g,new THREE.PointsMaterial({color:c,size,transparent:true,opacity:o,depthWrite:false})); m.frustumCulled=false; scene.add(m); return m; };
   const sz=ERA.camDist/25;
+  // a parachute: canopy, shroud lines and the pilot, larger than life so it can be picked out
+  const chute=new THREE.Group(), cw=ERA.camDist/5, line=new THREE.LineBasicMaterial({color:0x444444}), lv=[]; chute.add(new THREE.Mesh(new THREE.SphereGeometry(cw,14,7,0,TAU,0,Math.PI/2),new THREE.MeshLambertMaterial({color:0xf4f1e6,side:THREE.DoubleSide})));
+  for(let i=0;i<8;i++) lv.push(new THREE.Vector3(Math.cos(i*TAU/8)*cw,0,Math.sin(i*TAU/8)*cw),new THREE.Vector3(0,-cw*1.5,0));
+  chute.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(lv),line));
+  const pm=new THREE.Mesh(new THREE.BoxGeometry(cw*.2,cw*.45,cw*.2),new THREE.MeshLambertMaterial({color:0x33383c})); pm.position.y=-cw*1.7; chute.add(pm); G3.chute=chute;
   G3.scene=scene; G3.planes=planes; G3.tracers=seg(2500,0xffd36b,.9);
   G3.parts={smoke:pts(0x6a6a6a,9*sz,.55),trail:pts(0xdddddd,3*sz,.45),fire:pts(0xff8a2a,4*sz,.9),spark:pts(0xffe08a,1.6*sz,1)};
   G3.mis=seg(40,0xffffff,1);
   G3.camera=new THREE.PerspectiveCamera(62,1,.5,A*12); G3.fwd=null;
-  document.querySelectorAll('.skywrap .lbl').forEach(x=>x.remove());
-  G3.labels=F.planes.map(()=>{ const el=document.createElement('span'); el.className='lbl'; el.hidden=true; sky3.parentNode.appendChild(el); return el; });
 }
 function render3D(){
   const g=G3, R=g.renderer, w=sky3.clientWidth, h=sky3.clientHeight;
@@ -2409,16 +2402,15 @@ function render3D(){
   for(const type in g.parts){ const pm=g.parts[type], a=pm.geometry.attributes.position; let k=0;
     for(const q of F.parts) if(q.type===type&&k<1500){ a.setXYZ(k++,q.p[0],q.p[2],-q.p[1]); }
     pm.geometry.setDrawRange(0,k); a.needsUpdate=true; }
+  for(const ch of F.chutes){ if(!ch.m){ ch.m=g.chute.clone(); g.scene.add(ch.m); } ch.m.visible=!ch.down; ch.m.position.copy(T3(ch.p)); }
   // camera
-  const live=p=>!p.gone, cd=ERA.camDist, lead=sd=>F.planes.find(p=>p.side===sd&&p.alive&&!p.gone)||F.planes.find(p=>p.side===sd&&!p.gone);
-  const A=lead(0), B=lead(1);
-  let mode=F.view; if(mode==='chase'&&!A) mode='wide'; if(mode==='rival'&&!B) mode='wide';
+  const cd=ERA.camDist, A=F.watch, near=F.planes.filter(q=>q.side!==A.side&&q.alive&&!q.gone).sort((a,b)=>vlen(vsub(a.pos,A.pos))-vlen(vsub(b.pos,A.pos)))[0];
+  const mode=F.view==='wide'&&near?'wide':'chase';
   let pos, look;
-  if(mode==='chase'||mode==='rival'){ const p=mode==='chase'?A:B, fw=T3(vnorm(p.V));
+  if(mode==='chase'){ const p=A, fw=T3(vnorm(p.V));
     g.fwd=g.fwd&&!F.snap?g.fwd.lerp(fw,.06).normalize():fw.clone();
     const P=T3(p.pos); pos=P.clone().addScaledVector(g.fwd,-cd).add(new THREE.Vector3(0,cd*.28,0)); look=P.clone().addScaledVector(g.fwd,cd*.8); }
-  else { const pa=T3((A||B).pos), pb=T3((B||A).pos), ps=F.planes.filter(live).map(p=>T3(p.pos)), mid=ps.length?ps.reduce((m,v)=>m.add(v),new THREE.Vector3()).multiplyScalar(1/ps.length):pa.clone();
-    const sep=Math.max(pa.distanceTo(pb),...ps.map(v=>v.distanceTo(mid)*2));
+  else { const pa=T3(A.pos), pb=T3(near.pos), mid=pa.clone().add(pb).multiplyScalar(.5), sep=pa.distanceTo(pb);
     const ab=pb.clone().sub(pa); ab.y=0; if(ab.lengthSq()<1) ab.set(1,0,0); const side=new THREE.Vector3(-ab.z,0,ab.x).normalize();
     pos=mid.clone().addScaledVector(side,sep*.9+cd*4).add(new THREE.Vector3(0,sep*.25+cd,0)); look=mid; }
   pos.y=Math.max(pos.y,groundAt(pos.x,-pos.z)+8);
@@ -2427,20 +2419,13 @@ function render3D(){
   g.camera.position.copy(g.camPos); g.camera.lookAt(g.look);
   if(g.sky) g.sky.position.copy(g.camera.position);
   if(g.sun) g.sun.position.copy(g.camera.position).addScaledVector(T3(SUN),ERA.arena*7);
-  if(g.seaTex){ g.seaTex.offset.x=F.t*.002; g.seaTex.offset.y=F.t*.0013; }
+  g.floor.position.x=g.camera.position.x; g.floor.position.z=g.camera.position.z;
   R.render(g.scene,g.camera);
   SND.update();
-  // name labels
-  const firstOf=sd=>F.planes.find(q=>q.side===sd&&q.alive&&!q.gone), keyed=new Set([firstOf(0),firstOf(1)]);
-  F.planes.forEach((p,i)=>{ const el=g.labels[i]; if(S.realistic||p.gone||!p.alive||(F.planes.length>8&&!keyed.has(p))){el.hidden=true; return;}
-    const v=T3(p.pos).project(g.camera); if(v.z>1){el.hidden=true; return;}
-    el.hidden=false; el.textContent=`${plabel(p)} · ${f0(p.pos[2]/10)*10} m`; el.style.color=p.side?'#ffd2c8':'#fff';
-    el.style.left=((v.x+1)/2*w)+'px'; el.style.top=((1-v.y)/2*h-14)+'px'; });
 }
-const plabel=p=>p.side?p.name:p.lead?'You':p.name;
 function render(){
   const use3=F.view!=='map'&&G3&&G3.scene;
-  sky.hidden=!!use3; sky3.hidden=!use3; if(!use3) document.querySelectorAll('.skywrap .lbl').forEach(x=>x.hidden=true);
+  sky.hidden=!!use3; sky3.hidden=!use3;
   use3?render3D():render2D();
 }
 function status(p){
@@ -2457,24 +2442,54 @@ function status(p){
   if(p.noAmmo) t.push('no ammunition'); else if(p.fuel<=0) t.push('no fuel');
   return t.join(' · ');
 }
+// The little aircraft at each side of the screen. Green is untouched, yellow scratched, orange smoking, red lost, grey gone from the map.
+function planeState(p){
+  if(!p.alive||p.reason==='forced down') return 'down';
+  if(p.gone) return 'left';
+  if(p.burn>0||p.hp/p.hpMax<.5||p.eng<.8) return 'hurt';
+  return p.hp<p.hpMax||p.eng<1||p.wounds||p.ctrl<1||p.holes>0?'nick':'ok';
+}
+const canWatch=p=>p.alive&&!p.gone&&!(S.realistic&&p.side);
+function setWatch(p){ F.watch=p; if(G3){ G3.camPos=null; G3.fwd=null; } }
+// When the machine being viewed is lost, follow whoever shot it down, otherwise a friendly at random.
+function keepWatch(){ const w=F.watch; if(!w||!(w.gone||(!w.alive&&w.downT>2))) return;
+  const by=w.lastHit, shot=!w.alive&&w.fate!=='collision'&&w.fate!=='ground'&&by&&by.side!==w.side&&canWatch(by);
+  const pool=F.planes.filter(p=>p.side===0&&canWatch(p)), fresh=pool.filter(p=>!outOfFight(p));
+  const pick=l=>l[Math.floor(Math.random()*l.length)], next=shot?by:fresh.length?pick(fresh):pool.length?pick(pool):F.planes.find(canWatch);
+  if(next) setWatch(next); }
+const PLANEICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2 7 8 4v2.5l-8-2-.8 5.5 3 2V23l-4.2-1-4.2 1v-1l3-2-.8-5.5-8 2V13l8-4z"/></svg>';
+function buildSymbols(){ for(const [sd,id] of [[0,'#sqA'],[1,'#sqB']]){ const box=$(id), ps=F.planes.filter(p=>p.side===sd); box.innerHTML=''; box.classList.toggle('many',ps.length>16);
+    ps.forEach(p=>{ const b=document.createElement('button'); b.type='button'; b.dataset.watch=F.planes.indexOf(p); b.innerHTML=PLANEICON; b.setAttribute('aria-label',`View ${p.name}`); box.appendChild(b); p.sym=b; }); } }
 function hud(){
   const set=(id,v)=>$(id).style.width=(clamp(v,0,1)*100).toFixed(1)+'%';
   { const side=sd=>F.planes.filter(p=>p.side===sd), sum=(ps,f)=>ps.reduce((s,p)=>s+f(p),0);
-    for(const [sd,h,fu,sp] of [[0,'#hpA','#fuA','#spA'],[1,'#hpB','#fuB','#spB']]){ const ps=side(sd);
-      set(h,sum(ps,p=>p.alive?p.hp:0)/sum(ps,p=>p.hpMax)); set(fu,sum(ps,p=>Math.max(0,p.fuel)/p.fuelMax)/ps.length);
+    for(const p of F.planes){ const c=`pl ${planeState(p)}${p===F.watch?' on':''}${canWatch(p)?'':' off'}`; if(p.symClass!==c){ p.symClass=c; p.sym.className=c; } }
+    for(const [sd,fu,sp] of [[0,'#fuA','#spA'],[1,'#fuB','#spB']]){ const ps=side(sd);
+      set(fu,sum(ps,p=>Math.max(0,p.fuel)/p.fuelMax)/ps.length);
       const fly=ps.filter(p=>p.alive&&!p.gone&&!outOfFight(p)).length, down=ps.filter(p=>!p.alive).length, home=ps.length-fly-down;
       const ml=sum(ps,p=>p.mis.reduce((t,L)=>t+L.left,0)), mf=sum(ps,p=>p.misShots);
       $(sp).textContent=`${fly} fighting · ${down} down${home?` · ${home} breaking off`:''}${ml||mf?` · ${ml} missiles left, ${mf} fired`:''}`; } }
+  $('#altread').textContent=F.watch?`Altitude ${(f0(F.watch.pos[2]/10)*10).toLocaleString()} m`:'';
   const t=Math.floor(F.t); $('#clock').textContent=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;
 }
+// Skip runs the rest of the fight in short slices, however long it has left, so the page never locks up.
+function skipRun(){ if(!F||F.finished) return; const t0=performance.now(), G=F; let n=0;
+  while(!G.finished&&(n++<200||performance.now()-t0<30)) simStep(STEP);
+  if(!G.finished) setTimeout(skipRun,0); }
 function frame(now){
   if(!F||F.finished) return;
+  if(F.skip){ keepWatch(); render(); hud(); F.raf=requestAnimationFrame(frame); return; }
   const dt=clamp((now-F.last)/1000,0,.05); F.last=now; F.acc+=dt*F.speed;
   while(F.acc>=STEP&&!F.finished){simStep(STEP); F.acc-=STEP;}
-  render(); hud();
+  keepWatch(); render(); hud();
   if(!F.finished) F.raf=requestAnimationFrame(frame);
 }
-const RIVAL_N=12, MAX_N=20;   // the rival always fields twelve; a cheaper machine than theirs gets you more, up to twenty
+// The rival always fields the same number; a cheaper machine than theirs gets you more, up to the limit.
+const SQUADS={s:[6,10],m:[12,20],l:[24,40]}; let RIVAL_N=12, MAX_N=20;
+function setSquad(){ [RIVAL_N,MAX_N]=SQUADS[S.squad]||SQUADS.m; }
+// Machines that are no match one for one come in greater numbers.
+const rivalN=r=>Math.round(RIVAL_N*(r.n||1));
+setSquad();
 // Once an engine is a few years old, spares and new airframes get scarce, and each further year adds to the cost of fielding the type.
 const OBSOLETE={ww1:[1,.6],ww2:[2.5,.5],super:[4,.7]};   // years before an engine counts as old, and the cost added for each year after
 const ageFactor=(d,when)=>{ const E=part('engine',d.engine), [grace,rate]=OBSOLETE[ERA.id], yrs=when-E.from-grace; return yrs>0?Math.min(5,1+rate*yrs):1; };
@@ -2483,8 +2498,8 @@ const fieldCost=(d,when)=>compute(d).cost*ageFactor(d,when);
 const squadSize=(d,r)=>clamp(Math.floor(RIVAL_N*Math.pow(fieldCost(r.d,r.date)/fieldCost(d,r.date),.8)+1e-9),1,MAX_N);
 function startSortie(i,custom){
   if(!custom&&flyLocked()) return;
-  const r=custom?custom.rival:RIVALS[i]; T=tokens(); F={sea:ERA.id!=='ww1'&&Math.random()<.2}; buildGround(F.sea); sctx=sky.getContext('2d');
-  const mineD=custom?custom.mine:Array(squadSize(S.design,r)).fill(S.design), theirD=custom?custom.theirs:Array(RIVAL_N).fill(r.d);
+  const r=custom?custom.rival:RIVALS[i]; T=tokens(); F={sea:ERA.id!=='ww1'&&Math.random()<.2}; sctx=sky.getContext('2d');
+  const mineD=custom?custom.mine:Array(squadSize(S.design,r)).fill(S.design), theirD=custom?custom.theirs:Array(rivalN(r)).fill(r.d);
   // readiness: each machine must start and pass its checks, more likely the more reliable it is
   const ready=list=>{ const ok=list.filter(d=>Math.random()<.6+.4*compute(d).rel); return ok.length?ok:[list[0]]; };
   const mine=ready(mineD), theirs=ready(theirD);
@@ -2494,13 +2509,14 @@ function startSortie(i,custom){
   for(const sd of [0,1]){ const ps=planes.filter(p=>p.side===sd), x=sd?sep:-sep, y0=jit()*sep*.4, hd=sd?-1:1;
     ps.forEach((p,k)=>{ if(k%2){ p.leader=ps[k-1]; ps[k-1].wing=p; }   // pairs: a leader and a wingman who guards him
       const row=Math.ceil(k/2), side=k%2?1:-1, sp=ERA.camDist*4;   // a loose vee
-      p.paint=paintFor(sctx,p.design.paint); const hi=p.st.machHigh>1.3; p.pos=[x-hd*row*sp,y0+side*row*sp,(hi?ERA.alt0+3000:ERA.alt0)+jit()*200]; p.V=vmul(vnorm([hd,jit()*.2,0]),p.vmax*(hi?.95:.85)); p.v=vlen(p.V); }); }
+      p.paint=SIDEPAINT[p.side]; const hi=p.st.machHigh>1.3; p.pos=[x-hd*row*sp,y0+side*row*sp,(hi?ERA.alt0+3000:ERA.alt0)+jit()*200]; p.V=vmul(vnorm([hd,jit()*.2,0]),p.vmax*(hi?.95:.85)); p.v=vlen(p.V); }); }
   F=Object.assign(F,{t:0,planes,squad:true,custom:custom||null,unserv:{mine:mineD.length-mine.length,theirs:theirD.length-theirs.length},sent:[mineD.length,theirD.length],
-     bullets:[],missiles:[],parts:[],rival:r,rid:i,speed:1,acc:0,last:performance.now(),outcome:null,endT:0,finished:false});
-  const has3=!!init3D(); F.view=has3?(S.view||'chase'):'map';
+     bullets:[],missiles:[],parts:[],chutes:[],rival:r,rid:i,speed:1,acc:0,last:performance.now(),outcome:null,endT:0,finished:false});
+  const has3=!!init3D(); F.view=has3?(S.view==='wide'||(S.view==='map'&&!S.realistic)?S.view:'chase'):'map';
   if(has3) setupScene();
-  document.querySelectorAll('[data-cam]').forEach(x=>{x.hidden=!has3; x.setAttribute('aria-pressed',x.dataset.cam===F.view);});
-  $('#hudA').textContent=`Your squadron · ${mine.length} × ${mineD[0].name||'your design'}`; $('#hudB').textContent=`${custom?'Opponents':r.name+"'s squadron"} · ${theirs.length} × ${theirD[0].name||r.title}`;
+  document.querySelectorAll('[data-cam]').forEach(x=>{x.hidden=!has3||(x.dataset.cam==='map'&&!!S.realistic); x.setAttribute('aria-pressed',x.dataset.cam===F.view);});
+  F.watch=planes[0]; buildSymbols(); hud();
+  $('#hudA').textContent=`Your squadron · ${mine.length} × ${mineD[0].name||'your design'}`; $('#hudB').textContent=`${custom?'Opponents':'Rival squadron'} · ${theirs.length} × ${theirD[0].name||r.title}`;
   document.querySelectorAll('[data-speed]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.speed==='1'));
   $('#result').hidden=true; $('#ctl').hidden=false; $('#workshop').hidden=true; $('#sortie').hidden=false;
   window.scrollTo(0,0); SND.last={}; SND.start(); F.raf=requestAnimationFrame(frame);
@@ -2515,7 +2531,7 @@ function finish(){
     S.points+=pts; S.career+=pts;
     if(o.res==='win'&&first&&r.id<RIVALS.length-1) S.selected=r.id+1;
     save();
-    nextTxt=o.res==='win'&&first?(r.id<RIVALS.length-1?` · The calendar moves to ${dateText(RIVALS[r.id+1].date)}. ${RIVALS[r.id+1].name} will now take you on.`:` · ${ERA.endText}${ERA.nextText||''}`):pts===0&&o.res!=='loss'?' · Sorties against this rival no longer pay points.':'';
+    nextTxt=o.res==='win'&&first?(r.id<RIVALS.length-1?` · The calendar moves to ${dateText(RIVALS[r.id+1].date)}. The ${RIVALS[r.id+1].title} will now take you on.`:` · ${ERA.endText}${ERA.nextText||''}`):pts===0&&o.res!=='loss'?' · Sorties against this rival no longer pay points.':'';
   }
   squadReport(o,r,pts,nextTxt);
 }
@@ -2525,7 +2541,9 @@ $('#sortie').addEventListener('click',e=>{
   if(sp&&F){F.speed=+sp.dataset.speed; document.querySelectorAll('[data-speed]').forEach(x=>x.setAttribute('aria-pressed',x===sp));}
   const cv=e.target.closest('[data-cam]');
   if(cv&&F){F.view=cv.dataset.cam; S.view=F.view; save(); document.querySelectorAll('[data-cam]').forEach(x=>x.setAttribute('aria-pressed',x===cv)); if(G3) G3.camPos=null;}
-  if(e.target.id==='skip'&&F&&!F.finished){let n=0; F.snap=true; while(!F.finished&&n++<20000) simStep(STEP);}
+  const ws=e.target.closest('[data-watch]');
+  if(ws&&F&&!F.finished){ const q=F.planes[+ws.dataset.watch]; if(canWatch(q)) setWatch(q); }
+  if(e.target.id==='skip'&&F&&!F.finished&&!F.skip){ F.skip=true; F.snap=true; F.speed=4; skipRun(); }
   if(e.target.id==='back') back();
   if(e.target.id==='again'){const i=F.rid, c=F.custom; back(); if(c) openCustom(); else startSortie(i);}
 });
@@ -2543,17 +2561,17 @@ $('#hsave').addEventListener('click',()=>{ S.lib=S.lib||[]; const d=clone(S.desi
 $('#hangar').addEventListener('click',e=>{ const l=e.target.closest('[data-hload]'), x=e.target.closest('[data-hdel]');
   if(l){ S.design=clone(S.lib[+l.dataset.hload]); fixDesign(S.design); save(); renderAll(); toast(`${S.design.name} loaded.`); }
   if(x){ const d=S.lib.splice(+x.dataset.hdel,1)[0]; save(); renderHangar(); toast(`${d.name||'Design'} deleted.`); } });
-// A custom battle: any of your designs against any rival of this era (or another of your designs), up to twenty a side. No budget, no progress.
+// A custom battle: any of your designs against any rival of this era (or another of your designs), up to the squadron limit a side. No budget, no progress.
 let CB={a:0,b:0,na:6,nb:6};
 function cbLists(){
   const mine=[S.design,...(S.lib||[])].filter(d=>compute(d).sm>=-.04);
-  const theirs=[{d:S.design,label:`${S.design.name||'Untitled'} (on the drawing board)`},...RIVALS.map(r=>({d:r.d,label:`${r.title} (${r.name}, ${dateText(r.date)})`,rival:r})),...(S.lib||[]).map(d=>({d,label:`${d.name||'Untitled'} (your hangar)`}))];
+  const theirs=[{d:S.design,label:`${S.design.name||'Untitled'} (on the drawing board)`},...RIVALS.map(r=>({d:r.d,label:`${r.title} (${dateText(r.date)})`,rival:r})),...(S.lib||[]).map(d=>({d,label:`${d.name||'Untitled'} (your hangar)`}))];
   return {mine,theirs};
 }
 function openCustom(){
-  const {mine,theirs}=cbLists(); CB.a=Math.min(CB.a,mine.length-1); CB.b=Math.min(CB.b,theirs.length-1);
+  const {mine,theirs}=cbLists(); CB.na=Math.min(CB.na,MAX_N); CB.nb=Math.min(CB.nb,MAX_N); CB.a=Math.min(CB.a,mine.length-1); CB.b=Math.min(CB.b,theirs.length-1);
   $('#sqhead').textContent=`${ERA.label} · practice`; $('#sqtitle').textContent='Custom battle';
-  $('#sqrival').textContent='Pick both sides and how many fly, up to twenty each. Custom battles have no budget and do not count towards progress.';
+  $('#sqrival').textContent=`Pick both sides and how many fly, up to ${MAX_N} each. Custom battles have no budget and do not count towards progress.`;
   const opt=(list,sel,lab)=>list.map((x,i)=>`<option value="${i}"${i===sel?' selected':''}>${lab(x)}</option>`).join('');
   const row=(k,title,list,sel,lab,n)=>`<div class="sqrow"><div><strong>${title}</strong><div><select id="cb${k}" aria-label="${title}">${opt(list,sel,lab)}</select></div></div>
     <div class="cnt"><button data-cb="${k}-" aria-label="One fewer">−</button><output id="cb${k}n">${n}</output><button data-cb="${k}+" aria-label="One more">+</button></div></div>`;
@@ -2567,7 +2585,7 @@ $('#sqd').addEventListener('click',e=>{ const b=e.target.closest('[data-cb]'); i
 $('#sqd').addEventListener('change',e=>{ if(e.target.id==='cba') CB.a=+e.target.value; if(e.target.id==='cbb') CB.b=+e.target.value; });
 $('#sqcancel').addEventListener('click',()=>{ $('#sqd').hidden=true; });
 $('#sqfly').addEventListener('click',()=>{ const {mine,theirs}=cbLists(), A=mine[CB.a], B=theirs[CB.b]; $('#sqd').hidden=true;
-  const rival=B.rival?Object.assign({},B.rival,{id:-1}):{name:'Opponents',title:B.d.name||'Opponent',d:B.d,skill:.6,id:-1,date:techDate()};
+  const rival=B.rival?Object.assign({},B.rival,{id:-1}):{title:B.d.name||'Opponent',d:B.d,skill:.6,id:-1,date:techDate()};
   startSortie(-1,{rival,mine:Array(CB.na).fill(A),theirs:Array(CB.nb).fill(B.d)}); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('#sqd').hidden) $('#sqd').hidden=true; });
 // What decided the fight, in a few plain sentences drawn from what actually happened.
@@ -2594,9 +2612,9 @@ function squadReport(o,r,pts,nextTxt){
   const head={win:'Victory',loss:'Defeat',draw:'Draw'}[o.res], u=F.unserv||{mine:0,theirs:0};
   const notes=[...sortieStory(A,B),`Your losses: ${fates(A)}.`,`Theirs: ${fates(B)}.`,ace&&ace.kills?`Top scorer: ${ace.name} with ${ace.kills} victor${ace.kills>1?'ies':'y'}.`:'',
     u.mine?`${u.mine} of your machines failed their checks and stayed on the ground.`:'',u.theirs?`${u.theirs} of theirs never took off.`:''].filter(Boolean);
-  $('#result').innerHTML=`<span class="label">${F.custom?'Custom battle':'Squadron report'} · ${F.custom?ERA.label:`${r.name}, ${r.title} · ${dateText(r.date)}`}</span>
+  $('#result').innerHTML=`<span class="label">${F.custom?'Custom battle':'Squadron report'} · ${F.custom?ERA.label:`${r.title} · ${dateText(r.date)}`}</span>
     <h3 class="${o.res}">${head}. ${o.how}.</h3>
-    <div class="rtable"><span class="h"></span><span class="h">You</span><span class="h">${F.custom?'Opponents':r.name}</span>
+    <div class="rtable"><span class="h"></span><span class="h">You</span><span class="h">${F.custom?'Opponents':r.title}</span>
       <span>Aircraft sent</span><span class="mono">${A.length}</span><span class="mono">${B.length}</span>
       <span>Lost</span><span class="mono">${lost(A)}</span><span class="mono">${lost(B)}</span>
       <span>Rounds fired</span><span class="mono">${sum(A,p=>p.shots)}</span><span class="mono">${sum(B,p=>p.shots)}</span>
@@ -2605,7 +2623,7 @@ function squadReport(o,r,pts,nextTxt){
       <span>Time in the fight</span><span class="mono">${f0(F.t)} s</span><span class="mono"></span></div>
     <div><span class="label">How it went</span><ul>${notes.map(x=>`<li>${x}</li>`).join('')}</ul></div>
     ${F.custom?'':`<p style="margin:0"><strong class="mono">+${pts} victory points</strong>${nextTxt}</p>`}
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="back">Back to the drawing office</button><button class="btn ghost" id="again">${F.custom?'Set up another battle':`Fly ${r.name} again`}</button></div>`;
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="back">Back to the drawing office</button><button class="btn ghost" id="again">${F.custom?'Set up another battle':`Fly the ${r.title} again`}</button></div>`;
   $('#result').hidden=false; $('#ctl').hidden=true; hud(); render();
   $('#result').scrollIntoView({block:'nearest'});
 }
@@ -2621,7 +2639,7 @@ const SND={ctx:null,last:{},
     f.type='lowpass'; f.frequency.value=freq; g.gain.setValueAtTime(vol,c.currentTime); g.gain.exponentialRampToValueAtTime(.0005,c.currentTime+dur);
     n.connect(f); f.connect(g); g.connect(this.master); n.start(); n.stop(c.currentTime+dur+.05); },
   update(){ const c=this.ctx; if(!c||!F||!this.eng) return; const on=S.sound!==false&&!F.finished&&F.view!=='map'&&F.speed===1;
-    const p=F.view==='rival'?F.planes.find(q=>q.side===1&&q.alive&&!q.gone):F.planes.find(q=>q.side===0&&q.alive&&!q.gone);
+    const p=F.watch&&!F.watch.gone&&F.watch.alive?F.watch:null;
     if(!on||!p){ this.eng.gain.setTargetAtTime(0,c.currentTime,.1); return; }
     const jet=p.fit.jet, r=p.v/p.vmax;
     this.osc.type=jet?'triangle':'sawtooth'; this.osc.frequency.setTargetAtTime(jet?500+700*r:45+55*r,c.currentTime,.1); this.flt.frequency.setTargetAtTime(jet?2500:420+300*r,c.currentTime,.1);
@@ -2635,10 +2653,11 @@ const SND={ctx:null,last:{},
 
 /* ---------- Settings: appearance and a fresh start ---------- */
 function applyTheme(){ const t=S.theme||'system'; if(t==='system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme=t;
-  document.querySelectorAll('[data-theme-set]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.themeSet===t)); $('#realistic').setAttribute('aria-pressed',!!S.realistic); $('#soundset').setAttribute('aria-pressed',S.sound!==false); }
+  document.querySelectorAll('[data-theme-set]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.themeSet===t)); document.querySelectorAll('[data-battle]').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.battle==='realistic')===!!S.realistic)); document.querySelectorAll('[data-squad]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.squad===(S.squad||'m'))); $('#soundset').setAttribute('aria-pressed',S.sound!==false); }
 $('#settings').addEventListener('click',()=>{ applyTheme(); $('#reset').textContent='Reset progress'; $('#reset').dataset.armed=''; $('#setd').hidden=false; $('#setclose').focus(); });
 $('#setclose').addEventListener('click',()=>{ $('#setd').hidden=true; });
-$('#realistic').addEventListener('click',()=>{ S.realistic=!S.realistic; save(); applyTheme(); });
+document.querySelectorAll('[data-battle]').forEach(b=>b.addEventListener('click',()=>{ S.realistic=b.dataset.battle==='realistic'; save(); applyTheme(); }));
+document.querySelectorAll('[data-squad]').forEach(b=>b.addEventListener('click',()=>{ S.squad=b.dataset.squad; setSquad(); save(); applyTheme(); renderAll(); }));
 $('#soundset').addEventListener('click',()=>{ S.sound=S.sound===false; save(); applyTheme(); if(S.sound===false) SND.stop(); });
 $('#setd').addEventListener('click',e=>{ const b=e.target.closest('[data-theme-set]'); if(b){ S.theme=b.dataset.themeSet; save(); applyTheme(); } });
 $('#reset').addEventListener('click',e=>{ const b=e.currentTarget;
@@ -2721,7 +2740,7 @@ $('#view3d').hidden=!window.THREE;
 
 /* ---------- Boot ---------- */
 let rt; window.addEventListener('resize',()=>{clearTimeout(rt); rt=setTimeout(()=>{ if(!$('#workshop').hidden){renderSheet();renderRivals();} },120);});
-const rethemed=()=>{ if(!$('#workshop').hidden){renderSheet();renderRivals();} else if(F){T=tokens(); buildGround(F.sea);} };
+const rethemed=()=>{ if(!$('#workshop').hidden){renderSheet();renderRivals();} else if(F) T=tokens(); };
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rethemed);}catch(e){}
 new MutationObserver(rethemed).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 // A short walkthrough for new players, pointing at each part of the drawing office in turn.
@@ -2729,10 +2748,10 @@ const TOUR=[
   ['#controls','Build your fighter','Pick parts from the period: wings, structure, engine, guns. Locked parts arrive as the calendar moves on. The sliders set the shape: span, chord, where the wing and cockpit sit.'],
   ['#ga','The drawing','Side and plan views at one scale. The black and white disc is the centre of gravity, the triangle the neutral point. Keep the disc ahead of the triangle or the machine is unflyable. View in 3D shows it turning.'],
   ['#stats','The numbers','Your design against the rival you are comparing (the second figure). Click any stat name to see how it is worked out. Pin these numbers to compare changes.'],
-  ['#summary','Your budget','Every sortie, the rival flies twelve machines and your budget buys as many of yours as it can, up to twenty. A cheaper design means a bigger squadron; a better one means each machine counts for more.'],
+  ['#summary','Your budget','Every sortie, the rival flies a full squadron and your budget buys as many of yours as it can, up to the limit. You can change the squadron size in Settings. A cheaper design means a bigger squadron; a better one means each machine counts for more.'],
   ['#rivals','Rivals','Beat each rival in turn to move the calendar on and unlock new parts. Your pilots choose their own tactics, playing to your machine\'s strengths.'],
-  ['#custom','Custom battles','Try any design against any other, up to twenty a side, without affecting your progress.'],
-  ['#settings','Settings','Light or dark, sound, realistic battles without labels, and a fresh start.']];
+  ['#custom','Custom battles','Try any design against any other, at any numbers up to the squadron limit, without affecting your progress.'],
+  ['#settings','Settings','Light or dark, sound, arcade or realistic battles, squadron size, and a fresh start.']];
 let tourAt=-1;
 function tourShow(){
   document.querySelectorAll('.tour-hl').forEach(x=>x.classList.remove('tour-hl'));
