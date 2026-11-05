@@ -574,7 +574,7 @@ const NOARM={engine:false,pilot:false,fuel:false};
 const RIVALS1=[
   {title:'S.4 Scout',date:1914.6,skill:.25,blurb:'A Bristol Scout-style biplane with a Lewis gun firing over the propeller.',
    d:{paint:'linen',layout:'bi',control:'ail',airfoil:'thin',frame:'wood',engine:'lr9c',arm:'lewis',span:7.4,chord:1.55,gap:1.4,stagger:.25,dihedral:2,wingPos:1.15,fusLen:6.1,tailArea:2.4,cockpitPos:2.5,fuelPos:'fwd',fuelL:110,ammo:400,armour:NOARM,doctrine:'balanced'}},
-  {title:'E.7',date:1915.6,n:1.5,skill:.6,blurb:'An Eindecker-style monoplane with the new synchronised gun. Dives, fires, climbs away.',
+  {title:'E.7',date:1915.6,n:1.3,skill:.55,blurb:'An Eindecker-style monoplane with the new synchronised gun. Dives, fires, climbs away.',
    d:{paint:'linen',layout:'mono',control:'warp',airfoil:'thin',frame:'steel',engine:'ou1',arm:'sync1',span:9.5,chord:1.75,gap:1.2,stagger:0,dihedral:1,wingPos:1.05,fusLen:7.2,tailArea:2.2,cockpitPos:2.4,fuelPos:'fwd',fuelL:100,ammo:500,armour:NOARM,doctrine:'balanced'}},
   {title:'N.14',date:1916.3,skill:.52,blurb:'A Nieuport-style sesquiplane with a Lewis on the top wing. Wants a turning fight.',
    d:{paint:'linen',layout:'sesqui',control:'ail',airfoil:'thin',frame:'wood',engine:'lr9j',arm:'foster',span:8.2,chord:1.25,gap:1.2,stagger:.35,dihedral:1.5,wingPos:.95,fusLen:5.8,tailArea:2.1,cockpitPos:2.15,fuelPos:'fwd',fuelL:90,ammo:500,armour:NOARM,doctrine:'turn'}},
@@ -582,7 +582,7 @@ const RIVALS1=[
    d:{paint:'ply',layout:'bi',control:'ail',airfoil:'thin',frame:'ply',engine:'md3',arm:'sync2',span:8.5,chord:1.7,gap:1.35,stagger:.4,dihedral:1,wingPos:1.25,fusLen:7.4,tailArea:2.8,cockpitPos:2.75,fuelPos:'fwd',fuelL:120,ammo:500,armour:NOARM,doctrine:'balanced'}},
   {title:'F.3',date:1917.4,skill:.66,blurb:'A Camel-style biplane: a big Clerget rotary, twin guns and the weight packed forward. Vicious, and the best turner of its day.',
    d:{paint:'pc10',layout:'bi',control:'ail',airfoil:'thin',frame:'wood',engine:'cl9b',arm:'sync2',span:8.5,chord:1.37,gap:1.5,stagger:.45,dihedral:5,wingPos:.85,fusLen:5.7,tailArea:2.3,cockpitPos:2.0,fuelPos:'fwd',fuelL:140,ammo:500,armour:NOARM,doctrine:'turn'}},
-  {title:'Tr.4',date:1917.8,skill:.78,blurb:'A Dreidecker-style triplane with thick wings. Climbs and turns like nothing else.',
+  {title:'Tr.4',date:1917.8,skill:.55,blurb:'A Dreidecker-style triplane with thick wings. Climbs and turns like nothing else.',
    d:{paint:'red',layout:'tri',control:'ail',airfoil:'thick',frame:'steel',engine:'lr9j',arm:'sync2',span:7.2,chord:1.0,gap:.9,stagger:.2,dihedral:0,wingPos:.95,fusLen:5.8,tailArea:2.0,cockpitPos:2.2,fuelPos:'fwd',fuelL:90,ammo:500,armour:NOARM,doctrine:'turn'}},
   {title:'D.XIII',date:1918.5,skill:.84,blurb:'A D.VII-style biplane: thick wings, steel tube and the BMW engine.',
    d:{paint:'lozenge',layout:'bi',control:'ail',airfoil:'thick',frame:'steel',engine:'bmw3a',arm:'sync2',span:8.9,chord:1.7,gap:1.4,stagger:.5,dihedral:1,wingPos:1.2,fusLen:6.9,tailArea:2.6,cockpitPos:2.6,fuelPos:'fwd',fuelL:120,ammo:600,armour:NOARM,doctrine:'energy'}},
@@ -1172,7 +1172,7 @@ const ROWS4=(()=>{ const rows=ROWS1.map(r=>Object.assign({},r,{
     why:(s,d)=>{const M=part('missiles',d.missiles); return M.loads.length?`${M.loads.map(l=>`${l.n} × ${MIS[l.m].name} (${MIS[l.m].seek==='ir'?`heat-seeking, from within ${MIS[l.m].aspect}° of the target's tail`:'radar-guided, from any angle, while your radar holds the target'}, ${f1(MIS[l.m].range/1000)} km, works ${f0(MIS[l.m].pk*100)}% of the time)`).join('; ')}.`:'No missiles: this machine fights with its gun.';}});
   return rows; })();
 const RIVALS4=[
-  {title:'F-83',date:1950.5,skill:.25,blurb:'An F-80-style straight-winged jet: one centrifugal engine, six .50s and a bubble canopy.',
+  {title:'F-83',date:1950.5,n:.85,skill:.25,blurb:'An F-80-style straight-winged jet: one centrifugal engine, six .50s and a bubble canopy.',
    d:{paint:'bare',layout:'straight',airfoil:'thick',controls:'manual',body:'plain',intake:'pitot',install:'single',engine:'j33',radar:'gyro',arm:'b50x6',missiles:'none',cm:'none',frame:'light',canopy:'bubble',span:11.8,chord:1.9,dihedral:3,wingPos:4.5,fusLen:10.5,tailArea:5,cockpitPos:2.7,fuelPos:'wing',fuelL:1600,ammo:300,ammoC:100,armour:{},doctrine:'energy'}},
   {title:'MiK-11',date:1950.9,skill:.5,blurb:'A MiG-15-style swept-wing fighter: light, climbs like a rocket, carries bomber-killing cannon.',
    d:{paint:'soviet',layout:'sw35',airfoil:'thin',controls:'manual',body:'plain',intake:'pitot',install:'single',engine:'nene',radar:'gyro',arm:'mig',missiles:'none',cm:'none',frame:'light',canopy:'bubble',span:10.1,chord:2.04,dihedral:-2,wingPos:2.45,fusLen:10.1,tailArea:4.5,cockpitPos:2.6,fuelPos:'fus',fuelL:1400,ammo:300,ammoC:80,armour:{},doctrine:'energy'}},
@@ -1713,7 +1713,7 @@ function commonGroups(){
 function renderControls(){ $('#controls').innerHTML=ERA.controls().join(''); }
 function verdictText(st){
   if(st.sm<-.04) return {bad:true,t:`Unflyable: the centre of gravity sits ${f0(-st.sm*100)}% of the chord behind the neutral point. Move weight forward, move the wing back, or enlarge the tail.`};
-  if(st.sm<.05) return {bad:true,t:`Twitchy: the CG is only ${f0(st.sm*100)}% ahead of the neutral point. Very agile, like a Camel, but it will spin out of stalls.`};
+  if(st.sm<.05) return {bad:true,t:`Twitchy: the CG is ${st.sm<0?`${f0(-st.sm*100)}% behind`:`only ${f0(st.sm*100)}% ahead of`} the neutral point. Very agile, like a Camel, but pilots have to fly it short of the stall, and a hard break can throw it into a spin.`};
   if(st.sm>.3) return {bad:true,t:`Sluggish: the CG is ${f0(st.sm*100)}% ahead of the neutral point. Safe, but slow to answer the stick.`};
   return {bad:false,t:`${stabWord(st.sm)}: static margin ${f0(st.sm*100)}% of the chord.`};
 }
@@ -1838,8 +1838,11 @@ function fitFlight(st,jet,nmax){
 }
 function makePlane(d,side,skill,name){
   const st=compute(d), G=part('arm',d.arm), nmax=st.nmax||ERA.nmax, bk=ERA.banks(d);
-  return {side,name,design:d,st,tactic:'balanced',misReach:st.misRange||0,skill:Math.min(.95,skill+(st.view||0)),fit:fitFlight(st,!!(ERA.jet||st.jet),nmax),
-    vmax:st.speed/3.6,vs:st.stall/3.6,nmax,rollRate:ERA.rollBase*st.roll,torque:st.torque,spinny:st.sm<.05,
+  // a twitchy machine (static margin under 5%) can be pulled closer to the stall: that part of its turn rate is extra
+  // pull at the stall, not less drag, so the power and drag are fitted without it
+  const agile=clamp(1+(.05-st.sm)*1.4,1,1.25);
+  return {side,name,design:d,st,tactic:'balanced',misReach:st.misRange||0,skill:Math.min(.95,skill+(st.view||0)),fit:fitFlight(Object.assign({},st,{turn:st.turn/agile}),!!(ERA.jet||st.jet),nmax),
+    vmax:st.speed/3.6,vs:st.stall/3.6,nmax,agile,rollRate:ERA.rollBase*st.roll,torque:st.torque,spinny:st.sm<.05?clamp(.2+(.05-st.sm)*3,.2,.5):0,   // chance of a spin each time it reaches the stall, before the pilot's skill
     hp:st.durability,hpMax:st.durability,armour:Object.assign({},d.armour||{}),fireP:st.fireP,rel:st.rel,
     selfHit:G.selfHit||0,leadV:bk.reduce((a,g,i,all)=>a+g.vel/all.length,0),aimMul:st.sightAim||1,
     guns:bk.map((g,i,a)=>Object.assign(g,{inMag:g.mag||1e9,cool:Math.random()*.1,jam:0,reload:0,lat:a.length>1?-1+2*i/(a.length-1):0})),
@@ -1885,7 +1888,7 @@ function pilot(p,foe){
     // a missile seen coming: break hard across its path and dive a little
     if(p.evadeT>0&&p.threat){ const ml=vnorm(vsub(p.pos,p.threat.p)); let beam=vnorm([-ml[1],ml[0],0]); if(vdot(beam,u)<0) beam=vmul(beam,-1); dir=vnorm(vadd(beam,[0,0,-.25])); tau=.3; }
     // in a turning fight, keep near corner speed (the slowest speed that still gives full g): climb off excess speed, dive to regain it
-    else if(off>.3&&doc!=='energy'&&doc!=='missile'&&dist<ERA.gunR*2&&!(p.evadeT>0)){ const vc=p.vs*Math.sqrt(p.nmax); dir=vnorm(vadd(dir,[0,0,clamp((p.v-vc*1.1)/vc,-.35,.6)])); if(p.v>vc*1.15) throttle=.15; }
+    else if(off>.3&&doc!=='energy'&&doc!=='missile'&&dist<ERA.gunR*2&&!(p.evadeT>0)){ const vc=p.vs*Math.sqrt(p.nmax/p.agile); dir=vnorm(vadd(dir,[0,0,clamp((p.v-vc*1.1)/vc,-.35,.6)])); if(p.v>vc*1.15) throttle=.15; }
     // Basic fighter manoeuvres, in order of urgency.
     const attacker=F.planes.find(q=>q.side!==p.side&&onTail(q,p)&&vlen(vsub(q.pos,p.pos))<ERA.gunR*1.3);
     if(attacker&&!(p.evadeT>0)&&p.vmax>attacker.vmax*1.08&&p.pos[2]>groundAt(p.pos[0],p.pos[1])+ERA.floor*3&&F.t-(p.fledT||-99)>6){ p.fledT=F.t;
@@ -1934,10 +1937,12 @@ function flyTowards(p,ai,dt,power){
   if(vlen(perp)<1e-4) perp=ang>1?p.up:[0,0,0];
   const want=vlen(perp)>1e-6?vmul(vnorm(perp),ang/ai.tau*v):[0,0,0];
   const sr=sigma(p.pos[2])/sigma(ERA.alt0);   // air density relative to the height the machine's numbers are quoted at
-  const gperp=vsub(gv,vmul(u,vdot(gv,u))), nAvail=Math.min(p.nmax*p.ctrl,(v/p.vs)**2*sr);
+  const gperp=vsub(gv,vmul(u,vdot(gv,u))), nAvail=Math.min(p.nmax*p.ctrl,(v/p.vs)**2*sr*p.agile);
   let lift=vsub(want,gperp);
   // asking for more than the wing can give: keep holding up the weight and turn as hard as what is left allows
-  const N=nAvail*GRAV, over=vlen(lift)>N;
+  // a twitchy machine is flown just short of the buffet, as Camel pilots learned to; only a hard break takes it to the stall
+  const yank=p.spinny&&ai.tau>.3?.95:1;
+  const N=nAvail*yank*GRAV, over=vlen(lift)>N;
   if(over){ const ww=vdot(want,want), wg=vdot(want,gperp), disc=wg*wg-ww*(vdot(gperp,gperp)-N*N); const k=ww>1e-9&&disc>0?clamp((wg+Math.sqrt(disc))/ww,0,1):0; lift=vsub(vmul(want,k),gperp); }
   const nDes=vlen(lift)/GRAV, ldir=nDes>1e-6?vmul(lift,1/(nDes*GRAV)):p.up;
   // roll the lift vector towards where the pull is wanted
@@ -1949,7 +1954,7 @@ function flyTowards(p,ai,dt,power){
   // pull: limited by the stall, the airframe's g limit and the controls
   const align=Math.max(.1,vdot(p.up,ldir));
   let n=p.spinT>0?.3:Math.min(nDes,nAvail)*align;
-  if(p.spinT<=0&&over&&nAvail<p.nmax*p.ctrl){ if(!p.edge){p.edge=1; p.stalls++;} if(p.spinny&&Math.random()<dt*.6) p.spinT=2.4; } else p.edge=0;
+  if(p.spinT<=0&&over&&yank===1&&nAvail<p.nmax*p.ctrl){ if(!p.edge){ p.edge=1; p.stalls++; if(Math.random()<p.spinny*(1-p.skill)) p.spinT=1.6; } } else p.edge=0;
   const T=(p.fit.jet?p.fit.P:p.fit.P/Math.max(v,p.fit.v1))*power*powerAt(p.eng0,p.pos[2])/p.pRef, D=(p.fit.a*v*v*sr+p.fit.b*n*n/(v*v*sr))*(1+p.holes);
   const A=vadd(vadd(vmul(u,T-D),vmul(p.up,n*GRAV)),gv);
   p.V=vadd(p.V,vmul(A,dt)); p.v=vlen(p.V);
@@ -2853,7 +2858,12 @@ const DROPS=[
     "3D viewer: studio floor and shadow, camera buttons, span and length marked, X-ray showing where the weight sits with the centre of gravity and neutral point, the selected rival's outline, retracting gear, and a docked mode that updates as you change the design.",
     "Balance: faster jets no longer break away to extend and climb; they stay in the fight.",
     "Balance: jets carrying only heat-seeking missiles no longer stand off; they close in and use guns and missiles together.",
-    "Balance: the F-93 fields the same number of planes as other rivals again."]}
+    "Balance: the F-93 fields the same number of planes as other rivals again."]},
+  {at:'2026-11-06T07:05:00+13:00',items:[
+    "Twitchy designs fixed: their pilots were spinning out every few seconds and lost almost every fight. Now they fly a twitchy machine just short of the stall and only risk a short spin when they break hard, and better pilots spin less.",
+    "A twitchy design's extra turn rate now comes from being able to pull harder at the stall. Before, the battle quietly took away some engine power to pay for it.",
+    "The Twitchy warning now says when the centre of gravity is behind the neutral point, instead of showing a negative number ahead of it.",
+    "Rivals retuned for the new spin rules: the E.7 fields fewer machines with less experienced pilots, the Tr.4's pilots are less experienced, and the F-83 fields fewer jets."]}
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
