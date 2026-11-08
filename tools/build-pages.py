@@ -1,6 +1,6 @@
-"""Build docs/index.html for GitHub Pages from the game page.
+"""Build the GitHub Pages copies of the games: docs/index.html (Kite Makers) and docs/flat-tops/index.html (Flat-tops).
 
-The game file is written for claude.ai artifacts, which add the document
+Each game file is written for claude.ai artifacts, which add the document
 skeleton when published. A plain web host needs that skeleton in the file,
 so this wraps the page in one with the same viewport and reset.
 
@@ -9,11 +9,7 @@ Run from the repository root:  python tools/build-pages.py
 from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
-page = (root / "kite-makers.html").read_text(encoding="utf-8")
-page = page.replace('<meta charset="utf-8">\n', "", 1)
-# The title, font links and stylesheet belong in <head>; the markup and script in <body>.
-split = page.index("</style>") + len("</style>")
-page_head, page_body = page[:split], page[split:]
+PAGES = [("kite-makers.html", "docs/index.html"), ("flat-tops.html", "docs/flat-tops/index.html")]
 
 head = """<!doctype html>
 <html lang="en">
@@ -28,8 +24,14 @@ img{max-width:100%}
 </style>
 """
 
-out = root / "docs" / "index.html"
-out.parent.mkdir(exist_ok=True)
-out.write_text(head + page_head + "\n</head>\n<body>" + page_body + "\n</body>\n</html>\n", encoding="utf-8", newline="\n")
+for src, dst in PAGES:
+    page = (root / src).read_text(encoding="utf-8")
+    page = page.replace('<meta charset="utf-8">\n', "", 1)
+    # The title, font links and stylesheet belong in <head>; the markup and script in <body>.
+    split = page.index("</style>") + len("</style>")
+    page_head, page_body = page[:split], page[split:]
+    out = root / dst
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(head + page_head + "\n</head>\n<body>" + page_body + "\n</body>\n</html>\n", encoding="utf-8", newline="\n")
+    print(f"wrote {out.relative_to(root)}")
 (root / "docs" / ".nojekyll").write_text("", encoding="utf-8")
-print(f"wrote {out.relative_to(root)}")
