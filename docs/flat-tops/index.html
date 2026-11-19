@@ -3269,6 +3269,15 @@ const DROPS=[
     'Hits show on the 3D ships: scorched, jagged holes in the deck where bombs went in, and torn holes at the waterline on the side a torpedo or a collision struck.',
     'A hangar fire depends on what is in the hangar. Fuelled and armed aircraft feed the fire and go off one after another, and aircraft being refuelled and rearmed, with bombs and torpedoes beside them, are worst of all, as the Japanese carriers found at Midway. A bomb bursting among them can set them off at once. An empty hangar, or one with aircraft not yet refuelled, burns but does not explode. Fire runs along an open or enclosed hangar, while an armoured box hangar\'s fire curtains hold it back, and better damage control fights fires faster and drains the fuel lines in action.',
   ]},
+  {at:'2026-11-19T23:15:00+13:00',items:[
+    'A ship wrecked beyond saving is abandoned and goes down: one dead in the water, burning out of control, deep in the water or heeling far over, for long enough. A carrier with no aircraft aboard no longer soaks up bomb after bomb: about six 450 kg bombs or five or six torpedoes now finish an empty fleet carrier, as Hornet and Yorktown were finished. Target ships at anchor have a skeleton crew who fight fires slowly and flood a magazine in danger.',
+    'Torpedo protection wears out: a second torpedo on the same stretch of the same side finds the layers already broken. A bomb bursting inside a destroyer or other narrow ship blows out her side and the bulkheads next to it. Ordinary bombs set off magazines far less often than armour-piercing ones.',
+    'Bombs wreck anti-aircraft guns: a hit on the deck or upperworks takes out the guns near it, and splinters from a near miss cut down light guns. The ship lists show how much of her flak is left.',
+    'On the chart, fighters are red, dive bombers green and torpedo bombers blue. Enemy aircraft have a heavy dark outline.',
+    'Air fights are fairer: both sides fire at the same moment, a fighter that turns tighter has an edge, and bombers\' gunners shoot back with what they carry, from nothing to a power turret. Fighters have only their guns\' seconds of fire: once it is spent they stop shooting until they land and rearm.',
+    'The enemy sends out more scouts and searches again sooner, so it finds you more reliably; it escorts its strikes with all the fighters it has not kept on patrol, and a strike that finds your screen goes on to look for your carrier.',
+    'Aircraft that cannot go below no longer fill the forward deck so that nothing can land: room is left ahead of the barrier for four aircraft, and any more stay ashore. With no barrier, only aircraft that can be struck below are parked on deck. The deck officer now strikes armed aircraft below too when the landing area is needed. Aircraft that ran out of fuel are counted as ditched.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -3554,7 +3563,7 @@ for(const [id,k] of [['cvt-comp','comp'],['cvt-3d','d3'],['cvt-water','water']])
 // sets whether it can happen, and the sea's pitch and roll set how fast. Times are in seconds, distances on deck in metres from the
 // forward end of the flight deck, and positions at sea in kilometres (x east, y north).
 const TRK={launch:25,land:35,lift:40,spot:45,warm:240,taxi:20,go:150,rearm:{fighter:420,dive:900,torpedo:1200},cat:{c34:90,c38:60,c40:45,c43:35}};
-const ROLECOL={fighter:'#4F86C6',dive:'#7E9A4C',torpedo:'#C2593B'};
+const ROLECOL={fighter:'#D8463A',dive:'#4C9E45',torpedo:'#3D7FD6'};
 let TR=null;
 const trS=()=>S.trials||(S.trials={cls:null,sea:4,air:{}});
 const trLib=()=>[S.design,...(S.lib||[])].filter((d,i,a)=>d&&a.findIndex(x=>x.name===d.name)===i);
@@ -3601,8 +3610,11 @@ function shipDmgText(T){ if(T.status!=='afloat') return {sinking:'Sinking',capsi
 function trAirList(cv,cs){ const ts=trS(), out=[]; for(const d of trLib()){ const a=compute(d), f=cvAircraft(cv,cs,a,d), n=f.ok?(ts.air[d.name]||0):0; for(let i=0;i<n;i++) out.push({d,a,f}); } return out; }
 // Where everything goes at the start: the hangar first (if the aircraft fits it and a lift), then the forward deck.
 function trStow(cv,cs,list){ let area=cs.hArea2, hangar=0, deck=0, left=0;
-  const fwd=[]; for(const x of list){ const fh=x.a.foldSpan*x.d.fusLen*1.3; if(!x.f.tall&&x.f.lift&&area>=fh){ area-=fh; hangar++; x.where='hangar'; } else fwd.push(x); }
-  const cap=trFwdLayout(cv,fwd.map(x=>({d:x.d,st:x.a}))).fit; for(let i=0;i<fwd.length;i++){ if(i<cap){ deck++; fwd[i].where='fwd'; } else { left++; fwd[i].where=null; } }
+  const fwd=[]; for(const x of list){ const fh=x.a.foldSpan*x.d.fusLen*1.3; if(!x.f.tall&&x.f.lift&&area>=fh){ area-=fh; hangar++; x.where='hangar'; } else if(cv.barrier||!x.f.tall&&x.f.lift) fwd.push(x); else { left++; x.where=null; } }   // with no barrier, everything parked forward must be able to go below before anything lands
+  // the forward park leaves room ahead of the barrier for four aircraft to land, or nothing could ever come aboard
+  const P=fwd.map(x=>({d:x.d,st:x.a})), big=P.slice().sort((a,b)=>b.st.foldSpan*b.d.fusLen-a.st.foldSpan*a.d.fusLen)[0]; let cap=trFwdLayout(cv,P).fit;
+  if(big) while(cap>0&&trFwdLayout(cv,[...P.slice(0,cap),big,big,big,big]).fit<cap+4) cap--;
+  for(let i=0;i<fwd.length;i++){ if(i<cap){ deck++; fwd[i].where='fwd'; } else { left++; fwd[i].where=null; } }
   return {hangar,deck,left}; }
 // The deck in plan. The barrier stands a little over halfway aft; the landing area is behind it, the forward park in front of it.
 const trBar=cv=>cv.deckL*.55;
@@ -3694,6 +3706,7 @@ function dmgSet(c,v){ c.dmg=clamp(Math.max(c.dmg||0,v),0,1); c.dmgMin=Math.max(c
 function shipSys(T){ if(T.status!=='afloat'||!T.comps) return ''; const out=[], f=spdF(T), mk=(T.cvC?T.cvC.cs.speed:T.maxKn)||0;
   if(f<.98&&mk) out.push(f<.02?'dead in the water':`can make ${f0(mk*f)} knots`); if(T.rudder) out.push('rudder jammed'); if(T.shaftsLost) out.push(`${T.shaftsLost} shaft${T.shaftsLost>1?'s':''} wrecked`);
   if((T.elec??1)<.5) out.push('no electrical power'); const C=T.cvC, bl=C?C.lifts.filter(L=>L.broken).length:0; if(bl) out.push(`${bl} lift${bl>1?'s':''} wrecked`); if(T.catsOut) out.push('catapults wrecked');
+  if(T.aa0&&T.aa){ const a0=T.aa0.h+T.aa0.l, a=T.aa.h+T.aa.l; if(a0&&a<a0*.97) out.push(`${f0(100*a/a0)}% of her anti-aircraft guns left`); }
   return out.join(' · '); }
 // Why a damaged carrier cannot fly: going down, holes in the flight deck (patched in about 25 minutes each), fire in the hangar, or a heavy list.
 function cvHold(T){ const t=TR.t; if(T.status!=='afloat') return 'She is going down.';
@@ -3732,7 +3745,7 @@ function trStepCV(dt){
   const W=trWOD(), into=Math.abs(W.rel)<=20, flyable=!m.stop;
   // in the hangar: rearming and refuelling, and with an open hangar, warming engines for the next launch
   for(const p of R.planes){ if(p.rearm&&p.rearm<=t&&R.avgas<p.d.fuelL){ trWarn('avgas','The aviation fuel is used up: no more refuelling.',900); p.rearm=t+120; continue; }
-    if(p.rearm&&p.rearm<=t){ p.rearm=0; p.armed=true; p.dropped=false; p.fuel=p.st.range/p.st.cruise*3600*.92; R.avgas-=p.d.fuelL; if(p.landT!=null) R.stats.turn.push(t-p.landT); p.landT=null; }
+    if(p.rearm&&p.rearm<=t){ p.rearm=0; p.armed=true; p.dropped=false; p.ammoS=null; p.fuel=p.st.range/p.st.cruise*3600*.92; R.avgas-=p.d.fuelL; if(p.landT!=null) R.stats.turn.push(t-p.landT); p.landT=null; }
     if(p.state==='hangar'&&p.armed&&p.order&&cv.hside==='open'&&!p.warm){ p.warmT=p.warmT||t; if(t-p.warmT>=TRK.warm) p.warm=true; } }
   // lifts finishing their trips
   for(const L of R.lifts) if(L.load&&L.busy<=t){ const p=L.load; L.load=null;
@@ -3789,10 +3802,10 @@ function trStepCV(dt){
     if(f.mission==='cap'&&f.intc){ tx=f.intc.x; ty=f.intc.y; orbit=false; spd=Math.min(...f.planes.map(p=>p.st.speed))*.9/3600; }
     const r=f.mission==='cap'?8:4, dx=clamp(tx,-BOXKM,BOXKM)-f.x, dy=clamp(ty,-BOXKM,BOXKM)-f.y, dd=Math.hypot(dx,dy);
     if(!orbit||dd>r){ const s=Math.min(dd,spd*dt); if(dd>1e-6){ f.x+=dx/dd*s; f.y+=dy/dd*s; } } else { const a=Math.atan2(f.y-ty,f.x-tx)+spd*dt/r; f.x=tx+Math.cos(a)*r; f.y=ty+Math.sin(a)*r; }
-    for(const p of f.planes){ p.fuel-=dt; if(p.fuel<=0){ p.state='lost'; R.stats.lost++; trLog(`${p.d.name} of ${f.name} ran out of fuel and ditched.`); } }
+    for(const p of f.planes){ p.fuel-=dt; if(p.fuel<=0){ p.state='lost'; p.lostKind='fuel'; R.stats.lost++; trLog(`${p.d.name} of ${f.name} ran out of fuel and ditched.`); } }
     if(f.mission==='home'&&home<6) for(const p of f.planes){ p.state='circuit'; p.fl=null; R.circuit.push(p); } }
   R.flights=R.flights.filter(f=>f.planes.some(p=>p.state==='air'));
-  for(const p of R.circuit){ p.fuel-=dt; if(p.fuel<=0){ p.state='lost'; R.stats.lost++; trLog(`${p.d.name} ran out of fuel in the landing circuit and ditched.`); } }
+  for(const p of R.circuit){ p.fuel-=dt; if(p.fuel<=0){ p.state='lost'; p.lostKind='fuel'; R.stats.lost++; trLog(`${p.d.name} ran out of fuel in the landing circuit and ditched.`); } }
   R.circuit=R.circuit.filter(p=>p.state==='circuit').sort((a,b)=>a.fuel-b.fuel);
   // landing: the deck aft of the barrier must be clear, the ship into the wind, and room forward (or a lift to strike the aircraft below)
   if(R.circuit.length&&R.ops!=='recover') trWarn('circ',`${R.circuit.length} aircraft are waiting to land. Open the deck to recover them.`,240);
@@ -3920,16 +3933,23 @@ function advFight(dt){ const R=TR, visF=clamp(1-(R.sea.n-2)*.07,.6,1), all=[];
   for(const A of all){ if(A.f.mission!=='cap'){ continue; } const home=A.C.ship, rk=radar(A.side), det=Math.max(rk,30*visF), reach=rk>80?110:70;
     const foes=all.filter(B=>B.side!==A.side&&Math.hypot(B.pos.x-home.x,B.pos.y-home.y)<det&&Math.hypot(B.pos.x-A.pos.x,B.pos.y-A.pos.y)<reach).sort((a,b)=>Math.hypot(a.pos.x-home.x,a.pos.y-home.y)-Math.hypot(b.pos.x-home.x,b.pos.y-home.y));
     const B=foes[0]; if(B){ if(!A.f.intc) trLog(`${A.side==='red'?'Enemy fighters':A.f.name} ${A.side==='red'?'go':'goes'} after ${B.ps.length} ${B.side==='red'?'enemy ':''}aircraft ${f0(Math.hypot(B.pos.x-home.x,B.pos.y-home.y))} km out.`,true); A.f.intc={x:B.pos.x,y:B.pos.y}; } else A.f.intc=null; }
-  const pk=(a,b)=>.0028*Math.sqrt(Math.max(.2,a.st.fireRate||1)/1.5)*Math.pow(clamp(a.st.speed/b.st.speed,.6,1.6),1.5)*toughK(b.st);
+  // Each fighter has only so many seconds of fire (its guns' rounds), spent in bursts: once it is out of ammunition it stops shooting.
+  // speed counts most (the faster fighter chooses when to fight), then how tightly it turns, its guns, and how much killing the target takes
+  const pk=(a,b)=>.0028*Math.sqrt(Math.max(.2,a.st.fireRate||1)/1.5)*Math.pow(clamp(a.st.speed/b.st.speed,.6,1.6),1.5)*Math.pow(clamp((a.st.turn||15)/(b.st.turn||15),.7,1.4),.7)*toughK(b.st);
+  // a bomber's gunners shoot back with what they have: nothing, one or two flexible guns, or a power turret
+  const RGK={none:0,r1:1,r2:1.6,t50:2.2}, rk=(a,b)=>.00025*(RGK[a.d.rear]??1)*toughK(b.st);
+  // everyone fires in the same second: those shot down this second still get their shots off
+  const down=[];
   for(let i=0;i<all.length;i++) for(let j=i+1;j<all.length;j++){ const A=all[i], B=all[j]; if(A.side===B.side||Math.hypot(A.pos.x-B.pos.x,A.pos.y-B.pos.y)>4) continue;
     for(const [X,Y] of [[A,B],[B,A]]){ const live=Y.ps.filter(p=>p.state==='air'); if(!live.length) continue; const bombers=live.filter(p=>p.role!=='fighter');
       for(const a of X.ps){ if(a.state!=='air') continue; let b, k;
-        if(a.role==='fighter'){ b=bombers.length&&Math.random()<(X.f.mission==='cap'?(live.length>bombers.length?.5:.9):.2)?bombers[Math.floor(Math.random()*bombers.length)]:live[Math.floor(Math.random()*live.length)]; k=pk(a,b); }
-        else { const fs=live.filter(q=>q.role==='fighter'); b=fs[Math.floor(Math.random()*fs.length)]; k=b?.00025:0; }
-        if(b&&b.state==='air'&&Math.random()<1-Math.exp(-k*dt)) advLoss({p:b,C:Y.C,side:Y.side},'air'); } }
-    if(!A.f.fightLog||R.t-A.f.fightLog>600){ A.f.fightLog=R.t; B.f.fightLog=R.t; const Y=A.side==='blue'?A:B, N=Y===A?B:A; trLog(`Air fight ${f0(Math.hypot(A.pos.x-R.ship.x,A.pos.y-R.ship.y))} km from ${R.name}: ${Y.f.name} (${Y.ps.length}) against ${N.ps.length} enemy aircraft.`,true); } } }
+        if(a.role==='fighter'){ if(a.ammoS==null) a.ammoS=Math.max(6,a.st.fireTime||20); if(a.ammoS<=0) continue; a.ammoS-=.12*dt; b=bombers.length&&Math.random()<(X.f.mission==='cap'?(live.length>bombers.length?.5:.9):.2)?bombers[Math.floor(Math.random()*bombers.length)]:live[Math.floor(Math.random()*live.length)]; k=pk(a,b); }
+        else { const fs=live.filter(q=>q.role==='fighter'); b=fs[Math.floor(Math.random()*fs.length)]; k=b?rk(a,b):0; }
+        if(b&&Math.random()<1-Math.exp(-k*dt)) down.push({p:b,C:Y.C,side:Y.side}); } }
+    if(!A.f.fightLog||R.t-A.f.fightLog>600){ A.f.fightLog=R.t; B.f.fightLog=R.t; const Y=A.side==='blue'?A:B, N=Y===A?B:A; trLog(`Air fight ${f0(Math.hypot(A.pos.x-R.ship.x,A.pos.y-R.ship.y))} km from ${R.name}: ${Y.f.name} (${Y.ps.length}) against ${N.ps.length} enemy aircraft.`,true); } }
+  for(const it of down) advLoss(it,'air'); }
 // The enemy commander: looks for you with his scouts, ships and patrols; when he knows where you are, sends every bomber that can
-// reach you with half his spare fighters as escort; and his strikes, arriving where you were reported, hunt for you in sight of it.
+// reach you with all his spare fighters as escort; and his strikes, arriving where you were reported, hunt for you in sight of it.
 function advEnemy(){ const R=TR, t=R.t, visF=clamp(1-(R.sea.n-2)*.07,.6,1), blues=R.tgts.filter(T=>T.side==='blue'&&T.status==='afloat'); if(!blues.length) return;
   for(const tf of R.tfs){ if(tf.side!=='red') continue; const reds=tf.ships.filter(T=>T.status==='afloat'); if(!reds.length) continue;
     const cs=cvAll().filter(C=>C.tf===tf&&C.ship.status==='afloat');
@@ -3938,18 +3958,18 @@ function advEnemy(){ const R=TR, t=R.t, visF=clamp(1-(R.sea.n-2)*.07,.6,1), blue
     if(seen){ const B=blues.filter(q=>q.type==='CV'&&Math.hypot(q.x-seen.x,q.y-seen.y)<30)[0]||seen, first=!tf.known||t-tf.known.t>1800;
       tf.known={x:B.x,y:B.y,hdg:B.hdg,kn:B.kn,t}; if(first) trLog(`An enemy ${by} has sighted your ${B.spec.name.toLowerCase()} ${B.name}. ${tf.name} knows where you are.`,true); }
     if(!cs.length) continue;
-    if((!tf.known||t-tf.known.t>7200)&&t>=tf.nextSearch){ tf.nextSearch=t+3*3600; advSearch(tf,cs); }
+    if((!tf.known||t-tf.known.t>7200)&&t>=tf.nextSearch){ tf.nextSearch=t+1.5*3600; advSearch(tf,cs); }
     if(tf.known&&t-tf.known.t<1800&&t>=tf.nextStrike){ if(advStrike(tf,cs)) tf.nextStrike=t+2*3600; } }
   for(const C of cvAll()) if(C.side==='red') for(const f of C.flights) if(f.mission==='strike'&&f.phase==='out'&&!f.tgt&&f.planes.length){
-    const B0=atkPick(f.x,f.y,40*visF,'red'), B=B0&&(atkPick(B0.x,B0.y,15,'red')||B0); if(B){ f.tgt=B.id; f.tx=B.x; f.ty=B.y; trLog(`An enemy strike of ${f.planes.length} aircraft has found your ${B.spec.name.toLowerCase()} ${B.name}.`,true); } } }
-function advSearch(tf,cs){ let k=0, n=Math.min(8,cs.length*4); const off=Math.random()*360;
+    const B0=atkPick(f.x,f.y,40*visF,'red'), B=B0&&(atkPick(B0.x,B0.y,25,'red')||B0); if(B){ f.tgt=B.id; f.tx=B.x; f.ty=B.y; trLog(`An enemy strike of ${f.planes.length} aircraft has found your ${B.spec.name.toLowerCase()} ${B.name}.`,true); } } }
+function advSearch(tf,cs){ let k=0, n=Math.min(11,5+cs.length*3); const off=Math.random()*360;
   for(const C of cs){ withC(C,()=>{ const R=TR; R.quiet=true; const ps=R.planes.filter(p=>p.armed&&!p.task&&!p.sq&&(p.state==='hangar'||p.state==='fwd')&&p.role!=='fighter').sort((a,b)=>b.st.radius-a.st.radius);
     for(const p of ps.slice(0,Math.ceil(n/cs.length))){ const b=off+k*360/n, leg=Math.min(p.st.radius*.85,320), [hx,hy]=hdgV(b); k++;
       p.task='scout'; p.scout={x:clamp(R.ship.x+hx*leg,-BOXKM,BOXKM),y:clamp(R.ship.y+hy*leg,-BOXKM,BOXKM)}; if(p.state==='hangar') p.order=true; else p.respot=true; } R.quiet=false; }); }
   if(k) trLog(`${tf.name} sends out ${k} scouts to look for you.`,true); }
 function advStrike(tf,cs){ const R0=TR, k=tf.known, age=TR.t-k.t, [hx,hy]=hdgV(k.hdg), ex=k.x+hx*k.kn*KN*age/1000, ey=k.y+hy*k.kn*KN*age/1000; let sent=0;
   for(const C of cs){ withC(C,()=>{ const R=TR; R.quiet=true; R.pfx=`Enemy carrier ${C.name}: `; try{ const d=Math.hypot(ex-R.ship.x,ey-R.ship.y), ok=p=>p.armed&&!p.task&&(p.state==='hangar'||p.state==='fwd')&&p.st.radius>=d*1.05;
-    const bom=R.planes.filter(p=>ok(p)&&p.role!=='fighter'&&loadKind(p)), fig=R.planes.filter(p=>ok(p)&&p.role==='fighter'&&p.sq==null), esc=fig.slice(0,Math.ceil(fig.length*.5)); if(bom.length<2) return;
+    const bom=R.planes.filter(p=>ok(p)&&p.role!=='fighter'&&loadKind(p)), fig=R.planes.filter(p=>ok(p)&&p.role==='fighter'&&p.sq==null), esc=fig; if(bom.length<2) return;
     const sq={id:++R.sqid,name:`Strike ${R.sqid}`}; for(const p of [...bom,...esc]) p.sq=sq.id; R.sq.push(sq);
     const so={id:++R.soid,sqs:[sq.id],state:'pick',tgt:null,tx:ex,ty:ey}; R.sorties.push(so); trSortieGo(so); sent+=bom.length+esc.length;
     trLog(`ranges a strike for you: ${bom.length} bombers and ${esc.length} fighters, ${f0(d)} km to where you were reported.`,true); } finally { R.quiet=false; R.pfx=''; } }); }
@@ -3960,8 +3980,8 @@ function advStep(dt){ const R=TR, t=R.t;
   const air=advAir(); advEvade(air); advAA(air,dt); advFight(dt);
   if(Math.floor(t/5)!==Math.floor((t-dt)/5)) advEnemy();
   if(R.aaLog&&Math.floor(t/30)!==Math.floor((t-dt)/30)){ const b=R.aaLog.blue, r=R.aaLog.red;
-    if(r&&(r.flak||r.air||r.off)) trLog(`Enemy aircraft: ${[r.flak&&`${r.flak} shot down by your flak`,r.air&&`${r.air} by your fighters`,r.off&&`${r.off} hit and turned away`].filter(Boolean).join(', ')}.`);
-    if(b&&(b.flak||b.air||b.off)) trLog(`Your aircraft: ${[b.flak&&`${b.flak} shot down by enemy flak`,b.air&&`${b.air} by enemy fighters`,b.off&&`${b.off} hit and turned away`].filter(Boolean).join(', ')}.`);
+    if(r&&(r.flak||r.air||r.off)) trLog(`Enemy aircraft: ${[r.flak&&`${r.flak} shot down by your flak`,r.air&&`${r.air} shot down by your fighters`,r.off&&`${r.off} hit and turned away`].filter(Boolean).join(', ')}.`);
+    if(b&&(b.flak||b.air||b.off)) trLog(`Your aircraft: ${[b.flak&&`${b.flak} shot down by enemy flak`,b.air&&`${b.air} shot down by enemy fighters`,b.off&&`${b.off} hit and turned away`].filter(Boolean).join(', ')}.`);
     R.aaLog=null; } }
 /* ---------- Ships are solid: they keep clear of each other, and if they meet, both are holed ---------- */
 // Every ship afloat is a body: a capsule her length long and her beam wide. bodies() lists them with their mass (full load, tonnes).
@@ -4193,7 +4213,7 @@ function flightMarks(ps,x,y,hdg,sp){ const g=new Map(); for(const p of ps){ cons
 function planeGlyph(c,x,y,hdg,sz,col,red){ c.save(); c.translate(x,y); c.rotate(hdg*DEG); c.beginPath();
   c.moveTo(0,-sz); c.lineTo(sz*.17,-sz*.5); c.lineTo(sz,-sz*.1); c.lineTo(sz,sz*.12); c.lineTo(sz*.17,-sz*.02); c.lineTo(sz*.12,sz*.58); c.lineTo(sz*.46,sz*.8); c.lineTo(sz*.46,sz*.98);
   c.lineTo(-sz*.46,sz*.98); c.lineTo(-sz*.46,sz*.8); c.lineTo(-sz*.12,sz*.58); c.lineTo(-sz*.17,-sz*.02); c.lineTo(-sz,sz*.12); c.lineTo(-sz,-sz*.1); c.lineTo(-sz*.17,-sz*.5); c.closePath();
-  c.fillStyle=col; c.fill(); c.lineWidth=red?1.3:.7; c.strokeStyle=red?'#F08A7E':'rgba(0,0,0,.5)'; c.stroke(); c.restore(); }
+  c.fillStyle=col; c.fill(); c.lineWidth=red?1.8:.7; c.strokeStyle=red?'#0A0A0A':'rgba(255,255,255,.55)'; c.stroke(); c.restore(); }
 // The chart's squares and wind arrows can be switched off; the choice is kept between trials.
 const trMapOpts=()=>{ const ts=trS(); return ts.map||(ts.map={grid:true,wind:true}); };
 function trDrawMap(){
@@ -4308,6 +4328,12 @@ function hangarHere(T,c){ const hc=hangarSpan(T), k=hc.indexOf(c); if(k<0||!T.sp
 // How readily a hangar fire sets things off: an open hangar vents fumes and blast out of its sides, an enclosed one holds them in, an
 // armoured box with fire curtains and sprays contains it. Better damage control drains the fuel lines and fills them with inert gas in action.
 const hangarK=T=>{ const cv=T.cvm||TR.cv; return ({open:.7,closed:1,box:.35}[cv.hside]??1)*({dc0:1,dc1:.7,dc2:.45}[cv.dc]??1); };
+// Bombs wreck anti-aircraft guns: each hit takes a share of the mounts near where it burst (more if it burst on the upperworks or the
+// flight deck, among them), and a near miss sweeps the light guns with splinters. Returns words for the log, or ''.
+function tgtAAHit(T,w,where){ const A=T.aa; if(!A) return ''; if(!T.aa0) T.aa0={h:A.h,l:A.l}; const big=Math.sqrt(w.kg/250);
+  const fh=where==='near'?0:clamp((where==='top'?.16:where==='deck'?.1:.05)*big*(.5+Math.random()),0,.5), fl=clamp((where==='near'?.04:where==='top'?.18:where==='deck'?.12:.06)*big*(.5+Math.random()),0,.5);
+  const dh=Math.min(A.h,T.aa0.h*fh), dl=Math.min(A.l,T.aa0.l*fl); A.h=Math.max(0,A.h-dh); A.l=Math.max(0,A.l-dl);
+  const n=Math.round(dh+dl); return n>=1?` ${where==='near'?'Splinters put':'It wrecked'} ${n===1?'an anti-aircraft gun':`${n} anti-aircraft guns`} out of action.`:''; }
 // A mark for the 3D ship: k bomb (a hole in the deck, v metres to starboard of the centreline), torp or col (a hole in her side at
 // the waterline, on side v), s its size in metres; x from the bow.
 function tgtMark(T,m){ (T.marks||(T.marks=[])).push(Object.assign({t:TR.t},m)); if(T.marks.length>40) T.marks.shift(); }
@@ -4323,9 +4349,9 @@ function tgtHit(T,w){ if(T.status==='sunk') return;
     tgtNote(T,`${{torp:'A torpedo',bomb:'A bomb',near:'A near miss',dud:'A dud torpedo'}[w.kind]||'A hit'} struck her as she went down${w.kind==='dud'?'':', hastening the end'}.`); return; }
   const t=TR.t, c=tgtComp(T,w.x), sd=w.side>0?'hs':'hp', where=tgtWhere(T,c,w.side); c.hitT=t; let s='';
   if(w.kind==='dud'){ T.hits.dud++; tgtNote(T,`A ${w.what||'torpedo'} struck ${where} and failed to go off.`); return; }
-  if(w.kind==='torp'){ T.hits.torp++; const absorb=(c.prot?70:15)*T.tps, ex=Math.max(0,w.kg-absorb), A=ex>0?6+ex/6:.4+w.kg/500, tk=sd==='hs'?'ts':'tp', tcap=(c.x1-c.x0)*T.tps*T.D*.6*1.025;
-    if(T.tps) c[tk]=Math.min(tcap,(c[tk]||0)+Math.max(tcap*.6,w.kg*3));   // the layers of the torpedo protection flood, and stay flooded
-    c[sd]+=A; if(ex>80) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q){ q[sd]+=A*.25; q.hitT=t; } }
+  if(w.kind==='torp'){ T.hits.torp++; const tkN='n'+(sd==='hs'?'ts':'tp'), absorb=(c.prot?70:15)*T.tps*Math.pow(.6,c[tkN]||0), ex=Math.max(0,w.kg-absorb), A=ex>0?6+ex/6:.4+w.kg/500, tk=sd==='hs'?'ts':'tp', tcap=(c.x1-c.x0)*T.tps*T.D*.6*1.025;
+    if(T.tps) c[tk]=Math.min(tcap,(c[tk]||0)+Math.max(tcap*.6,w.kg*3)); c[tkN]=(c[tkN]||0)+1;   // the layers of the torpedo protection flood, and stay flooded
+    c[sd]+=A; if(ex>80) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q){ q[sd]+=A*.12; q.hitT=t; } }
     if(ex>0) dmgSet(c,.35+ex/200); tgtMark(T,{k:'torp',x:w.x,v:w.side*T.B/2,s:ex>0?Math.sqrt(A)*1.5:2});
     // aft, a torpedo can jam the rudder or wreck a shaft
     const fa=(c.x0+c.x1)/2/T.L; if(ex>0&&fa>.78){ if(!T.rudder&&Math.random()<.35){ T.rudder=(Math.random()<.5?-1:1)*(12+Math.random()*18); T.rudderT=t; tgtNote(T,`The torpedo aft has jammed her rudder ${f0(Math.abs(T.rudder))}° to ${T.rudder>0?'starboard':'port'}: she is circling.`); }
@@ -4334,18 +4360,18 @@ function tgtHit(T,w){ if(T.status==='sunk') return;
     if(ex>0&&c.kind==='avgas'){ c.fire=Math.max(c.fire,.5); c.ufire=Math.max(c.ufire,.3); const p=tgtPt(T,c); TR.fx.push({kind:'sec',x:p.x,y:p.y,t,size:1.2}); }
     if(ex>0&&c.kind==='mag'&&Math.random()<.12){ tgtBlow(T,`A torpedo ${where} set off the magazine`); return; }
     s=ex>0?`Torpedo hit ${where}: about ${f0(A)} m² of her side torn open.`:`Torpedo hit ${where}: the torpedo protection held, with some flooding behind it.`; }
-  else if(w.kind==='near'){ T.hits.near++; const A=w.kg/450*(w.d<5?1.1:.45); c[sd]+=A; if(c.kind==='boiler'||c.kind==='engine') dmgSet(c,(c.dmg||0)+.18*A); s=`Near miss ${where}${A>.3?': the blast sprung her plating':''}.`; }
+  else if(w.kind==='near'){ T.hits.near++; const A=w.kg/450*(w.d<5?1.1:.45); c[sd]+=A; if(c.kind==='boiler'||c.kind==='engine') dmgSet(c,(c.dmg||0)+.18*A); s=`Near miss ${where}${A>.3?': the blast sprung her plating':''}.`+(w.d<10?tgtAAHit(T,w,'near'):''); }
   else { T.hits.bomb++; let below=false;
-    if(T.spec.cv){ if(w.pen<T.fd){ c.ufire=Math.max(c.ufire,.2); s=`Bomb burst on the armoured flight deck ${where}.`; }
+    if(T.spec.cv){ const gun=tgtAAHit(T,w,Math.abs(w.v??0)>((T.cvm||TR.cv).deckW||T.B)*.35?'top':'deck'); if(w.pen<T.fd){ c.ufire=Math.max(c.ufire,.2); s=`Bomb burst on the armoured flight deck ${where}.`+gun; }
       else { T.deckHoles=(T.deckHoles||0)+1; c.ufire=Math.max(c.ufire,.5+Math.random()*.35); const left=w.pen-T.fd; tgtDeckHit(T,w);
-        if(left>(c.prot?T.deck:12)) below=true; else { s=`Bomb through the flight deck ${where}: it burst in the hangar and set it alight.`;
+        if(left>(c.prot?T.deck:12)) below=true; else { s=`Bomb through the flight deck ${where}: it burst in the hangar and set it alight.`+gun;
           const H=hangarHere(T,c); if(H.w>.5&&Math.random()<Math.min(.85,.25*H.w*hangarK(T))) w.chain=H; } } }
-    else if(Math.random()<.3){ c.ufire=Math.max(c.ufire,.15+Math.random()*.3); s=`Bomb hit the upperworks ${where}.`; }
-    else { const arm=c.prot?T.deck:Math.min(T.deck,16); if(w.pen<arm){ c.ufire=Math.max(c.ufire,.12); s=`Bomb burst on the ${arm>40?'armoured ':''}deck ${where} without getting through.`; } else below=true; }
+    else if(Math.random()<.3){ c.ufire=Math.max(c.ufire,.15+Math.random()*.3); s=`Bomb hit the upperworks ${where}.`+tgtAAHit(T,w,'top'); }
+    else { const arm=c.prot?T.deck:Math.min(T.deck,16); if(w.pen<arm){ c.ufire=Math.max(c.ufire,.12); s=`Bomb burst on the ${arm>40?'armoured ':''}deck ${where} without getting through.`+tgtAAHit(T,w,'deck'); } else below=true; }
     tgtMark(T,{k:'bomb',x:w.x,v:w.v??0,s:2.2+w.kg/160,cv:!!T.spec.cv});
-    if(below){ c.fire=Math.max(c.fire,.35+Math.random()*.35); if(Math.random()<.35) c[sd]+=w.kg/700;
+    if(below){ c.fire=Math.max(c.fire,.35+Math.random()*.35); const thin=clamp((20-T.B)/10,0,1); if(Math.random()<.35+.6*thin){ const A=w.kg/700*(1+5*thin); c[sd]+=A; if(thin>.3) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q){ q[sd]+=A*.5*thin; q.hitT=TR.t; } } }
       dmgSet(c,.5+Math.random()*.5); for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q) dmgSet(q,.15); } T.crewLoss=Math.min(.5,(T.crewLoss||0)+.04*Math.sqrt(w.kg/250));
-      if(c.kind==='mag'&&Math.random()<.35*Math.sqrt(w.kg/450)){ tgtBlow(T,`A bomb went down ${where} and set off the magazine`); return; }
+      if(c.kind==='mag'&&Math.random()<(w.pen>130?.35:.12)*Math.sqrt(w.kg/450)){ tgtBlow(T,`A bomb went down ${where} and set off the magazine`); return; }
       if(c.kind==='avgas'&&Math.random()<.35){ tgtSecondary(T,c,'avgas',`A bomb burst among the aviation fuel tanks ${where}: a great explosion of petrol vapour.`); return; }
       if((c.kind==='mag'||c.kind==='avgas')&&Math.random()<.5){ tgtSecondary(T,c,'ammo',`A bomb burst ${where}: ammunition and stores are going off.`); return; }
       s=`Bomb pierced the deck ${where} and burst below.`; } }
@@ -4381,7 +4407,7 @@ function tgtStep(T,dt){ const t=TR.t;
   for(const c of T.comps){ const w=c.fp+c.fs+(c.tp||0)+(c.ts||0); W+=w; Ms+=(c.fs-c.fp)*T.B/4+((c.ts||0)-(c.tp||0))*(T.B/2-T.tps/2); Mt+=w*((c.x0+c.x1)/2-T.L/2);
     for(const k of ['fp','fs']){ const f=c[k]/(c.cap/2); if(f>.02&&f<.97) fsm+=(c.x1-c.x0)*Math.pow(T.B/2,3)/12*1.025; } }
   // fires: they grow, spread and are fought; a magazine with fire next to it is flooded before it goes up, if there is time
-  const dcRate=T.dc?(.004+T.disp/45000*.012)*dt*({dc0:1,dc1:1.4,dc2:2}[(T.cvm||{}).dc]??1)/Math.max(1,burning)*(.4+.6*T.elec)*(1-(T.crewLoss||0)):0;
+  const dcRate=(T.dc?1:T.side==='tgt'?.35:0)*(.004+T.disp/45000*.012)*dt*(T.dc?{dc0:1,dc1:1.4,dc2:2}[(T.cvm||{}).dc]??1:1)/Math.max(1,burning)*(.4+.6*T.elec)*(1-(T.crewLoss||0));
   if(T.dc) for(const c of T.comps) if(c.dmg>(c.dmgMin||0)) c.dmg=Math.max(c.dmgMin||0,c.dmg-.00015*dt*T.elec);   // repair parties at work
   if(T.rudder&&T.dc&&t-T.rudderT>1200&&Math.random()<.0006*dt){ T.rudder=0; tgtNote(T,'Damage control has freed the rudder: she answers the helm again.'); }   // a big ship has more men to fight fires; a hulk at anchor has none
   const hSpan=T.spec.cv?hangarSpan(T):null, hRun=T.spec.cv?({open:1,closed:1.5,box:.2}[(T.cvm||TR.cv).hside]??1):0;
@@ -4393,7 +4419,7 @@ function tgtStep(T,dt){ const t=TR.t;
       if(c[k]>.7&&Math.random()<.0006*dt){ const q=T.comps[c.i+(Math.random()<.5?-1:1)]; if(q&&q[k]<.2){ q[k]=.25; } }
       if(k==='ufire'&&c.ufire>.8&&Math.random()<.001*dt) c.fire=Math.max(c.fire,.3); }
     const hot=Math.max(c.fire,T.comps[c.i-1]?T.comps[c.i-1].fire:0,T.comps[c.i+1]?T.comps[c.i+1].fire:0);
-    if(c.kind==='mag'&&!c.mflood&&hot>.45){ c.mfT=c.mfT??t; if(T.dc&&t-c.mfT>45){ c.mflood=true; c.fp=Math.max(c.fp,c.cap*.12); c.fs=Math.max(c.fs,c.cap*.12); tgtNote(T,'Fire next to a magazine: it has been flooded.'); }
+    if(c.kind==='mag'&&!c.mflood&&hot>.45){ c.mfT=c.mfT??t; if(T.dc&&t-c.mfT>45||T.side==='tgt'&&t-c.mfT>120){ c.mflood=true; c.fp=Math.max(c.fp,c.cap*.12); c.fs=Math.max(c.fs,c.cap*.12); tgtNote(T,'Fire next to a magazine: it has been flooded.'); }
       else if(Math.random()<.0012*dt*hot){ tgtBlow(T,'Fire reached a magazine'); return; } }
     if(c.kind==='avgas'&&c.fire>.6&&(c.secN||0)<2&&Math.random()<.002*dt*({dc0:1,dc1:.6,dc2:.4}[(T.cvm||{}).dc]??1)) tgtSecondary(T,c,'avgas','Petrol vapour from the aviation fuel tanks exploded, tearing open the decks around them.');
     // a carrier's burning hangar: armed and fuelled aircraft, bombs and torpedoes going off one after another, each blast spreading the
@@ -4402,6 +4428,12 @@ function tgtStep(T,dt){ const t=TR.t;
       if(H.w>.5&&Math.random()<.004*c.ufire*H.w*hangarK(T)*dt) tgtSecondary(T,c,'ammo',H.rearm?'Aircraft being refuelled and rearmed in the burning hangar are exploding, with the bombs and torpedoes beside them.':H.armed?'Fuelled and armed aircraft in the burning hangar are exploding.':'Petrol left in the aircraft in the burning hangar has exploded.'); } }
   const Dp=T.disp+W, gm=T.GM-fsm/Dp; T.flood=W; T.gm=gm; T.sink=W/(T.L*T.B*.72*1.025); T.fires=T.comps.filter(c=>c.fire>.05||c.ufire>.05).length;
   T.list=Math.atan2(Ms,Dp*Math.max(.05,gm))*180/Math.PI; T.trim=Math.atan2(Mt,Dp*1.1*T.L)*180/Math.PI;
+  const burn=T.comps.reduce((s,c)=>s+Math.max(c.fire,c.ufire),0)/T.comps.length, past=(T.dc?1.6:.7)*burn+(T.dc?.5:.4)*(1-(T.pf??1))+1.2*W/T.reserve+.8*Math.abs(T.list)/T.cap+.6*(T.crewLoss||0),
+    decisive=(T.pf??1)<.12||burn>.4||W/T.reserve>.75||Math.abs(T.list)>T.cap*.55;   // dead in the water, fires out of control, deep in the water or heeling far over
+  T.past=past; if(past>1&&decisive){ T.doom=(T.doom||0)+dt*clamp((past-.9)/.35,0,3); if(T.doom>300&&!T.doomNote){ T.doomNote=true; tgtNote(T,T.dc?'She is in a bad way: the damage is getting ahead of her damage control.':'She is burning and wrecked, and nobody is aboard to save her.'); } }
+  else { T.doom=Math.max(0,(T.doom||0)-dt*.5); if(T.doom<60) T.doomNote=false; }
+  if(T.doom>900&&W<=T.reserve){ T.status='sinking'; T.sinkT=0; T.abandoned=true; const why=burn>.4?(T.dc?'Burning beyond saving':'Burnt out and wrecked'):W/T.reserve>.75?'Too deep in the water to be saved':Math.abs(T.list)>T.cap*.55?'Heeling too far to be saved':'Dead in the water and wrecked beyond saving';
+    tgtNote(T,T.dc?`${why}, she has been abandoned and is going down.`:`${why}, she is settling and going down.`); return; }
   if(W>T.reserve){ T.status='sinking'; T.sinkT=0; tgtNote(T,`She has more water in her than she can float with, and is going down by the ${Mt>0?'stern':'head'}.`); }
   else if(Math.abs(T.list)>T.cap||gm<=.02){ T.status='capsizing'; T.sinkT=0; tgtNote(T,gm<=.02?'The water sloshing in her has taken away her stability: she is rolling over.':`At ${f0(Math.abs(T.list))}° of list she cannot recover: she is rolling over.`); } }
 // On the chart: every target ship always shows, to scale close in, coloured by how she is.
@@ -4918,7 +4950,8 @@ function trDeckOfficer(){ const R=TR, t=R.t, sh=R.ship, cv=R.cv;
     else if(R.circuit.length&&!R.pack.length&&!coming){ R.ops='recover'; R.nextLand=Math.max(R.nextLand,t); trLog('Deck officer: the deck is open to land aircraft.'); } }
   else if(R.ops==='recover'&&!R.circuit.length&&!R.flights.some(f=>f.mission==='home'&&Math.hypot(f.x-sh.x,f.y-sh.y)<40)){ R.ops='idle'; trLog('Deck officer: recovery complete.'); }
   if(R.ops!=='recover') for(const p of R.fwd) if(!p.armed&&!p.rearm&&!p.below&&p.role!=='fighter'&&trCanBelow(p)) p.below=true;
-  if(R.ops==='recover'&&cv.barrier&&R.circuit.length&&trFwdLayout(cv,[...R.fwd,...R.circuit.slice(0,2)]).fit<R.fwd.length+2){ const q=R.fwd.find(p=>trCanBelow(p)&&!p.below&&!p.armed); if(q) q.below=true; }
+  if(R.ops==='recover'&&cv.barrier&&R.circuit.length&&trFwdLayout(cv,[...R.fwd,...R.circuit.slice(0,2)]).fit<R.fwd.length+2){ const q=R.fwd.find(p=>trCanBelow(p)&&!p.below&&!p.armed)||R.fwd.find(p=>trCanBelow(p)&&!p.below); if(q) q.below=true; }
+  if(R.ops==='recover'&&!cv.barrier&&R.circuit.length&&R.fwd.length&&!R.fwd.some(p=>p.below)){ const q=R.fwd.find(p=>trCanBelow(p)); if(q) q.below=true; }
   if(R.ops!=='idle'||R.pack.length||R.circuit.length){ if(Math.abs(angN(sh.ordHdg-R.wind.from))>3) sh.ordHdg=R.wind.from; sh.ordKn=Math.max(sh.ordKn,clamp(28-R.wind.kn,8,Math.floor(R.cs.speed))); } }
 function agStatus(sq){ const R=TR, ps=sqPlanes(sq), c={}; for(const p of ps){ const k=AGCOL.find(x=>x[2](p.state)); const n=k?k[1].toLowerCase():p.state==='lost'?'lost':'moving'; c[n]=(c[n]||0)+1; }
   const where=Object.entries(c).map(([k,n])=>`${k} ${n}`).join(' · '), so=R.sorties.find(q=>q.sqs.includes(sq.id)&&(q.state==='ranging'||q.state==='out'));
@@ -5200,7 +5233,7 @@ function numEdit(o){ if(o.querySelector('input')) return; const d=o.closest('.di
 document.addEventListener('click',e=>{ const o=e.target.closest('.dim output'); if(o) numEdit(o); });
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches&&e.target.matches('.dim output')){ e.preventDefault(); numEdit(e.target); } });
 // for testing only: ?debug exposes the inner state to the console
-if(/[?&]debug\b/.test(location.search)) window.FT={hangarHere,hangarK,trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
+if(/[?&]debug\b/.test(location.search)) window.FT={hangarHere,hangarK,advFight,advAA,advAir,trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
 })();
 </script>
 
