@@ -1114,11 +1114,10 @@ const CVP={
   bow:[{id:'plain',name:'Plain bow',note:'A conventional stem.',from:1920,wave:1},{id:'bulb',name:'Bulbous bow',note:'A bulb at the forefoot cancels part of the bow wave at high speed. 7% less wave drag.',from:1937.5,wave:.93}],
   hside:[
     {id:'open',name:'Open hangar',note:'Light sides that roll up. Engines can be warmed up below, and fumes blow away. Splinters and seas come in.',from:1920,cut:6.5},
-    {id:'closed',name:'Enclosed hangar',note:'Steel sides keep weather out, but petrol fumes collect inside.',from:1920,cut:6.5},
-    {id:'box',name:'Armoured box hangar',note:'Armoured sides and ends, with the flight deck armour as its lid. Heavy, narrow, very hard to burn out.',from:1937.5,cut:10}],
-  island:[{id:'none',name:'Flush deck',note:'No island. All the deck is clear, but the ship is conned from under the flight deck and the smoke goes out the side.',from:1920,w:0,len:0,bw:0},
-    {id:'small',name:'Small island',note:'A narrow island with the bridge and funnel.',from:1920,w:180,len:25,bw:5},
-    {id:'large',name:'Large island',note:'Room for the bridge, air operations, radar and fighter direction. Heavy and high up.',from:1920,w:420,len:45,bw:8}],
+    {id:'closed',name:'Enclosed hangar',note:'Steel sides keep weather out, but petrol fumes collect inside, and a fire or explosion in the hangar has nowhere to go.',from:1920,cut:6.5},
+    {id:'box',name:'Armoured box hangar',note:'Armoured sides and ends, with the flight deck armour as its lid, and fire curtains to divide it. Heavy, narrow, very hard to burn out.',from:1937.5,cut:10}],
+  island:[{id:'none',name:'Flush deck',note:'No island. All the deck is clear, but the ship is conned from under the flight deck and the smoke goes out the side.',from:1920},
+    {id:'built',name:'Island',note:'A bridge on the deck edge. Choose below what else it holds: its size and weight follow.',from:1920}],
   cat:[{id:'c34',name:'Early accelerator',note:'A hydraulic launching trolley like those fitted to Courageous and Glorious. Up to 2.7 t, to 95 km/h.',from:1934.5,kg:2700,v:95,w:30},
     {id:'c38',name:'Hydraulic catapult',note:'Throws aircraft up to 3.2 t to 110 km/h.',from:1937.5,kg:3200,v:110,w:40},
     {id:'c40',name:'Improved hydraulic catapult',note:'Up to 5 t, to 125 km/h. BH III and H-2 style.',from:1940,kg:5000,v:125,w:55},
@@ -1137,7 +1136,7 @@ const CVP={
     {id:'r1',name:'Air-search radar',note:'Sees aircraft coming 100 km out.',from:1940.5,w:12,crew:20},
     {id:'r2',name:'Radar and fighter direction',note:'Air search, height finding and a room to steer the fighters onto raids.',from:1942.5,w:30,crew:45}],
   dc:[{id:'dc0',name:'Basic damage control',note:'Pumps, hoses and the duty watch.',from:1920,w:0,crew:0},
-    {id:'dc1',name:'Improved damage control',note:'Split electric power, portable pumps, trained repair parties.',from:1941.5,w:40,crew:60},
+    {id:'dc1',name:'Improved damage control',note:'Split electric power, portable pumps, trained repair parties, and the aviation fuel lines drained and filled with inert gas in action.',from:1941.5,w:40,crew:60},
     {id:'dc2',name:'Full damage control',note:'Foam and fog, emergency diesel generators, and every man trained to fight fires.',from:1943,w:90,crew:100}],
   istyle:[{id:'tower',name:'Tall tower',note:'Offices low down, a tall bridge forward and the funnel raked aft behind it. Yorktown and Essex.',from:1920},
     {id:'long',name:'Long and low',note:'A long, low island with the bridge at its forward end and a broad funnel amidships. Ark Royal and Illustrious.',from:1920},
@@ -1167,6 +1166,25 @@ const SPACE={
   void:{name:'Empty',short:'',hold:1,low:1,col:''},
 };
 const cvPart=(c,id)=>CVP[c].find(p=>p.id===id)||CVP[c][0];
+// The island is built from what it has to hold. The navigating bridge and the offices under it are always there; the rest is chosen.
+// Each part adds length, a deck of height, breadth, weight and men; the funnel, if the uptakes are led into the island, adds length
+// for the boiler power it carries. The layout above only arranges the parts.
+const ISLP={flag:{name:'Flag bridge',note:'Room for an admiral and his staff. A task force she leads turns and keeps station quicker. Adds a deck to the island.',from:1920},
+  air:{name:'Air operations',note:'Primary flight control, high up with a view of the whole deck. Launches and landings come about a tenth quicker.',from:1920},
+  fdir:{name:'Fighter direction room',note:'A plotting room where officers talk the fighter patrol onto raids using the radar. Needed for radar and fighter direction; patrols meet raids further out.',from:1941.5}};
+const ISLMAST={pole:{name:'Pole mast',note:'Light and short: radar on it sees less far.',h:7,t:12},tripod:{name:'Tripod mast',note:'Heavy but tall and stiff: radar higher up sees further.',h:13,t:40}};
+const ISLDEF={flag:0,air:1,fdir:0,dirs:0,mast:'pole'};
+function islDims(cv){ if(cv.island==='none') return {none:true,len:0,bw:0,H:0,w:0,crew:0,mastH:0,dirs:0,flag:false,air:false,fdir:false,fun:false};
+  const p=Object.assign({},ISLDEF,cv.islp||{}), fun=cvPart('funnel',cv.funnel).id==='island', fl=fun?4+cv.shp/15000:0, dirs=clamp(p.dirs|0,0,2), M=ISLMAST[p.mast]||ISLMAST.pole;
+  const len=13+(p.air?5:0)+(p.fdir?7:0)+dirs*3.5+fl, lv=2+(p.flag?1:0)+(p.air?1:0), H=3.4+2.6*lv, bw=Math.min(8.5,4.5+(p.fdir?1:0)+(p.flag?1:0)+dirs*.5);
+  const w=160+(p.flag?35:0)+(p.air?25:0)+(p.fdir?35:0)+dirs*22+M.t+(fun?(cv.shp/4000+10)*1.4:0), crew=(p.flag?30:0)+(p.air?20:0)+(p.fdir?15:0)+dirs*10;
+  return {len,bw,H,w,crew,mastH:M.h,mast:p.mast,dirs,flag:!!p.flag,air:!!p.air,fdir:!!p.fdir,fun,fl}; }
+// What the island does in play. A big island stirs up the air over the landing area; radar sees further from higher up; gun
+// directors make the heavy guns deadlier (director-controlled mounts are half blind without one); air operations speeds the deck.
+const islTurb=cv=>{ const d=islDims(cv); return d.none?1:1+.05*d.len*d.H/450; };
+const islRadarKm=(cv,cs)=>{ if(!cv.radar||cv.radar==='none') return 0; const d=islDims(cv), h=(cs.hFD-cs.T)+(d.none?6:d.H+d.mastH); return 90*clamp(Math.sqrt(h/30),.75,1.3); };
+const islAAk=cv=>{ const d=islDims(cv); return (cv.aaH==='h3'&&!d.dirs?.7:1)*(1+.15*d.dirs); };
+const islAirK=cv=>islDims(cv).air?.9:1;
 // The hull's fullness along its length: full amidships, fine at the ends. f(x) is the fraction of the beam at x.
 function hullShape(cv){ const Cp=Math.min(.75,cv.Cb/.98), p=Cp/(1-Cp); return x=>Math.max(0,1-Math.pow(Math.abs(2*x/cv.L-1),p)); }
 // A sensible ship for a given size and date, as a starting point: a Yorktown-like layout scaled to the tonnage, with the best gear of the day.
@@ -1175,7 +1193,7 @@ const cvLatest=c=>{ const ok=CVP[c].filter(p=>p.from<=cvNow()+1e-6); return (ok[
 function newCV(t){
   const k=Math.cbrt(clamp(t||15000,5000,45000)/19800), r=v=>Math.round(v*10)/10;
   const cv={L:r(235*k),B:r(25.4*k),D:r(13.9*k),Cb:.52,bow:'plain',boiler:cvLatest('boiler'),turbine:'geared',shafts:k<.85?'2':'4',shp:Math.round(120000*k*k/1000)*1000,
-    n:Math.round(clamp(18*k,10,24)),hold:[],low:[],hangars:1,hH:5.2,hFrom:0,hTo:0,hside:'open',deckL:0,deckW:0,deckArm:0,hdArm:25,belt:50,tps:2.5,island:'small',lifts:[],
+    n:Math.round(clamp(18*k,10,24)),hold:[],low:[],hangars:1,hH:5.2,hFrom:0,hTo:0,hside:'open',deckL:0,deckW:0,deckArm:0,hdArm:25,belt:50,tps:2.5,island:'built',islp:{flag:0,air:1,fdir:0,dirs:0,mast:'pole'},lifts:[],
     cat:cvLatest('cat'),cats:0,wire:cvLatest('wire'),wires:8,barrier:true,aaH:cvLatest('aaH'),nH:Math.round(8*k),aaM:cvLatest('aaM'),nM:Math.round(4*k),aaL:cvLatest('aaL'),nL:Math.round(12*k),
     radar:'none',dc:cvLatest('dc'),avgas:cvLatest('avgas'),fore:'open',iside:'stbd',funnel:'island',islX:.42,istyle:'tower'};
   cv.deckL=Math.round(cv.L*1.04); cv.deckW=r(cv.B*1.03); cv.hFrom=Math.round(cv.L*.17); cv.hTo=Math.round(cv.L*.86);
@@ -1218,11 +1236,11 @@ function protRange(cv){ const v=(cv.hold||[]).map((h,i)=>VITAL.has(h)?i:-1).filt
 function hangarArea(cv){ const f=hullShape(cv), cut=cvPart('hside',cv.hside).cut, a=clamp(cv.hFrom,0,cv.L), b=clamp(cv.hTo,a,cv.L); let s=0;
   for(let x=a;x<b;x+=1) s+=Math.max(0,Math.min(cv.B,f(x+.5)*cv.B*1.15)-cut)*Math.min(1,b-x); return s*.95; }
 // Nominal air group, for sizing magazines, avgas, workshops and the aviation crew: fighter-sized aircraft folded, in the hangar and a deck park.
-function nominalAir(cv){ const isl=cvPart('island',cv.island); return Math.round(hangarArea(cv)*cv.hangars/65+Math.max(0,(cv.deckL-110)*cv.deckW*.8-isl.len*isl.bw)/80); }
+function nominalAir(cv){ const isl=islDims(cv); return Math.round(hangarArea(cv)*cv.hangars/65+Math.max(0,(cv.deckL-110)*cv.deckW*.8-isl.len*isl.bw)/80); }
 function cvNeeds(cv){
   const B=cvPart('boiler',cv.boiler), Tu=cvPart('turbine',cv.turbine), Vm=cv.shp*B.m3*Tu.m3, N=nominalAir(cv);
   const H=cvPart('aaH',cv.aaH), M=cvPart('aaM',cv.aaM), Lg=cvPart('aaL',cv.aaL), R=cvPart('radar',cv.radar), DC=cvPart('dc',cv.dc);
-  const crew=Math.round(150+cv.shp/300+N*9+cv.nH*H.crew+cv.nM*M.crew+cv.nL*Lg.crew+R.crew+DC.crew);
+  const crew=Math.round(150+cv.shp/300+N*9+cv.nH*H.crew+cv.nM*M.crew+cv.nL*Lg.crew+R.crew+DC.crew+islDims(cv).crew);
   return {N,crew,boiler:.62*Vm,engine:.38*Vm,mag:N*1.4+cv.nH*3+cv.nM+cv.nL*.1,avgas:N*2.5,crewQ:crew*5,stores:crew*1.4,shops:N*4};
 }
 // Hull resistance, fitted to 24 real carriers from the Hosho to the Essex: skin friction (ITTC 1957 line with a form factor and a
@@ -1247,7 +1265,7 @@ function computeCV(cv){
   add('Watertight bulkheads',(n-1)*cv.B*cv.D*.012*7.85*.75,.5*cv.D);
   add('Hangar decks and sides',cv.hangars*hLen*(cv.B*.9)*.1+(cv.hside==='open'?hLen*1.2:2*hLen*cv.hH*cv.hangars*.1),cv.D+cv.hangars*cv.hH*.5);
   add('Flight deck',cv.deckL*cv.deckW*.17,hFD);
-  if(Is.w) add(cv.funnel==='island'||!cv.funnel?'Island and funnel':'Island',Is.w,hFD+9);
+  const ID=islDims(cv); if(!ID.none) add(ID.fun?'Island and funnel':'Island',ID.w,hFD+ID.H*.55);
   const Fu=cvPart('funnel',cv.funnel); if(Fu.w) add('Side funnels and uptakes',Fu.w*(cv.shp/4000+10),cv.D+2);
   if(cv.fore==='closed') add('Enclosed bow plating',Math.max(0,cv.hFrom)*(hFD-cv.D)*2*.12,(cv.D+hFD)/2);
   add('Machinery',cv.shp*Bo.kg*Tu.kg/1000,.38*vol.hh+1.2);
@@ -1261,7 +1279,7 @@ function computeCV(cv){
   if(cv.wires) add('Arrester gear'+(cv.barrier?' and barrier':''),10+cv.wires*Wi.w+(cv.barrier?10:0),hFD-1);
   add('Avgas tanks and pumps',avgasM3/AG.fill*AG.w,vol.hh*.5);
   add('Guns and ammunition',cv.nH*(H.w+20)+cv.nM*(M.w+6)+cv.nL*(Lg.w+.6),hFD-1.5);
-  if(R.w) add('Radar',R.w,hFD+18);
+  if(R.w) add('Radar',R.w,hFD+(ID.none?6:ID.H+ID.mastH));
   if(DC.w) add('Damage-control gear',DC.w,cv.D*.6);
   add('Bombs and torpedoes',need.N*1.8,vol.hh*.4);
   add('Aviation fuel',avgasM3*.72,vol.hh*.5);
@@ -1284,6 +1302,9 @@ function computeCV(cv){
   for(const c of ['boiler','turbine','bow','hside','island','cat','wire','aaH','aaM','aaL','radar','dc','avgas']){ const p=cvPart(c,cv[c]);
     if(p.from>cvNow()+1e-6&&(c!=='cat'||cv.cats)) errs.push(`${p.name}: not available until ${dateText(p.from)}.`); }
   if(cv.island==='none'&&cvPart('funnel',cv.funnel).id==='island') errs.push('A flush deck has no island to carry the funnel: choose side funnels.');
+  if(cv.radar==='r2'&&!ID.fdir) errs.push(ID.none?'Radar and fighter direction needs an island with a fighter direction room.':'Radar and fighter direction needs a fighter direction room in the island.');
+  if(ID.fdir&&ISLP.fdir.from>cvNow()+1e-6) errs.push(`Fighter direction room: not available until ${dateText(ISLP.fdir.from)}.`);
+  if(cv.aaH==='h3'&&!ID.dirs) warns.push('Director-controlled heavy guns with no gun director in the island: they fire at a fraction of their worth.');
   if(cv.lifts.some(l=>l.edge)&&cvNow()<1940-1e-6) errs.push('Deck-edge lifts: not available until 1940.');
   for(const r of reqs) if(r.have<r.need*.995) (r.k==='shops'||r.k==='stores'?warns:errs).push(`${r.label}: ${f0(r.have)} m³ of the ${f0(r.need)} m³ needed.`);
   if(len<8&&cv.hold.includes('boiler')) errs.push(`Compartments are only ${f1(len)} m long: too short for boilers. Use fewer bulkheads.`);
@@ -1300,7 +1321,7 @@ function computeCV(cv){
   cv.lifts.forEach((l,i)=>{ if(!l.edge&&(l.x-l.l/2<cv.hFrom||l.x+l.l/2>cv.hTo)) errs.push(`Lift ${i+1} is not over the hangar.`); if(l.edge&&cv.hside!=='open') errs.push(`Deck-edge lift ${i+1} needs an open hangar side to reach.`); });
   if(cv.deckW<cv.B*.8) warns.push('The flight deck is narrow for the hull.');
   return {std:Math.round(std),full:Math.round(full),trial,T,Tstd,KG,GM,speed,range,fuel,avgasM3,hArea,hArea2:hArea*cv.hangars,hLen,hFD,fbHangar,fbDeck:hFD-T,need,vol,reqs,W,errs,warns,unit,protL,prot,
-    crew:need.crew,N:need.N,cat:Ca,wire:Wi,island:Is,aa:cv.nH*H.aa+cv.nM*M.aa+cv.nL*Lg.aa};
+    crew:need.crew,N:need.N,cat:Ca,wire:Wi,island:ID,aa:cv.nH*H.aa+cv.nM*M.aa+cv.nL*Lg.aa};
 }
 // How one aircraft design suits one carrier: does it fit the hangar and a lift, can it take off from the deck or a catapult, and can it land on?
 // The wind over the deck is the carrier's top speed plus a light natural wind.
@@ -1352,7 +1373,7 @@ function cvMotion(cv,cs,sea,o){
   // the flight deck's lurch sideways at the roll's quickest, and how often the sea comes over the bow
   const lurch=2*Math.sqrt(mr)*wr*wr*(cs.hFD-cs.KG), fb=cv.fore==='closed'?cs.hFD-T:cv.D-T+3, wet=Math.exp(-fb*fb/(2*mb));
   // what that does to the work on deck: each factor is how much longer the job takes
-  const land=(1+.35*(stern/1.5)**2+.25*(roll/4)**2)*(cv.iside==='port'?1.08:1)*(cvPart('funnel',cv.funnel).id==='island'&&sea.wind<12?1.06:1);
+  const land=(1+.35*(stern/1.5)**2+.25*(roll/4)**2)*islTurb(cv)*(cv.iside==='port'?1.08:1)*(cvPart('funnel',cv.funnel).id==='island'&&sea.wind<12?1.06:1);
   const launch=1+.2*(pitch/2)**2+.15*(roll/5)**2+wet*4;
   const handle=1+.3*(roll/6)**2+.2*(lurch/1.2)**2;
   const stop=roll>12?'She is rolling too far to land or move aircraft.':stern>4?'The stern is rising and falling too far to land.':wet>.25?'Green seas are coming over the bow.':'';
@@ -1794,6 +1815,14 @@ const cvChips=(cat,legend,cv)=>`<fieldset><legend class="label">${legend}</legen
 function cvSlider(k,label,unit,min,max,step,v,hint,fmt){ const f=fmt||(step<.1?f2:step<1?f1:f0);
   return `<div class="dim"><label for="cvd-${k}">${label}</label><output id="cvo-${k}" tabindex="0" title="Click to type a value">${f(v)} ${unit}</output><input type="range" id="cvd-${k}" data-cvk="${k}" min="${min}" max="${max}" step="${step}" value="${v}"><small>${hint||''}</small></div>`; }
 const fmtK=v=>Math.round(v).toLocaleString();
+function islPartsHTML(cv,cs){ const d=islDims(cv), p=Object.assign({},ISLDEF,cv.islp||{}), td=techDate();
+  const part=k=>{ const q=ISLP[k], lock=q.from>td+1e-6; return `<button class="chip${lock?' locked':''}" data-islp="${k}" aria-pressed="${!!p[k]}"${lock?' aria-disabled="true"':''}><span class="n">${q.name}</span><span class="d">${q.note}</span>${lock?`<span class="r">From ${dateText(q.from)}</span>`:''}</button>`; };
+  const dirs=[0,1,2].map(n=>`<button class="chip" data-isldirs="${n}" aria-pressed="${(p.dirs|0)===n}"><span class="n">${n?`${n} gun director${n>1?'s':''}`:'No gun directors'}</span><span class="d">${n?`Heavy guns ${n===1?'15':'30'}% deadlier. ${n>1?'One forward, one aft.':''}`:'The heavy guns aim by their own sights.'}</span></button>`).join('');
+  const mast=Object.entries(ISLMAST).map(([k,q])=>`<button class="chip" data-islmast="${k}" aria-pressed="${p.mast===k}"><span class="n">${q.name}</span><span class="d">${q.note}</span></button>`).join('');
+  const rk=islRadarKm(cv,cs), tb=Math.round((islTurb(cv)-1)*100);
+  return `<fieldset><legend class="label">In the island</legend><div class="chips">${['flag','air','fdir'].map(part).join('')}</div></fieldset>
+    <fieldset><legend class="label">Gun directors</legend><div class="chips">${dirs}</div></fieldset><fieldset><legend class="label">Mast</legend><div class="chips">${mast}</div></fieldset>
+    <p class="mono" style="margin:0;font-size:12.5px">Island ${f0(d.len)} m long, ${f1(d.bw)} m wide, ${f0(d.H)} m high · ${fmtK(d.w)} t · ${d.crew} more crew · landing turbulence +${tb}%${rk?` · radar sees about ${f0(rk)} km`:''}${d.dirs||cv.aaH==='h3'?` · heavy flak ×${f2(islAAk(cv))}`:''}</p>`; }
 function cvControls(cv,cs){
   const req=cs.reqs.map(r=>{ const pc=r.need>0?Math.min(100,r.have/r.need*100):100, ok=r.have>=r.need*.995;
     return `<div class="req${ok?'':' short'}"><span>${r.label}</span><span class="mono">${fmtK(r.have)} / ${fmtK(r.need)} m³</span><div class="g"><i style="width:${pc}%"></i></div></div>`; }).join('');
@@ -1812,7 +1841,7 @@ function cvControls(cv,cs){
       ${cvChips('hside','Hangar sides',cv)}<div class="dims">${cvSlider('hH','Clear height','m',3.8,6.5,.05,cv.hH,'Aircraft taller than this, folded, cannot go below.')}${cvSlider('hFrom','Hangar starts','m from the bow',0,Math.round(cv.L),1,cv.hFrom)}${cvSlider('hTo','Hangar ends','m from the bow',0,Math.round(cv.L),1,cv.hTo)}</div></section>`,
     `<section class="group"><h3>Flight deck</h3><div class="dims">${cvSlider('deckL','Length','m',100,300,1,cv.deckL,'May overhang the hull at bow and stern.')}${cvSlider('deckW','Width','m',14,40,.1,cv.deckW)}
       ${cvSlider('deckArm','Armour','mm',0,100,1,cv.deckArm,'Over the hangar. Stops bombs bursting in the hangar, at a great weight high up.')}</div>${cvChips('island','Island',cv)}
-      ${cv.island!=='none'?`${cvChips('istyle','Island layout',cv)}${cvChips('iside','Island side',cv)}<div class="dims">${cvSlider('islX','Island position','of the deck from the bow',.15,.7,.01,cv.islX??.42,'Where the island starts, measured back from the forward end of the flight deck.',v=>Math.round(v*100)+'%')}</div>`:''}${cvChips('funnel','Funnels',cv)}</section>`,
+      ${cv.island!=='none'?`${islPartsHTML(cv,cs)}${cvChips('istyle','Island layout',cv)}${cvChips('iside','Island side',cv)}<div class="dims">${cvSlider('islX','Island position','of the deck from the bow',.15,.7,.01,cv.islX??.42,'Where the island starts, measured back from the forward end of the flight deck.',v=>Math.round(v*100)+'%')}</div>`:''}${cvChips('funnel','Funnels',cv)}</section>`,
     `<section class="group"><h3>Lifts</h3><p class="muted" style="margin:0;font-size:13.5px">Aircraft must fit a lift, folded, to go between the hangar and the deck. A deck-edge lift sits outboard of the hangar, so wings can overhang it.</p>${lifts}
       <div>${cv.lifts.length<4?'<button class="btn ghost" id="cvaddlift">Add a lift</button>':''}</div></section>`,
     `<section class="group"><h3>Launch and recovery</h3>${cvChips('cat','Catapult',cv)}<div class="dims">${cvSlider('cats','Catapults','',0,2,1,cv.cats)}</div>
@@ -1835,24 +1864,26 @@ const ISLAND={
   tower:{blocks:[[0,1,0,.38,1],[.04,.76,.38,.58,.92],[.02,.38,.58,.76,.9]],glass:[[.015,.385,.68,.73,.93]],roof:[[0,.42,.76,.79,1.25]],bands:[[0,1,0,.38,1]],
     funnel:[.57,.87,.38,1.33,.8],rake:.12,mast:[.4,.79],dish:[.58,.68]},
   long:{blocks:[[0,1,0,.28,1],[0,.66,.28,.45,.92],[0,.26,.45,.62,.95]],glass:[[0,.27,.55,.6,.97]],roof:[[0,.3,.62,.64,1.15]],bands:[[0,1,0,.28,1]],
-    funnel:[.4,.72,.28,.98,.84],rake:.05,mast:[.82,.28],mastL:12,dish:[.15,.66],noFunnel:[[.45,.7,.28,.4,.8]]},
+    funnel:[.4,.72,.28,.98,.84],rake:.05,mast:[.82,.28],dish:[.15,.66],noFunnel:[[.45,.7,.28,.4,.8]]},
   compact:{blocks:[[0,.5,0,.32,.85],[.03,.42,.32,.52,.8]],glass:[[.02,.43,.43,.48,.82]],roof:[[0,.47,.52,.54,1.05]],bands:[[0,.5,0,.32,.85]],
-    funnel:[.64,.94,0,.95,.7],rake:.1,mast:[.52,0],mastL:H=>H*1.15,dish:[.2,.56]},
+    funnel:[.64,.94,0,.95,.7],rake:.1,mast:[.52,0],dish:[.2,.56]},
   split:{blocks:[[0,.4,0,.55,1],[.02,.36,.55,.75,.92]],glass:[[.02,.37,.66,.71,.94]],roof:[[0,.41,.75,.77,1.2]],bands:[[0,.4,0,.55,1]],
     funnel:[.5,1,0,1.25,.78],rake:0,mast:[.2,.77],dish:[.3,.8],noFunnel:[[.55,.9,0,.25,.8]]},
   stepped:{blocks:[[0,1,0,.34,1],[0,.58,.34,.52,.9]],glass:[[0,.59,.45,.5,.92]],roof:[[0,.62,.52,.54,1.1]],bands:[[0,1,0,.34,1]],
     funnel:[.62,.9,.18,1.05,.8],rake:.05,cant:.45,mast:[.35,.54],dish:[.1,.6]},
 };
-const islH0=cv=>cv.island==='large'?17:12;
-function islStyle(cv){ const s=ISLAND[cv.istyle]||ISLAND.tower, H=islH0(cv); return typeof s.mastL==='function'?{...s,mastL:s.mastL(H)}:s; }
+const islH0=cv=>islDims(cv).H;
+const islStyle=cv=>ISLAND[cv.istyle]||ISLAND.tower;
+// how tall the mast stands above its base: on the island's roof its own height; standing on the deck (compact layout) the island's too
+const islMastL=(cv,St)=>{ const d=islDims(cv); return St.mast[1]>0?d.mastH:d.H*.85+d.mastH; };
 // The island's footprint on the flight deck: x in metres from the forward end of the deck, dy across it (starboard negative), and
 // how far in from the centreline its inboard face stands. The island overhangs the deck edge a little, on a sponson.
-function islBand(cv){ const isl=cvPart('island',cv.island); if(!isl.len) return null; const x0=islX(cv)-deckStart(cv), hw=cv.deckW/2;
+function islBand(cv){ const isl=islDims(cv); if(isl.none) return null; const x0=islX(cv)-deckStart(cv), hw=cv.deckW/2;
   return {x0:x0-1,x1:x0+isl.len+1,side:cv.iside==='port'?1:-1,inner:hw-isl.bw*.56,outer:hw+isl.bw*.26}; }
 // Where the guns go along each deck edge (side +1 is starboard), kept clear of the island, deck-edge lifts, side funnels and each
 // other; and the stretches of catwalk between them. Positions are metres from the bow.
 function cvGunPlan(cv){
-  const dS=deckStart(cv), e=dS+cv.deckL, hw=cv.deckW/2, tf=Math.min(cv.deckL*.07,18), lo=dS+tf+1.5, hi=e-Math.min(4,hw*.3)-2.5, isl=cvPart('island',cv.island), sg=cv.iside==='port'?-1:1;
+  const dS=deckStart(cv), e=dS+cv.deckL, hw=cv.deckW/2, tf=Math.min(cv.deckL*.07,18), lo=dS+tf+1.5, hi=e-Math.min(4,hw*.3)-2.5, isl=islDims(cv), sg=cv.iside==='port'?-1:1;
   const occ={'1':[],'-1':[]}, block=(s,a,b,k)=>occ[s].push([a,b,k]);
   if(isl.len){ const ix=islX(cv); block(sg,ix-1.5,ix+isl.len+1.5,'island'); }
   for(const l of cv.lifts) if(l.edge) block(-sg,l.x-l.l/2-1.5,l.x+l.l/2+1.5,'lift');
@@ -1935,7 +1966,7 @@ function drawCV(cv,cs){
     for(const b of parts){ c.beginPath(); c.rect(...r(b)); c.fill(); c.stroke(); }
     c.fillStyle=T.ink; for(const b of St.glass) c.fillRect(...r(b));
     if(cv.funnel==='island'){ const f=St.funnel; c.fillRect(X(ix+il*f[0]),Y(cs.hFD+H*f[3]),il*(f[1]-f[0])*s,Math.max(2,.6*vz)); }
-    const [mf,mh]=St.mast, ml=St.mastL||9; c.beginPath(); c.moveTo(X(ix+il*mf),Y(cs.hFD+H*mh)); c.lineTo(X(ix+il*mf),Y(cs.hFD+H*mh+ml+(cv.radar!=='none'?2.5:0))); c.stroke(); }
+    const [mf,mh]=St.mast, ml=islMastL(cv,St); c.beginPath(); c.moveTo(X(ix+il*mf),Y(cs.hFD+H*mh)); c.lineTo(X(ix+il*mf),Y(cs.hFD+H*mh+ml+(cv.radar!=='none'?2.5:0))); c.stroke(); }
   // waterline at full load
   c.strokeStyle=T.water; c.lineWidth=2; c.setLineDash([10,5]); c.beginPath(); c.moveTo(20,Y(cs.T)); c.lineTo(W0-20,Y(cs.T)); c.stroke(); c.setLineDash([]);
   c.fillStyle=T.water; c.textAlign='right'; c.fillText(`WATERLINE, FULL LOAD · DRAUGHT ${f1(cs.T)} m`,W0-22,Y(cs.T)+14);
@@ -2004,6 +2035,9 @@ function renderCVSheet(){
 }
 function cvChanged(full){ save(); if(full) renderCV(); else renderCVSheet(); renderClassList(); }
 $('#cvcontrols').addEventListener('click',e=>{
+  { const b=e.target.closest('[data-islp],[data-isldirs],[data-islmast]'); if(b){ const c=cvSel(); if(!c) return; const cv=c.cv, p=cv.islp=Object.assign({},ISLDEF,cv.islp||{});
+      if(b.dataset.islp){ const q=ISLP[b.dataset.islp]; if(q.from>techDate()+1e-6){ toast(`${q.name}: from ${dateText(q.from)}.`); return; } p[b.dataset.islp]=p[b.dataset.islp]?0:1; }
+      else if(b.dataset.isldirs!=null) p.dirs=+b.dataset.isldirs; else p.mast=b.dataset.islmast; cvChanged(true); return; } }
   const c=cvSel(); if(!c) return; const cv=c.cv;
   const ch=e.target.closest('[data-cvcat]'); if(ch){ const p=CVP[ch.dataset.cvcat].find(x=>x.id===ch.dataset.id); if(p.from>techDate()+1e-6){ toast(`${p.name}: from ${dateText(p.from)}.`); return; } if(ch.dataset.cvcat==='funnel'&&p.id==='island'&&cv.island==='none'){ toast('A flush deck has no island to carry the funnel.'); return; }
     cv[ch.dataset.cvcat]=p.id; if(cv.island==='none'&&cvPart('funnel',cv.funnel).id==='island') cv.funnel='down'; cvChanged(true); return; }
@@ -3228,6 +3262,13 @@ const DROPS=[
     'Explosions show on the chart: yellow a hit, white a near miss, orange a secondary explosion, red a magazine going up. All flak shows as tracer, on the chart and in 3D.',
     'Secondary explosions: a bomb among the aviation fuel, or petrol vapour from it, explodes and spreads fire without sinking her outright, and a burning hangar sets off its bombs and fuelled aircraft, wrecking aircraft and holing the flight deck.',
   ]},
+  {at:'2026-11-19T21:30:00+13:00',items:[
+    'Islands are built from parts: the bridge, then a flag bridge, air operations, a fighter direction room, up to two gun directors and a pole or tripod mast, with the funnel if its uptakes go through the island. Its size, weight and crew follow from what it holds, and the layouts arrange the parts, so a small island stays small.',
+    'What the island does: a bigger island stirs up more air over the landing area; radar sees further from a taller mast; gun directors make the heavy guns deadlier, and director-controlled mounts need one; air operations launches and lands about a tenth quicker; a flag bridge turns the task force quicker; radar and fighter direction needs the fighter direction room, and sends patrols after raids further out.',
+    'Damaged compartments now stop doing their jobs. Each boiler room and engine room gives its share of power unless it is wrecked, flooded or on fire, and speed follows the power left: a ship can be left dead in the water. Torpedoes aft can jam the rudder, leaving her circling, or wreck a shaft. With too little steam the electrics fail: pumps stop, damage control slows, flak weakens, and a carrier cannot work her lifts or catapults, unless emergency diesel generators keep some power. Bombs through the flight deck can wreck the lift or catapults they land on.',
+    'Hits show on the 3D ships: scorched, jagged holes in the deck where bombs went in, and torn holes at the waterline on the side a torpedo or a collision struck.',
+    'A hangar fire depends on what is in the hangar. Fuelled and armed aircraft feed the fire and go off one after another, and aircraft being refuelled and rearmed, with bombs and torpedoes beside them, are worst of all, as the Japanese carriers found at Midway. A bomb bursting among them can set them off at once. An empty hangar, or one with aircraft not yet refuelled, burns but does not explode. Fire runs along an open or enclosed hangar, while an armoured box hangar\'s fire curtains hold it back, and better damage control fights fires faster and drains the fuel lines in action.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -3363,7 +3404,7 @@ function cvMesh(cv,cs,opt={}){
   // catwalks along the deck edges where nothing else stands, on brackets to the ship's side
   for(const s of [1,-1]) for(const [a,b] of plan.cat[String(s)]){ box(b-a,.25,1.3,X((a+b)/2),yFD-1.1,s*(hw+.65),steel);
     for(let m=a+1;m<b;m+=9){ const zi=hullOut(m,cs.hFD-4)-.1; if(hw+1.2-zi>.6) brace(new THREE.Vector3(X(m),yFD-1.2,s*(hw+1.2)),new THREE.Vector3(X(m),yFD-Math.min(4.5,1.2+(hw+1.2-zi)),s*zi)); } }
-  const isl=cvPart('island',cv.island), sg=cv.iside==='port'?-1:1;
+  const isl=islDims(cv), sg=cv.iside==='port'?-1:1;
   // deck-edge lifts, on the side away from the island
   const lifts=[], liftM=mat(cv.deckArm>0?'#555C61':'#86704F',{roughness:.9}), wellM=mat('#202427',{side:THREE.BackSide,roughness:1});
   for(const l of cv.lifts){
@@ -3387,8 +3428,11 @@ function cvMesh(cv,cs,opt={}){
       add(new THREE.BoxGeometry(il*(e-a),fh,bw2*w),grey,0,fh/2,0,g); add(new THREE.BoxGeometry(il*(e-a)*.92,.5,bw2*w*.9),black,0,fh+.05,0,g); g.updateMatrixWorld(true); smoke.push(g.localToWorld(new THREE.Vector3(0,fh+.4,0))); }
     else if(St.noFunnel) for(const b of St.noFunnel) blk(b);
     // the mast: a tripod with a yard, and the radar at its head
-    const [mf,mh0]=St.mast, mx=X(ix+il*mf), mb=yFD+H*mh0, ml=St.mastL||9, mt=mb+ml; add(new THREE.CylinderGeometry(.2,.3,ml,6),steel,mx,mb+ml/2,zc);
-    for(const s2 of [-1,1]){ const leg=add(new THREE.CylinderGeometry(.14,.18,ml*.93,5),steel,mx+1.2,mb+ml*.46,zc+s2*1.1); leg.rotation.x=-s2*.13; leg.rotation.z=.14; }
+    const [mf,mh0]=St.mast, mx=X(ix+il*mf), mb=yFD+H*mh0, ml=islMastL(cv,St), mt=mb+ml; add(new THREE.CylinderGeometry(.2,.3,ml,6),steel,mx,mb+ml/2,zc);
+    if(isl.mast==='tripod') for(const s2 of [-1,1]){ const leg=add(new THREE.CylinderGeometry(.14,.18,ml*.93,5),steel,mx+1.2,mb+ml*.46,zc+s2*1.1); leg.rotation.x=-s2*.13; leg.rotation.z=.14; }
+    // gun directors on the bridge roof, and air operations' windows looking aft over the deck
+    { const roof=St.roof[0], ry=yFD+H*roof[3]; for(let k=0;k<isl.dirs;k++){ const dx=X(ix+il*(roof[0]+(roof[1]-roof[0])*(k?.25:.7))); box(2.4,1.7,2.3,dx,ry+.85,zc,steel); box(.25,.25,3.6,dx,ry+1.3,zc,dark); }
+      if(isl.air){ const top=St.blocks[St.blocks.length-1]; box(il*Math.min(.16,(top[1]-top[0])*.45),1.1,bw2*.9,X(ix+il*(top[1]-.05)),yFD+H*top[3]-.8,zc,glassM); } }
     box(.25,.25,bw2*2,mx,mt-2.2,zc,steel);
     if(cv.radar!=='none'){ box(.3,2.6,4.2,mx,mt+1.2,zc,steel); if(cv.radar==='r2'){ const [rf,rh]=St.dish, d=add(new THREE.CylinderGeometry(1.1,1.1,.25,14),steel,X(ix+il*rf),yFD+H*rh+1.2,zc); d.rotation.z=Math.PI/2.4; } } }
   else { box(1.2,1.4,cv.deckW*.6,X(dS+.8),yFD-1.7,0,glassM); }   // a flush deck: the bridge looks out from under the front of the flight deck
@@ -3553,7 +3597,7 @@ function etfHTML(){ const e=etfOf(), ok=S.classes.filter(c=>!cvStats(c.cv).errs.
 // What has happened to a ship, in a line.
 function shipDmgText(T){ if(T.status!=='afloat') return {sinking:'Sinking',capsizing:'Rolling over',blown:'Blown up',sunk:'Sunk'}[T.status]; const h=T.hits, n=h.bomb+h.torp+h.near;
   if(!n&&T.flood<1&&!T.fires) return 'None';
-  return [h.bomb&&`${h.bomb} bomb${h.bomb>1?'s':''}`,h.torp&&`${h.torp} torpedo${h.torp>1?'es':''}`,h.near&&`${h.near} near miss${h.near>1?'es':''}`,T.flood>1&&`${fmtK(T.flood)} t of water`,Math.abs(T.list)>.5&&`list ${f1(Math.abs(T.list))}°`,T.fires&&`${T.fires} fire${T.fires>1?'s':''}`,T.deckHoles&&`${T.deckHoles} hole${T.deckHoles>1?'s':''} in the flight deck`,spdF(T)<.98&&`${f0(spdF(T)*100)}% of her speed`].filter(Boolean).join(' · '); }
+  return [h.bomb&&`${h.bomb} bomb${h.bomb>1?'s':''}`,h.torp&&`${h.torp} torpedo${h.torp>1?'es':''}`,h.near&&`${h.near} near miss${h.near>1?'es':''}`,T.flood>1&&`${fmtK(T.flood)} t of water`,Math.abs(T.list)>.5&&`list ${f1(Math.abs(T.list))}°`,T.fires&&`${T.fires} fire${T.fires>1?'s':''}`,T.deckHoles&&`${T.deckHoles} hole${T.deckHoles>1?'s':''} in the flight deck`,shipSys(T)].filter(Boolean).join(' · '); }
 function trAirList(cv,cs){ const ts=trS(), out=[]; for(const d of trLib()){ const a=compute(d), f=cvAircraft(cv,cs,a,d), n=f.ok?(ts.air[d.name]||0):0; for(let i=0;i<n;i++) out.push({d,a,f}); } return out; }
 // Where everything goes at the start: the hangar first (if the aircraft fits it and a lift), then the forward deck.
 function trStow(cv,cs,list){ let area=cs.hArea2, hangar=0, deck=0, left=0;
@@ -3619,27 +3663,44 @@ const trMot=()=>{ if(TR.t-TR.motT>30||!TR.mot){ TR.mot=cvMotion(TR.cv,TR.cs,TR.s
 function trTeam(dur){ for(let i=0;i<TR.teams.length;i++) if(TR.teams[i]<=TR.t){ TR.teams[i]=TR.t+dur; return true; } return false; }
 // Which lifts can be used now: a centreline lift is a hole in the deck while it runs, so not one in the landing area during a recovery,
 // and not one with aircraft parked on it.
-function trLiftOK(L,p,down){ const cv=TR.cv; if(L.busy>TR.t) return false;
+function trLiftOK(L,p,down){ const cv=TR.cv; if(L.busy>TR.t||L.broken) return false;
   if(!L.edge){ if(TR.ops==='recover'&&L.x+L.l/2>trBar(cv)) return false; const pk=trPackLayout(cv,TR.pack); if(TR.pack.length&&L.x+L.l/2>pk.front) return false;
     if(!down&&TR.fwd.length){ const fl=trFwdLayout(cv,TR.fwd); if(L.x-L.l/2<fl.end) return false; } }
   const a=p.st, d=p.d; return L.edge?a.foldSpan<=L.w+4&&d.fusLen<=L.l+1:(a.foldSpan<=L.w&&d.fusLen<=L.l)||(a.foldSpan<=L.l&&d.fusLen<=L.w); }
 const trCanBelow=p=>!p.f.tall&&p.f.lift;
 // The deck an aircraft needs ahead of it to fly off with this wind over the deck: 40 m for a catapult shot, or its take-off run.
-function trRunNeed(p,W){ const cv=TR.cv, cs=TR.cs; if(cv.cats>0&&(p.st.massTO||p.st.mass)<=cs.cat.kg&&p.st.vlof<=cs.cat.v/3.6+W.head) return 40; return Math.max(0,p.st.vlof-W.head)**2/(2*p.st.acc)+15; }
+function trRunNeed(p,W){ const cv=TR.cv, cs=TR.cs; if(cv.cats>0&&!TR.ship.catsOut&&(p.st.massTO||p.st.mass)<=cs.cat.kg&&p.st.vlof<=cs.cat.v/3.6+W.head) return 40; return Math.max(0,p.st.vlof-W.head)**2/(2*p.st.acc)+15; }
 const trHangarFree=()=>TR.cs.hArea2-TR.planes.filter(p=>p.state==='hangar'||p.state==='liftdown').reduce((s,p)=>s+p.st.foldSpan*p.d.fusLen*1.3,0);
 function trRearmTime(p){ return TRK.rearm[p.role]*(p.state==='fwd'&&!trCanBelow(p)?1.5:1); }
 // A ship turning at about two of her lengths' radius and gathering or losing way slowly, toward the course and speed she has been
 // given: steerHdg and steerKn when she keeps station or takes evasive action, otherwise ordHdg and ordKn.
 function shipMove(sh,dt,L,max){ const oh=sh.steerHdg??sh.ordHdg, ok=sh.steerKn??sh.ordKn, dh=angN(oh-sh.hdg), rate=Math.max(.15,sh.kn*KN/(2.2*L)*180/Math.PI);
-  sh.hdg=(sh.hdg+clamp(dh,-rate*dt,rate*dt)+360)%360; sh.kn=Math.max(0,sh.kn+clamp(clamp(ok,0,max)-sh.kn,-.08*dt,.05*dt)); const v=hdgV(sh.hdg); sh.x+=v[0]*sh.kn*KN*dt/1000; sh.y+=v[1]*sh.kn*KN*dt/1000; return v; }
-// How much of her speed a damaged ship keeps: water in her slows her, and flooded boiler and engine rooms more so.
-const spdF=T=>{ if(!T||!T.comps) return 1; if(T.status!=='afloat') return 0; const mc=T.comps.filter(c=>c.kind==='boiler'||c.kind==='engine'), wet=mc.length?mc.filter(c=>(c.fp+c.fs)/c.cap>.4).length/mc.length:0;
-  return clamp(1-.45*clamp(T.flood/T.reserve,0,1)-.7*wet,.1,1); };
+  sh.hdg=(sh.hdg+(sh.rudder?sh.rudder/30*rate*dt:clamp(dh,-rate*dt,rate*dt))+360)%360; sh.kn=Math.max(0,sh.kn+clamp(clamp(ok,0,max)-sh.kn,-.08*dt,.05*dt)); const v=hdgV(sh.hdg); sh.x+=v[0]*sh.kn*KN*dt/1000; sh.y+=v[1]*sh.kn*KN*dt/1000; return v; }
+// What still works in her. Each boiler room and engine room gives its share of steam or of power to the shafts unless it is wrecked,
+// flooded or on fire, and a shaft wrecked aft takes its share with it; she has the lesser of the two. Speed goes as the cube root of
+// the power, less a little for the water in her. The dynamos run on steam: with under a third of her power the lights, pumps, lifts and
+// catapults fail, unless emergency diesel generators keep some of them going.
+const SHAFTS={DD:2,CL:4,CA:4,BC:4,BB:4};
+function tgtPower(T){ const mw=c=>{ const wet=(c.fp+c.fs)/c.cap; return (1-(c.dmg||0))*(wet>.4?0:1-wet*.5)*(c.fire>.5?.4:1); };
+  const avg=k=>{ const cs=T.comps.filter(c=>c.kind===k); return cs.length?cs.reduce((s,c)=>s+mw(c),0)/cs.length:1; };
+  const n=T.cvm?cvPart('shafts',T.cvm.shafts).n:SHAFTS[T.type]||4, left=Math.max(0,n-(T.shaftsLost||0)), pf=Math.min(avg('boiler'),avg('engine'))*left/n;
+  const diesel=T.cvm?T.cvm.dc==='dc2':techDate()>=1943; return {pf,elec:Math.max(clamp(pf/.3,0,1),diesel?.6:0),n,left}; }
+const spdF=T=>{ if(!T||!T.comps) return 1; if(T.status!=='afloat') return 0; const pf=T.pf??1; if(T.dead||pf<.03) return 0;
+  return clamp(Math.cbrt(pf)*(1-.3*clamp(T.flood/T.reserve,0,1)),0,1); };
+const aaPow=T=>T&&T.comps?(.35+.65*(T.elec??1))*(T.status==='afloat'?1:0):1;   // power-worked guns and their directors need electricity
+// Damage to what is in a compartment: up to 1 (wrecked). Damage control repairs a part of it in time, never all.
+function dmgSet(c,v){ c.dmg=clamp(Math.max(c.dmg||0,v),0,1); c.dmgMin=Math.max(c.dmgMin||0,c.dmg*.35); }
+// What is wrong with her besides the water and fire, for the ship lists.
+function shipSys(T){ if(T.status!=='afloat'||!T.comps) return ''; const out=[], f=spdF(T), mk=(T.cvC?T.cvC.cs.speed:T.maxKn)||0;
+  if(f<.98&&mk) out.push(f<.02?'dead in the water':`can make ${f0(mk*f)} knots`); if(T.rudder) out.push('rudder jammed'); if(T.shaftsLost) out.push(`${T.shaftsLost} shaft${T.shaftsLost>1?'s':''} wrecked`);
+  if((T.elec??1)<.5) out.push('no electrical power'); const C=T.cvC, bl=C?C.lifts.filter(L=>L.broken).length:0; if(bl) out.push(`${bl} lift${bl>1?'s':''} wrecked`); if(T.catsOut) out.push('catapults wrecked');
+  return out.join(' · '); }
 // Why a damaged carrier cannot fly: going down, holes in the flight deck (patched in about 25 minutes each), fire in the hangar, or a heavy list.
 function cvHold(T){ const t=TR.t; if(T.status!=='afloat') return 'She is going down.';
   if(T.deckHoles>0){ T.deckFixT=T.deckFixT??t+1500; if(t>=T.deckFixT){ T.deckHoles--; T.deckFixT=T.deckHoles>0?t+1500:null; if(!T.deckHoles) tgtNote(T,'The holes in her flight deck are patched: she can fly again.'); }
     if(T.deckHoles>0) return `Bomb holes in the flight deck are being patched, ${mmss(T.deckFixT-t)} to go.`; }
   if(T.comps.some(c=>c.ufire>.25)) return 'Fire in the hangar.';
+  if((T.elec??1)<.5) return 'No electrical power for the lifts and catapults.';
   if(Math.abs(T.list)>5) return `She is listing ${f0(Math.abs(T.list))}°.`;
   return null; }
 // A carrier going down: what is aboard goes with her; what is aloft lands on another carrier of hers if there is one, or ditches when its fuel runs out.
@@ -3706,14 +3767,14 @@ function trStepCV(dt){
     else if(!flyable) trWarn('stopL',`Launch held: ${m.stop.toLowerCase()}`,1e9);
     else if(Math.abs(W.rel)>30) trWarn('xwind',`Launch held: the wind is ${f0(Math.abs(W.rel))}° on the ${W.rel>0?'starboard':'port'} bow. Turn into the wind.`,1e9);
     else { const p=R.pack[0], pk=trPackLayout(cv,R.pack), run=p.dx, need=Math.max(0,p.st.vlof-W.head)**2/(2*p.st.acc)+15;
-      const cat=cv.cats>0&&run>=40&&(p.st.massTO||p.st.mass)<=cs.cat.kg&&p.st.vlof<=cs.cat.v/3.6+W.head;
+      const cat=cv.cats>0&&!TR.ship.catsOut&&run>=40&&(p.st.massTO||p.st.mass)<=cs.cat.kg&&p.st.vlof<=cs.cat.v/3.6+W.head;
       if(!p.warm) trWarn('warm',`Launch waiting: ${p.d.name} is still warming up.`,1e9);
       else if(run<need&&!cat){ trWarn('run'+p.id,`${p.d.name} cannot get off: it needs ${f0(need)} m with ${f0(W.head/KN)} knots over the deck, and has ${f0(run)} m. More wind over the deck, or a smaller range, gives it more.`,240); }
       else { R.pack.shift(); p.state='air'; p.warm=false; R.stats.launched++; const byCat=run<need; trClear('xwind','stopL','warm');
         p.launchT=t; p.runDx=run; p.runDy=p.dy||0; p.wod=W.head; p.byCat=byCat;
         if(!byCat&&run<need*1.1&&Math.random()<.08){ p.state='lost'; p.lostKind='bow'; p.lostT=t; R.stats.lost++; R.stats.crashes++; trLog(`${p.d.name} went off the bow on take-off: too little deck.`); }
         else { const fl=trJoinFlight(p); fl.planes.push(p); p.fl=fl; }
-        R.nextLaunch=t+(byCat?TRK.cat[cv.cat]||60:TRK.launch)*m.launch; } } }
+        R.nextLaunch=t+(byCat?TRK.cat[cv.cat]||60:TRK.launch)*m.launch*islAirK(cv); } } }
   if(R.ops!=='launch') for(const f of R.flights) f.fresh=false;
   // in the air: flights fly their missions; the fuel runs down; low fuel turns them for home
   for(const f of R.flights){ f.planes=f.planes.filter(p=>p.state==='air'); if(!f.planes.length) continue;
@@ -3749,7 +3810,7 @@ function trStepCV(dt){
         else { R.circuit.shift(); R.stats.landed++; p.landT=p.tdT=t; p.wod=W.head; p.eng=eng; p.armed=false; trClear('packR','nobar','fwdfull','xwindR','stopR');
           if(cv.barrier&&Math.random()<pc){ p.state='lost'; p.lostKind='barrier'; p.lostT=t; R.stats.crashes++; R.stats.lost++; trLog(`${p.d.name} missed the wires and went into the barrier: written off.`); }
           else { p.state='fwd'; R.fwd.push(p); if(!cv.barrier) p.below=true; } }
-        R.nextLand=t+TRK.land*m.land; } } }
+        R.nextLand=t+TRK.land*m.land*islAirK(cv); } } }
   trSorties(); if(R.auto) trDeckOfficer();
   atkFlights(dt);
   if(R.ops==='recover'&&!R.circuit.length&&!R.flights.some(f=>f.mission==='home')&&!R.recWarn){ R.recWarn=true; trLog('Everyone airborne and heading home is down.'); }
@@ -3796,8 +3857,9 @@ function tfStep(tf,dt){ const R=TR, t=R.t, live=tf.ships.filter(T=>T.status==='a
   let oh=tf.side==='blue'&&lead?lead.ship.ordHdg:tf.ordHdg, ok=tf.side==='blue'&&lead?lead.ship.ordKn:tf.ordKn;
   if(cvs.some(C=>C.ops!=='idle'||C.pack.length||C.circuit.length)){ oh=R.wind.from; ok=Math.max(ok,clamp(28-R.wind.kn,8,40)); }
   if(Math.abs(tf.gx)>BOXKM-15||Math.abs(tf.gy)>BOXKM-15){ const back=bearing(-tf.gx,-tf.gy); if(Math.abs(angN(oh-back))>80){ oh=back; if(tf.side==='red') tf.ordHdg=Math.round(back); else trOrder(back); } }
-  const vmax=Math.min(...live.map(T=>(T.cvC?T.cvC.cs.speed:T.maxKn)*spdF(T)))*.88;
-  tf.ghdg=(tf.ghdg+clamp(angN(oh-tf.ghdg),-1.2*dt,1.2*dt)+360)%360; tf.gkn=Math.max(0,tf.gkn+clamp(Math.min(ok,vmax)-tf.gkn,-.08*dt,.05*dt));
+  const able=live.filter(T=>spdF(T)>.35), vmax=Math.min(...(able.length?able:live).map(T=>(T.cvC?T.cvC.cs.speed:T.maxKn)*spdF(T)))*.88;
+  const flag=live.some(T=>T.cvm&&islDims(T.cvm).flag), tr=flag?2:1.2;   // an admiral's staff on a flag bridge handles the ships quicker
+  tf.ghdg=(tf.ghdg+clamp(angN(oh-tf.ghdg),-tr*dt,tr*dt)+360)%360; tf.gkn=Math.max(0,tf.gkn+clamp(Math.min(ok,vmax)-tf.gkn,-.08*dt,.05*dt));
   const [hx,hy]=hdgV(tf.ghdg); tf.gx+=hx*tf.gkn*KN*dt/1000; tf.gy+=hy*tf.gkn*KN*dt/1000;
   for(const T of live){ const mx=T.cvC?T.cvC.cs.speed:T.maxKn;
     if(T.ev&&T.ev.until>t){ T.steerHdg=T.ev.hdg; T.steerKn=mx; continue; } T.ev=null;
@@ -3818,7 +3880,7 @@ function advAA(air,dt){ const R=TR, t=R.t, dF=aaDate(), guns=R.tgts.filter(T=>T.
   for(const T of guns){ let tgts=0; const near=air.filter(it=>it.side!==T.side&&it.p.state==='air'&&Math.hypot(T.x-it.x,T.y-it.y)<7), nH=Math.max(1,near.length/3), nL=Math.max(1,near.filter(it=>it.alt<2500&&Math.hypot(T.x-it.x,T.y-it.y)<2.6).length/3);   // her directors and gun crews take on about three aircraft at a time
     for(const it of near){ const d=Math.hypot(T.x-it.x,T.y-it.y);
       const a=it.p.atk, ph=!a?.7:a.kind==='escort'?.6:a.kind==='torp'&&a.ph==='run'?1.5:a.kind==='dive'&&(a.ph==='dive'||a.ph==='pull')?1.3:a.kind==='level'?.6:1;
-      const h=(T.aa.h*3e-5*(1-d/9)/nH+(d<2.6&&it.alt<2500?T.aa.l*3e-5*(1-d/3)/nL:0))*ph*dF*toughK(it.p.st)*spdF(T);
+      const h=(T.aa.h*3e-5*(1-d/9)/nH+(d<2.6&&it.alt<2500?T.aa.l*3e-5*(1-d/3)/nL:0))*ph*dF*toughK(it.p.st)*aaPow(T);
       if(h<=0) continue; tgts++;
       if(Math.random()<1-Math.exp(-h*dt)) advLoss(it,'flak');
       else if(a&&!it.p.dropped&&a.kind!=='escort'&&it.p.armed&&Math.random()<h*.5*dt){ it.p.dropped=true; it.p.armed=false; atkHome(it.p,a); const k=R.aaLog||(R.aaLog={}); (k[it.side]||(k[it.side]={flak:0,air:0,off:0})).off++; }
@@ -3826,7 +3888,7 @@ function advAA(air,dt){ const R=TR, t=R.t, dF=aaDate(), guns=R.tgts.filter(T=>T.
       if(Math.random()<Math.min(1,T.aa.h/10/nH*dt)) R.fx.push({kind:'flak',x:it.x+gauss()*.12,y:it.y+gauss()*.12,alt:Math.max(40,it.alt+gauss()*90),t,heavy:true});
       if(d<2.6&&it.alt<2500&&Math.random()<Math.min(1,T.aa.l/12*dt)) R.fx.push({kind:'flak',x:it.x+gauss()*.05,y:it.y+gauss()*.05,alt:Math.max(15,it.alt+gauss()*30),t,heavy:false}); }
     // tracer: each ship's guns throw a few streams a second at the aircraft in reach, light guns low and close, heavy shells higher
-    if(near.length){ let n=Math.min(8,(T.aa.l+T.aa.h)/4)*dt*spdF(T); while(n>0){ if(Math.random()<Math.min(1,n)){ const it=near[Math.floor(Math.random()*near.length)], d=Math.hypot(T.x-it.x,T.y-it.y); trcAdd(T,it,d<2.6&&it.alt<2500&&Math.random()<.7); } n-=1; } }
+    if(near.length){ let n=Math.min(8,(T.aa.l+T.aa.h)/4)*dt*aaPow(T); while(n>0){ if(Math.random()<Math.min(1,n)){ const it=near[Math.floor(Math.random()*near.length)], d=Math.hypot(T.x-it.x,T.y-it.y); trcAdd(T,it,d<2.6&&it.alt<2500&&Math.random()<.7); } n-=1; } }
     T.firing=tgts>0; } }
 // One tracer: from a gun somewhere along her to near the aircraft, at the speed of the shell; light tracer burns on a little past.
 function trcAdd(T,it,light){ const R=TR, [hx,hy]=hdgV(T.hdg), u=(Math.random()-.5)*T.L*.7, sc=light?.035:.07;
@@ -3851,9 +3913,12 @@ function advEvade(air){ const R=TR, t=R.t;
 const fPos=f=>{ const ps=f.planes.filter(p=>p.state==='air'&&p.atk); return ps.length?{x:ps.reduce((s,p)=>s+p.ax,0)/ps.length,y:ps.reduce((s,p)=>s+p.ay,0)/ps.length}:{x:f.x,y:f.y}; };
 function advFight(dt){ const R=TR, visF=clamp(1-(R.sea.n-2)*.07,.6,1), all=[];
   for(const C of cvAll()) for(const f of C.flights){ const ps=f.planes.filter(p=>p.state==='air'); if(ps.length) all.push({f,C,side:C.side,ps,pos:fPos(f)}); }
-  const radar=side=>side==='blue'?cvAll().some(C=>C.side==='blue'&&C.cv.radar&&C.cv.radar!=='none')?90:0:techDate()>=1942.5?70:0;
-  for(const A of all){ if(A.f.mission!=='cap'){ continue; } const home=A.C.ship, det=Math.max(radar(A.side),30*visF);
-    const foes=all.filter(B=>B.side!==A.side&&Math.hypot(B.pos.x-home.x,B.pos.y-home.y)<det&&Math.hypot(B.pos.x-A.pos.x,B.pos.y-A.pos.y)<70).sort((a,b)=>Math.hypot(a.pos.x-home.x,a.pos.y-home.y)-Math.hypot(b.pos.x-home.x,b.pos.y-home.y));
+  // radar: how far the side's best radar sees (higher masts see further); without a fighter direction room the patrol is talked onto raids
+  // only roughly, so it goes for those well inside radar range; enemy radar from late 1942 counts as directed
+  const radar=side=>{ let km=0, dir=false; for(const C of cvAll()) if(C.side===side){ const k=islRadarKm(C.cv,C.cs); if(k>km) km=k; if(k&&islDims(C.cv).fdir) dir=true; }
+    if(side==='red'&&techDate()>=1942.5){ km=Math.max(km,70); dir=true; } return dir?km:km*.65; };
+  for(const A of all){ if(A.f.mission!=='cap'){ continue; } const home=A.C.ship, rk=radar(A.side), det=Math.max(rk,30*visF), reach=rk>80?110:70;
+    const foes=all.filter(B=>B.side!==A.side&&Math.hypot(B.pos.x-home.x,B.pos.y-home.y)<det&&Math.hypot(B.pos.x-A.pos.x,B.pos.y-A.pos.y)<reach).sort((a,b)=>Math.hypot(a.pos.x-home.x,a.pos.y-home.y)-Math.hypot(b.pos.x-home.x,b.pos.y-home.y));
     const B=foes[0]; if(B){ if(!A.f.intc) trLog(`${A.side==='red'?'Enemy fighters':A.f.name} ${A.side==='red'?'go':'goes'} after ${B.ps.length} ${B.side==='red'?'enemy ':''}aircraft ${f0(Math.hypot(B.pos.x-home.x,B.pos.y-home.y))} km out.`,true); A.f.intc={x:B.pos.x,y:B.pos.y}; } else A.f.intc=null; }
   const pk=(a,b)=>.0028*Math.sqrt(Math.max(.2,a.st.fireRate||1)/1.5)*Math.pow(clamp(a.st.speed/b.st.speed,.6,1.6),1.5)*toughK(b.st);
   for(let i=0;i<all.length;i++) for(let j=i+1;j<all.length;j++){ const A=all[i], B=all[j]; if(A.side===B.side||Math.hypot(A.pos.x-B.pos.x,A.pos.y-B.pos.y)>4) continue;
@@ -3933,7 +3998,7 @@ function segClosest(ax,ay,ux,uy,al,bx,by,vx,vy,bl){ // two segments centred at a
 function collideHurt(b,other,E,s,side){ const R=TR, T=b.T, A=.35*Math.pow(E,.8)*Math.sqrt(2*other.m/(b.m+other.m)), end=Math.abs(s)>b.L*.4, where=end?(s>0?'bow':'stern'):'side';
   if(!T){ b.o.kn=Math.min(b.o.kn,2); trLog(`${b.name} collided with the ${other.name}${A>4?' and is badly holed forward':''}. (In basic trials your carrier has no damage model, so she only loses way.)`,true); return; }
   if(T.status!=='afloat') return;
-  const c=tgtComp(T,T.L/2-s); c.hitT=R.t;
+  const c=tgtComp(T,T.L/2-s); c.hitT=R.t; dmgSet(c,(c.dmg||0)+A/25); tgtMark(T,{k:'col',x:T.L/2-s,v:end?0:side*T.B/2,s:Math.sqrt(A)*1.4});
   if(end){ c.hp+=A/2; c.hs+=A/2; } else c[side>0?'hs':'hp']+=A;
   if(A>8) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q){ q[side>0?'hs':'hp']+=A*.3; q.hitT=R.t; } }
   if((c.kind==='fuel'||c.kind==='avgas')&&Math.random()<.4) c.fire=Math.max(c.fire,.3+Math.random()*.3);
@@ -4070,7 +4135,7 @@ function atkWeapons(dt){ const R=TR, t=R.t;
   for(const b of R.bombs){ if(b.done||t<b.t1) continue; b.done=true; const up=q=>q.status!=='sunk'&&!(q.goneF>.8), T=R.tgts.find(q=>q.id===b.tgt&&up(q)&&outside(q,b.x,b.y).d<60)||R.tgts.filter(up).find(q=>outside(q,b.x,b.y).d<30);
     if(!T){ R.fx.push({kind:'splash',x:b.x,y:b.y,t,size:Math.cbrt(b.kg/250)}); continue; }
     const o=outside(T,b.x,b.y), side=o.q.v>0?1:-1, x=clamp(T.L/2-o.q.u,0,T.L);
-    if(o.in){ tgtHit(T,{kind:'bomb',kg:b.kg,pen:b.pen,x,side}); R.fx.push({kind:'hit',x:b.x,y:b.y,t}); }
+    if(o.in){ tgtHit(T,{kind:'bomb',kg:b.kg,pen:b.pen,x,side,v:o.q.v}); R.fx.push({kind:'hit',x:b.x,y:b.y,t}); }
     else { if(o.d<15) tgtHit(T,{kind:'near',kg:b.kg,x,side,d:o.d}); R.fx.push({kind:'splash',near:o.d<15,x:b.x,y:b.y,t,size:Math.cbrt(b.kg/250)}); } }
   R.torps=R.torps.filter(q=>!q.done||t-q.doneT<60); R.bombs=R.bombs.filter(b=>!b.done); R.fx=R.fx.filter(f=>t-f.t<90); if(R.trc) R.trc=R.trc.filter(q=>t-q.t<q.dur*q.ext+.5); }
 // In 3D, each attacking aircraft where its run has taken it.
@@ -4194,7 +4259,7 @@ const TKIND={boiler:'boiler rooms',engine:'engine rooms',mag:'magazines',avgas:'
 const ENAMES={DD:['Corsair','Brigand','Reaver','Harrier','Jackal','Viper','Adder','Marauder'],CL:['Nemesis','Fury','Wrath','Spite','Rancour'],CA:['Tyrant','Despot','Usurper','Tribune'],
   BC:['Leviathan','Behemoth','Kraken'],BB:['Goliath','Titan','Juggernaut','Mammoth'],CV:['Harpy','Gorgon','Chimera','Hydra','Basilisk']};
 const TGTKN={DD:35,CL:32,CA:32,BC:30,BB:27}, TGTAA={DD:[4,4],CL:[8,8],CA:[8,8],BC:[12,12],BB:[16,16]};
-function tgtAA(type,cv){ const d=techDate(); if(type==='CV') return {h:(cv.nH||0)+(cv.nM||0)*.5,l:(cv.nL||0)+(cv.nM||0)*.5};
+function tgtAA(type,cv){ const d=techDate(); if(type==='CV') return {h:((cv.nH||0)+(cv.nM||0)*.5)*islAAk(cv),l:(cv.nL||0)+(cv.nM||0)*.5};
   const [h,l]=TGTAA[type]; return {h:h*(d>=1943?1.4:1),l:l*(d>=1943?4:d>=1941.5?2:1)}; }
 function tgtMake(type,x,y,hdg,o={}){ const R=TR, id=++R.tid, side=o.side||'tgt', NL=(side==='red'?ENAMES:TGTNAMES)[type], used=R.tgts.filter(T=>T.type===type&&T.side===side).length, nm=o.name||NL[used%NL.length]+(used>=NL.length?' '+(Math.floor(used/NL.length)+1):'');
   let s, kinds, prot;
@@ -4222,11 +4287,34 @@ function tgtPt(T,c){ const [hx,hy]=hdgV(T.hdg), u=T.L/2-(c.x0+c.x1)/2; return {x
 // or ready-use ammunition. It does not sink her outright as a magazine does, but it tears holes, spreads fire and wrecks the hangar.
 function tgtSecondary(T,c,kind,why){ const R=TR, t=R.t, p=tgtPt(T,c), big=kind==='avgas';
   R.fx.push({kind:'sec',x:p.x,y:p.y,t,size:big?2.2:1.3}); c.secN=(c.secN||0)+1;
+  dmgSet(c,1); tgtMark(T,{k:'bomb',x:(c.x0+c.x1)/2,v:0,s:big?11:7,cv:!!T.spec.cv});
   if(big){ c.fire=1; c.ufire=Math.max(c.ufire,.8); c.hp+=12; c.hs+=12; c.hitT=t; for(const j of [-2,-1,1,2]){ const q=T.comps[c.i+j]; if(q){ q.fire=Math.max(q.fire,Math.abs(j)>1?.3:.6); q.ufire=Math.max(q.ufire,.4); q.hitT=t; } } if(T.spec.cv) T.deckHoles=(T.deckHoles||0)+2; }
-  else { c.ufire=Math.min(1,c.ufire+.3); for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q) q.ufire=Math.max(q.ufire,.4); } if(T.spec.cv) T.deckHoles=(T.deckHoles||0)+1;
-    // aircraft in the hangar there are wrecked
-    const C=T.cvC; if(C&&!C.gone){ const hp=C.planes.filter(q=>q.state==='hangar'); for(let k=0,n=1+Math.floor(Math.random()*3);k<n&&hp.length;k++){ const q=hp.splice(Math.floor(Math.random()*hp.length),1)[0]; q.state='lost'; q.lostKind='fire'; C.stats.lost++; } } }
+  else { c.ufire=Math.min(1,c.ufire+.3); for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q) q.ufire=Math.max(q.ufire,T.spec.cv?({open:.55,closed:.6,box:.2}[(T.cvm||TR.cv).hside]??.55):.4); } if(T.spec.cv) T.deckHoles=(T.deckHoles||0)+1;
+    // the aircraft in the hangar there are wrecked: most of them, so a hangar burns itself out once what is in it has gone off
+    const H=hangarHere(T,c), C=T.cvC; if(C&&!C.gone&&H.ps.length){ const hp=H.ps.slice(); for(let k=0,n=Math.max(1,Math.ceil(hp.length*(.4+.4*Math.random())));k<n&&hp.length;k++){ const q=hp.splice(Math.floor(Math.random()*hp.length),1)[0]; q.state='lost'; q.lostKind='fire'; q.rearm=0; C.stats.lost++; } }
+    else if(T.hload&&H.k>=0) T.hload[H.k]=Math.max(0,T.hload[H.k]-Math.ceil(T.hload[H.k]*(.4+.4*Math.random()))); }
+  c.secT=t;
   tgtNote(T,why); }
+// What is in a carrier's hangar over a compartment, and how much of it will burn or go off. Aircraft are shared out along the hangar.
+// One being refuelled and rearmed counts most, with fuel hoses out and bombs and torpedoes on trolleys beside it, as the Japanese
+// carriers were caught at Midway; one fuelled and armed counts 1 (a fighter, with only its guns, .6); one landed and not yet refuelled .08.
+// A target carrier at anchor is given half her air group, fuelled and armed, so you can see what a strike does to a loaded carrier.
+const hangarSpan=T=>{ const cv=T.cvm||TR.cv; return T.comps.filter(q=>q.x1>cv.hFrom&&q.x0<cv.hTo); };
+const planeRisk=p=>p.rearm?1.5:p.armed?(p.role==='fighter'?.6:1):.08;
+function hangarHere(T,c){ const hc=hangarSpan(T), k=hc.indexOf(c); if(k<0||!T.spec.cv) return {w:0,ps:[],k};
+  if(T.cvC){ const ps=T.cvC.gone?[]:T.cvC.planes.filter(p=>p.state==='hangar'&&p.id%hc.length===k); return {w:ps.reduce((s,p)=>s+planeRisk(p),0),ps,k,rearm:ps.some(p=>p.rearm),armed:ps.some(p=>p.armed)}; }
+  if(!T.hload){ const n=Math.round(nominalAir(T.cvm||TR.cv)*.5); T.hload=hc.map((_,i)=>Math.floor(n/hc.length)+(i<n%hc.length?1:0)); }
+  return {w:T.hload[k]||0,ps:[],k,armed:(T.hload[k]||0)>0}; }
+// How readily a hangar fire sets things off: an open hangar vents fumes and blast out of its sides, an enclosed one holds them in, an
+// armoured box with fire curtains and sprays contains it. Better damage control drains the fuel lines and fills them with inert gas in action.
+const hangarK=T=>{ const cv=T.cvm||TR.cv; return ({open:.7,closed:1,box:.35}[cv.hside]??1)*({dc0:1,dc1:.7,dc2:.45}[cv.dc]??1); };
+// A mark for the 3D ship: k bomb (a hole in the deck, v metres to starboard of the centreline), torp or col (a hole in her side at
+// the waterline, on side v), s its size in metres; x from the bow.
+function tgtMark(T,m){ (T.marks||(T.marks=[])).push(Object.assign({t:TR.t},m)); if(T.marks.length>40) T.marks.shift(); }
+// A bomb through a carrier's flight deck: a lift it lands on is wrecked, and one near the bow can wreck the catapults.
+function tgtDeckHit(T,w){ const C=T.cvC; if(!C) return; const ds=deckStart(C.cv);
+  C.lifts.forEach((L,i)=>{ if(!L.edge&&!L.broken&&Math.abs(w.x-(L.x+ds))<L.l/2+2.5){ L.broken=true; tgtNote(T,`A bomb wrecked lift ${i+1}: it cannot be used.`); } });
+  if(C.cv.cats>0&&!T.catsOut&&w.x-ds<45&&Math.random()<.6){ T.catsOut=true; tgtNote(T,'A bomb forward wrecked the catapults.'); } }
 function tgtBlow(T,why){ T.status='blown'; T.sinkT=0; T.blowSide=Math.random()<.5?-1:1; tgtNote(T,`${why}. She blew up.`); TR.fx.push({kind:'boom',x:T.x,y:T.y,t:TR.t,size:T.L*.6}); }
 // A weapon arriving: w.kind is 'bomb', 'torp', 'near' (a bomb close alongside) or 'dud'; w.kg the charge (bombs: their weight), w.pen what
 // a bomb would go through in mm of deck, w.x where along her from the bow in metres, w.side +1 starboard or -1 port.
@@ -4238,26 +4326,40 @@ function tgtHit(T,w){ if(T.status==='sunk') return;
   if(w.kind==='torp'){ T.hits.torp++; const absorb=(c.prot?70:15)*T.tps, ex=Math.max(0,w.kg-absorb), A=ex>0?6+ex/6:.4+w.kg/500, tk=sd==='hs'?'ts':'tp', tcap=(c.x1-c.x0)*T.tps*T.D*.6*1.025;
     if(T.tps) c[tk]=Math.min(tcap,(c[tk]||0)+Math.max(tcap*.6,w.kg*3));   // the layers of the torpedo protection flood, and stay flooded
     c[sd]+=A; if(ex>80) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q){ q[sd]+=A*.25; q.hitT=t; } }
+    if(ex>0) dmgSet(c,.35+ex/200); tgtMark(T,{k:'torp',x:w.x,v:w.side*T.B/2,s:ex>0?Math.sqrt(A)*1.5:2});
+    // aft, a torpedo can jam the rudder or wreck a shaft
+    const fa=(c.x0+c.x1)/2/T.L; if(ex>0&&fa>.78){ if(!T.rudder&&Math.random()<.35){ T.rudder=(Math.random()<.5?-1:1)*(12+Math.random()*18); T.rudderT=t; tgtNote(T,`The torpedo aft has jammed her rudder ${f0(Math.abs(T.rudder))}° to ${T.rudder>0?'starboard':'port'}: she is circling.`); }
+      const P=tgtPower(T); if(P.left>0&&Math.random()<.45){ T.shaftsLost=(T.shaftsLost||0)+1; tgtNote(T,`A propeller shaft is wrecked: ${P.left-1} of ${P.n} left.`); } }
     if(ex>0&&(c.kind==='boiler'||c.kind==='engine')&&Math.random()<.3) c.fire=Math.max(c.fire,.3);
     if(ex>0&&c.kind==='avgas'){ c.fire=Math.max(c.fire,.5); c.ufire=Math.max(c.ufire,.3); const p=tgtPt(T,c); TR.fx.push({kind:'sec',x:p.x,y:p.y,t,size:1.2}); }
     if(ex>0&&c.kind==='mag'&&Math.random()<.12){ tgtBlow(T,`A torpedo ${where} set off the magazine`); return; }
     s=ex>0?`Torpedo hit ${where}: about ${f0(A)} m² of her side torn open.`:`Torpedo hit ${where}: the torpedo protection held, with some flooding behind it.`; }
-  else if(w.kind==='near'){ T.hits.near++; const A=w.kg/450*(w.d<5?1.1:.45); c[sd]+=A; s=`Near miss ${where}${A>.3?': the blast sprung her plating':''}.`; }
+  else if(w.kind==='near'){ T.hits.near++; const A=w.kg/450*(w.d<5?1.1:.45); c[sd]+=A; if(c.kind==='boiler'||c.kind==='engine') dmgSet(c,(c.dmg||0)+.18*A); s=`Near miss ${where}${A>.3?': the blast sprung her plating':''}.`; }
   else { T.hits.bomb++; let below=false;
     if(T.spec.cv){ if(w.pen<T.fd){ c.ufire=Math.max(c.ufire,.2); s=`Bomb burst on the armoured flight deck ${where}.`; }
-      else { T.deckHoles=(T.deckHoles||0)+1; c.ufire=Math.max(c.ufire,.5+Math.random()*.35); const left=w.pen-T.fd;
-        if(left>(c.prot?T.deck:12)) below=true; else s=`Bomb through the flight deck ${where}: it burst in the hangar and set it alight.`; } }
+      else { T.deckHoles=(T.deckHoles||0)+1; c.ufire=Math.max(c.ufire,.5+Math.random()*.35); const left=w.pen-T.fd; tgtDeckHit(T,w);
+        if(left>(c.prot?T.deck:12)) below=true; else { s=`Bomb through the flight deck ${where}: it burst in the hangar and set it alight.`;
+          const H=hangarHere(T,c); if(H.w>.5&&Math.random()<Math.min(.85,.25*H.w*hangarK(T))) w.chain=H; } } }
     else if(Math.random()<.3){ c.ufire=Math.max(c.ufire,.15+Math.random()*.3); s=`Bomb hit the upperworks ${where}.`; }
     else { const arm=c.prot?T.deck:Math.min(T.deck,16); if(w.pen<arm){ c.ufire=Math.max(c.ufire,.12); s=`Bomb burst on the ${arm>40?'armoured ':''}deck ${where} without getting through.`; } else below=true; }
+    tgtMark(T,{k:'bomb',x:w.x,v:w.v??0,s:2.2+w.kg/160,cv:!!T.spec.cv});
     if(below){ c.fire=Math.max(c.fire,.35+Math.random()*.35); if(Math.random()<.35) c[sd]+=w.kg/700;
+      dmgSet(c,.5+Math.random()*.5); for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q) dmgSet(q,.15); } T.crewLoss=Math.min(.5,(T.crewLoss||0)+.04*Math.sqrt(w.kg/250));
       if(c.kind==='mag'&&Math.random()<.35*Math.sqrt(w.kg/450)){ tgtBlow(T,`A bomb went down ${where} and set off the magazine`); return; }
       if(c.kind==='avgas'&&Math.random()<.35){ tgtSecondary(T,c,'avgas',`A bomb burst among the aviation fuel tanks ${where}: a great explosion of petrol vapour.`); return; }
       if((c.kind==='mag'||c.kind==='avgas')&&Math.random()<.5){ tgtSecondary(T,c,'ammo',`A bomb burst ${where}: ammunition and stores are going off.`); return; }
       s=`Bomb pierced the deck ${where} and burst below.`; } }
-  tgtNote(T,s); }
+  tgtNote(T,s);
+  const ch=w.chain; w.chain=null; if(ch) tgtSecondary(T,c,'ammo',ch.rearm?'The bomb burst among aircraft being refuelled and rearmed: their bombs and torpedoes are going off.':'The bomb burst among fuelled and armed aircraft: they are exploding.'); }
 // Her state each second: water pouring in through the holes, finding its way across where nothing stops it, pumped out of the small
 // leaks once they are plugged; the list from water on one side against her stability (less the free surface of slack water), and the
 // trim from water at the ends; fires growing or being put out; damage control counterflooding to bring her upright.
+// News of her machinery: losing power, going dead in the water, and getting going again.
+function tgtSysNotes(T,was){ if(was==null) return; const mk=(T.cvC?T.cvC.cs.speed:T.maxKn)||0, t=TR.t;
+  if(!T.dead&&T.pf<.03){ T.dead=true; T.knShown=0; tgtNote(T,'She has lost all power and is dead in the water.'); return; }
+  if(T.dead&&T.pf>.08){ T.dead=false; T.knShown=Math.round(mk*spdF(T)); tgtNote(T,`She has steam again and can make ${T.knShown} knots.`); return; }
+  if(T.dead||!mk) return; const now=Math.round(mk*spdF(T)), was2=T.knShown??Math.round(mk);
+  if(Math.abs(now-was2)>=3&&(!T.knNote||t-T.knNote>300)){ T.knNote=t; T.knShown=now; tgtNote(T,now<was2?`Machinery damage: she can make only ${now} knots.`:`Repairs to her machinery: she can make ${now} knots.`); } }
 function tgtStep(T,dt){ const t=TR.t;
   if(T.status==='sunk') return;
   if(T.status!=='afloat'){ T.sinkT+=dt; const dur=T.status==='blown'?75:T.status==='capsizing'?200:T.flood>T.reserve*1.6?240:480; T.goneF=Math.min(1,T.sinkT/dur);
@@ -4269,7 +4371,8 @@ function tgtStep(T,dt){ const t=TR.t;
       if(!A&&c[k]>0&&!c.mflood&&!c.cf) leaks++; }
     const x=(c.fs-c.fp)*(1-T.split)*Math.min(1,.04*dt); c.fs-=x; c.fp+=x;
     if(c.fire>0||c.ufire>0) burning++; }
-  const pump=T.disp*.00004*dt/Math.max(1,leaks); if(leaks&&T.dc) for(const c of T.comps) for(const [k,hk] of [['fp','hp'],['fs','hs']]) if(!c[hk]&&c[k]>0&&!c.mflood&&!c.cf) c[k]=Math.max(0,c[k]-pump);
+  const PW=tgtPower(T), pkn=T.pf; T.pf=PW.pf; T.elec=PW.elec; tgtSysNotes(T,pkn);
+  const pump=T.disp*.00004*dt/Math.max(1,leaks)*T.elec; if(leaks&&T.dc) for(const c of T.comps) for(const [k,hk] of [['fp','hp'],['fs','hs']]) if(!c[hk]&&c[k]>0&&!c.mflood&&!c.cf) c[k]=Math.max(0,c[k]-pump);
   // damage control counterfloods the far side once the list passes a few degrees
   if(T.dc&&Math.abs(T.list)>3&&T.flood<T.reserve*.75){ if(T.cfT==null) T.cfT=t+150; if(t>T.cfT){ const far=T.list>0?'fp':'fs', near=T.list>0?'fs':'fp';
       const q=T.comps.filter(c=>!c.hp&&!c.hs&&c.kind!=='mag'&&c[far]<c.cap/2*.95&&c[near]<1).sort((a,b)=>a[far]-b[far])[0];
@@ -4278,18 +4381,25 @@ function tgtStep(T,dt){ const t=TR.t;
   for(const c of T.comps){ const w=c.fp+c.fs+(c.tp||0)+(c.ts||0); W+=w; Ms+=(c.fs-c.fp)*T.B/4+((c.ts||0)-(c.tp||0))*(T.B/2-T.tps/2); Mt+=w*((c.x0+c.x1)/2-T.L/2);
     for(const k of ['fp','fs']){ const f=c[k]/(c.cap/2); if(f>.02&&f<.97) fsm+=(c.x1-c.x0)*Math.pow(T.B/2,3)/12*1.025; } }
   // fires: they grow, spread and are fought; a magazine with fire next to it is flooded before it goes up, if there is time
-  const dcRate=T.dc?(.004+T.disp/45000*.012)*dt/Math.max(1,burning):0;   // a big ship has more men to fight fires; a hulk at anchor has none
-  for(const c of T.comps){ const wet=(c.fp+c.fs)/c.cap;
-    for(const k of ['fire','ufire']){ if(c[k]<=0) continue; const fuel=c.kind==='avgas'?3:c.kind==='fuel'?1.6:k==='ufire'&&T.spec.cv?2.2:1;
+  const dcRate=T.dc?(.004+T.disp/45000*.012)*dt*({dc0:1,dc1:1.4,dc2:2}[(T.cvm||{}).dc]??1)/Math.max(1,burning)*(.4+.6*T.elec)*(1-(T.crewLoss||0)):0;
+  if(T.dc) for(const c of T.comps) if(c.dmg>(c.dmgMin||0)) c.dmg=Math.max(c.dmgMin||0,c.dmg-.00015*dt*T.elec);   // repair parties at work
+  if(T.rudder&&T.dc&&t-T.rudderT>1200&&Math.random()<.0006*dt){ T.rudder=0; tgtNote(T,'Damage control has freed the rudder: she answers the helm again.'); }   // a big ship has more men to fight fires; a hulk at anchor has none
+  const hSpan=T.spec.cv?hangarSpan(T):null, hRun=T.spec.cv?({open:1,closed:1.5,box:.2}[(T.cvm||TR.cv).hside]??1):0;
+  for(const c of T.comps){ const wet=(c.fp+c.fs)/c.cap, Hc=hSpan&&c.ufire>0?hangarHere(T,c):null;
+    // a burning hangar with fuelled aircraft in it feeds on them, and spreads along the open hangar deck (an armoured box has fire curtains)
+    if(Hc&&Hc.k>=0&&c.ufire>.7) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q&&hSpan.includes(q)) q.ufire=Math.min(1,q.ufire+.002*hRun*(c.ufire-.7)/.3*dt); }
+    for(const k of ['fire','ufire']){ if(c[k]<=0) continue; const fuel=c.kind==='avgas'?3:c.kind==='fuel'?1.6:k==='ufire'&&T.spec.cv?(2.2+.5*(Hc?Hc.w:0))*(hRun<.5?.45:1):1;
       c[k]=clamp(c[k]+(.0013*fuel*dt)-dcRate-(k==='fire'&&wet>.5?.05*dt:0),0,1); c['b'+k]=(c['b'+k]||0)+c[k]*dt; if(c['b'+k]>1100*fuel) c[k]=Math.max(0,c[k]-.004*dt);   // and once what will burn is gone, it dies down
       if(c[k]>.7&&Math.random()<.0006*dt){ const q=T.comps[c.i+(Math.random()<.5?-1:1)]; if(q&&q[k]<.2){ q[k]=.25; } }
       if(k==='ufire'&&c.ufire>.8&&Math.random()<.001*dt) c.fire=Math.max(c.fire,.3); }
     const hot=Math.max(c.fire,T.comps[c.i-1]?T.comps[c.i-1].fire:0,T.comps[c.i+1]?T.comps[c.i+1].fire:0);
     if(c.kind==='mag'&&!c.mflood&&hot>.45){ c.mfT=c.mfT??t; if(T.dc&&t-c.mfT>45){ c.mflood=true; c.fp=Math.max(c.fp,c.cap*.12); c.fs=Math.max(c.fs,c.cap*.12); tgtNote(T,'Fire next to a magazine: it has been flooded.'); }
       else if(Math.random()<.0012*dt*hot){ tgtBlow(T,'Fire reached a magazine'); return; } }
-    if(c.kind==='avgas'&&c.fire>.6&&(c.secN||0)<2&&Math.random()<.002*dt) tgtSecondary(T,c,'avgas','Petrol vapour from the aviation fuel tanks exploded, tearing open the decks around them.');
-    // a carrier's burning hangar: armed and fuelled aircraft, bombs and torpedoes going off one after another
-    if(T.spec.cv&&c.ufire>.45&&(c.secN||0)<3&&Math.random()<.0025*c.ufire*dt) tgtSecondary(T,c,'ammo','Bombs and fuelled aircraft in the burning hangar are exploding.'); }
+    if(c.kind==='avgas'&&c.fire>.6&&(c.secN||0)<2&&Math.random()<.002*dt*({dc0:1,dc1:.6,dc2:.4}[(T.cvm||{}).dc]??1)) tgtSecondary(T,c,'avgas','Petrol vapour from the aviation fuel tanks exploded, tearing open the decks around them.');
+    // a carrier's burning hangar: armed and fuelled aircraft, bombs and torpedoes going off one after another, each blast spreading the
+    // fire along the hangar, for as long as there is anything left there to go off
+    if(T.spec.cv&&c.ufire>.45&&t-(c.secT??-1e9)>20){ const H=hangarHere(T,c);
+      if(H.w>.5&&Math.random()<.004*c.ufire*H.w*hangarK(T)*dt) tgtSecondary(T,c,'ammo',H.rearm?'Aircraft being refuelled and rearmed in the burning hangar are exploding, with the bombs and torpedoes beside them.':H.armed?'Fuelled and armed aircraft in the burning hangar are exploding.':'Petrol left in the aircraft in the burning hangar has exploded.'); } }
   const Dp=T.disp+W, gm=T.GM-fsm/Dp; T.flood=W; T.gm=gm; T.sink=W/(T.L*T.B*.72*1.025); T.fires=T.comps.filter(c=>c.fire>.05||c.ufire>.05).length;
   T.list=Math.atan2(Ms,Dp*Math.max(.05,gm))*180/Math.PI; T.trim=Math.atan2(Mt,Dp*1.1*T.L)*180/Math.PI;
   if(W>T.reserve){ T.status='sinking'; T.sinkT=0; tgtNote(T,`She has more water in her than she can float with, and is going down by the ${Mt>0?'stern':'head'}.`); }
@@ -4315,14 +4425,14 @@ function tgtDrawMap(c,PX,PY,s){ const R=TR;
 // How each kind of explosion shows on the chart: colour, smallest size in pixels, how long it lasts in seconds and how bright.
 const FXMAP={hit:{col:'255,214,40',r:5,life:22,op:.95},col:{col:'255,214,40',r:6,life:22,op:.95},near:{col:'245,248,250',r:4,life:14,op:.85},splash:{col:'220,230,236',r:2.2,life:10,op:.45},
   sec:{col:'255,138,42',r:6,life:28,op:.95},boom:{col:'232,53,43',r:10,life:45,op:1},crash:{col:'200,206,210',r:4,life:14,op:.8},tsplash:{col:'230,236,240',r:1.6,life:4,op:.4}};
-function burstGlyph(c,x,y,r,col,op){ if(op<=.02) return; c.save(); c.translate(x,y); c.fillStyle=`rgba(${col},${op})`; c.beginPath();
+function burstGlyph(c,x,y,r,col,op){ if(!(op>.02)||!(r>0)) return; op=Math.min(1,op); c.save(); c.translate(x,y); c.fillStyle=`rgba(${col},${op})`; c.beginPath();
   for(let i=0;i<16;i++){ const a=i/16*2*Math.PI, q=i%2?r*.5:r; c.lineTo(Math.cos(a)*q,Math.sin(a)*q); } c.closePath(); c.fill();
   c.fillStyle=`rgba(255,255,255,${op*.6})`; c.beginPath(); c.arc(0,0,r*.22,0,2*Math.PI); c.fill(); c.restore(); }
 function tgtRowsHTML(){ const R=TR; if(!R.tgts.length) return '<p class="muted" style="margin:0;font-size:13px">None anchored. Pick a type above the chart, then click the chart where she should be.</p>';
   return R.tgts.map(T=>{ const d=Math.hypot(T.x-R.ship.x,T.y-R.ship.y), h=T.hits, hit=[h.bomb&&`${h.bomb} bomb${h.bomb>1?'s':''}`,h.torp&&`${h.torp} torpedo${h.torp>1?'es':''}`,h.near&&`${h.near} near miss${h.near>1?'es':''}`,h.dud&&`${h.dud} dud${h.dud>1?'s':''}`,h.col&&`${h.col} collision${h.col>1?'s':''}`].filter(Boolean).join(', ');
     const st=T.status==='sunk'?'sunk':T.status==='afloat'?(T.flood>1||T.fires?'damaged':'undamaged')+(T.ev&&T.ev.until>R.t?', evading':'')+(T.firing?', firing':''):{sinking:'sinking',capsizing:'rolling over',blown:'blown up'}[T.status];
     return `<div class="trfl"><div><strong>${esc(T.type)} ${esc(T.name)}</strong> <span class="st">${T.side==='blue'?'yours':T.side==='red'?'enemy':'target'} · ${fmtK(T.disp)} t ${T.spec.name.toLowerCase()} · ${f0(d)} km, ${String(Math.round(bearing(T.x-R.ship.x,T.y-R.ship.y))).padStart(3,'0')}° · ${st}</span>
-      <div class="st">${hit?`Hit by ${hit}`:'Not hit'}${T.status==='afloat'&&T.flood>1?` · ${fmtK(T.flood)} t of water in her (${f0(T.flood/T.reserve*100)}% of what she can take) · list ${f1(Math.abs(T.list))}°${Math.abs(T.list)>.5?(T.list>0?' to starboard':' to port'):''}`:''}${T.status==='afloat'&&T.fires?` · ${T.fires} fire${T.fires>1?'s':''}`:''}</div>
+      <div class="st">${hit?`Hit by ${hit}`:'Not hit'}${T.status==='afloat'&&T.flood>1?` · ${fmtK(T.flood)} t of water in her (${f0(T.flood/T.reserve*100)}% of what she can take) · list ${f1(Math.abs(T.list))}°${Math.abs(T.list)>.5?(T.list>0?' to starboard':' to port'):''}`:''}${T.status==='afloat'&&T.fires?` · ${T.fires} fire${T.fires>1?'s':''}`:''}${shipSys(T)?` · ${shipSys(T)}`:''}</div>
       ${T.log[0]?`<div class="st">${mmss(T.log[0].t)} ${esc(T.log[0].s)}</div>`:''}</div>
       <span class="trbtns"><button class="btn ghost" data-tgview="${T.id}">View</button>${T.side==='blue'?'':`<button class="btn ghost" data-tgdel="${T.id}">Remove</button>`}</span></div>`; }).join(''); }
 // The flight deck in plan, bow to the left, with every aircraft on it: ranged aft wings spread, parked forward wings folded.
@@ -4677,6 +4787,24 @@ function warshipMesh(T){ const s=T.spec, fcv={L:s.L,B:s.B,D:s.D,Cb:s.Cb,bow:'pla
   return grp; }
 function tgt3Make(T){ const outer=new THREE.Group(), inner=new THREE.Group(); outer.add(inner); TR3.scene.add(outer);
   inner.add(T.spec.cv?cvMesh(T.cvm||TR.cv,T.csm||TR.cs).grp:warshipMesh(T)); inner.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } }); return {outer,inner}; }
+// Damage you can see: a scorched, jagged hole in the deck where a bomb went in, a torn hole at the waterline on the side a torpedo or a
+// collision struck. They are added to the ship's own group, so they list, trim and settle with her.
+function jagGeo(r,seed){ const n=16, P=[0,0,0], I=[]; let s=seed||1; const rnd=()=>(s=(s*9301+49297)%233280)/233280;
+  for(let i=0;i<=n;i++){ const a=i/n*2*Math.PI, q=r*(.62+.38*rnd()); P.push(Math.cos(a)*q,Math.sin(a)*q,0); } for(let i=1;i<=n;i++) I.push(0,i,i+1);
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setIndex(I); g.computeVertexNormals(); return g; }
+function dmgMats(){ if(TR3.dmgM) return TR3.dmgM; const o=document.createElement('canvas'); o.width=o.height=64; const g=o.getContext('2d'), gr=g.createRadialGradient(32,32,4,32,32,31);
+  gr.addColorStop(0,'rgba(12,10,8,.95)'); gr.addColorStop(.6,'rgba(20,16,12,.6)'); gr.addColorStop(1,'rgba(20,16,12,0)'); g.fillStyle=gr; g.fillRect(0,0,64,64);
+  const po={polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2};
+  return TR3.dmgM={hole:new THREE.MeshBasicMaterial({color:0x070707,side:THREE.DoubleSide,...po}),rim:new THREE.MeshStandardMaterial({color:0x3a2a1c,roughness:.95,side:THREE.DoubleSide,...po}),
+    soot:new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(o),transparent:true,depthWrite:false,side:THREE.DoubleSide,...po})}; }
+function tgt3Marks(T,grp){ if(!T.marks||!T.marks.length) return; const done=grp.userData.marks||(grp.userData.marks=new Set()), M=dmgMats();
+  const yDeck=T.spec.cv?((T.csm||TR.cs).hFD-T.T):T.D-T.T, halfDeck=T.spec.cv?(T.cvm||TR.cv).deckW/2:T.B/2;
+  for(const m of T.marks){ if(done.has(m)) continue; done.add(m); const x=T.L/2-m.x, seed=Math.floor(m.t*7+m.x*13)%233280+1;
+    if(m.k==='bomb'){ const z=clamp(m.v,-halfDeck+m.s*.6,halfDeck-m.s*.6), y=yDeck+.06;
+      for(const [geo,mat,dy] of [[new THREE.CircleGeometry(m.s*1.6,20),M.soot,.02],[jagGeo(m.s*.75,seed+3),M.rim,.04],[jagGeo(m.s*.5,seed),M.hole,.06]]){ const o=new THREE.Mesh(geo,mat); o.rotation.x=-Math.PI/2; o.position.set(x,y+dy,z); grp.add(o); } }
+    else { const sd=m.v>=0?1:-1, u=x, hw=(typeof hullHalf==='function'?hullHalf(T,u):T.B/2)||T.B/2*.6, z=sd*(hw+.1);
+      for(const [geo,mat,sx,sy,dy,dz] of [[new THREE.CircleGeometry(m.s*1.2,20),M.soot,1.5,1.3,1.8,.02],[jagGeo(m.s*.7,seed+5),M.rim,1.5,.9,.45,.04],[jagGeo(m.s*.5,seed),M.hole,1.5,.85,.35,.06]]){
+        const o=new THREE.Mesh(geo,mat); o.scale.set(sx,sy,1); o.position.set(x,dy,z+sd*dz); o.rotation.y=sd>0?0:Math.PI; grp.add(o); } } } }
 // A pool of sprites, handed out each frame and hidden when not used.
 function sprPool(n,mk){ const a=[]; for(let i=0;i<n;i++){ const s=mk(); s.visible=false; TR3.scene.add(s); a.push(s); } a.k=0; return a; }
 const sprTake=a=>{ const s=a[a.k++]; if(s) s.visible=true; return s; };
@@ -4704,6 +4832,7 @@ function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
     if(T===R.ship){ TR3.ship.visible=T.status!=='sunk'; TR3.foam.visible=T.status==='afloat'; }
     if(T.status==='sunk'||Math.hypot(x,z)>20000){ if(r) r.outer.visible=false; continue; }
     const cur=T===R.ship; if(cur){ if(r) r.outer.visible=false; r={inner:TR3.ship}; } else if(!r){ r=tgt3Make(T); TR3.tg.set(T.id,r); }
+    tgt3Marks(T,r.inner);
     let list=T.list, trim=T.trim, sink=T.sink; const f=T.goneF||0;
     if(T.status==='sinking'){ trim+=(T.trim>=0?1:-1)*30*f*f; sink+=T.D*3.4*f*f; }
     if(T.status==='capsizing'){ list+=(T.list>=0?1:-1)*(170-Math.abs(T.list))*ease3(f*1.3); sink+=T.D*2.6*Math.max(0,f-.55)/.45; }
@@ -5046,7 +5175,8 @@ $('#tourskip').addEventListener('click',()=>{ tourAt=-1; tourShow(); });
 $('#touragain').addEventListener('click',()=>{ $('#setd').hidden=true; tourStart(); });
 trimRivals();
 fixDesign(S.design);
-for(const c of S.classes){ if(!c.cv) c.cv=newCV(c.tons||12000); delete c.tons; if(!c.cv.funnel) c.cv.funnel=c.cv.island==='none'?'down':'island'; if(!c.cv.istyle) c.cv.istyle='tower'; }
+for(const c of S.classes){ if(!c.cv) c.cv=newCV(c.tons||12000); delete c.tons; if(!c.cv.funnel) c.cv.funnel=c.cv.island==='none'?'down':'island'; if(!c.cv.istyle) c.cv.istyle='tower';
+  if(c.cv.island==='small'||c.cv.island==='large'){ const big=c.cv.island==='large'; c.cv.islp={flag:big?1:0,air:1,fdir:c.cv.radar==='r2'?1:0,dirs:big?1:0,mast:big||c.cv.radar!=='none'?'tripod':'pole'}; c.cv.island='built'; } }
 if(!S.cvView) S.cvView={comp:true,d3:false,water:true};
 if(!clsOf(S.cvSel)&&S.classes.length) S.cvSel=S.classes[0].id;
 applyTheme();
@@ -5070,7 +5200,7 @@ function numEdit(o){ if(o.querySelector('input')) return; const d=o.closest('.di
 document.addEventListener('click',e=>{ const o=e.target.closest('.dim output'); if(o) numEdit(o); });
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches&&e.target.matches('.dim output')){ e.preventDefault(); numEdit(e.target); } });
 // for testing only: ?debug exposes the inner state to the console
-if(/[?&]debug\b/.test(location.search)) window.FT={trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
+if(/[?&]debug\b/.test(location.search)) window.FT={hangarHere,hangarK,trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
 })();
 </script>
 
