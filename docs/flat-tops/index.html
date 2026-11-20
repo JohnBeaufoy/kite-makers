@@ -3265,6 +3265,12 @@ const DROPS=[
     'Fire, smoke and explosions are 30% bigger, magazine explosions included.',
     'The island is back as it was before islands were built from parts: a small or a large island. Saved designs keep a large island if theirs had a flag bridge or gun directors.',
   ]},
+  {at:'2026-11-21T10:15:00+13:00',items:[
+    'Battleships and cruisers tidied up in 3D: the crane on the quarterdeck stands on its post instead of floating, floatplanes sit on their catapults, the light AA guns point up instead of into the deck, and the rangefinders and directors no longer stick out like black bars. Turret faces slope back the way real ones do, with the guns coming out of the face.',
+    'Gun barrels are to scale, worked out from each gun\'s calibre and length: 16-inch, 15-inch, 8-inch, 6-inch and 5-inch guns now look the right length and thickness on battleships, cruisers, destroyers and carriers.',
+    'The cruisers\' centreline 5-inch mounts no longer sit inside the bridge and the after superstructure: the forward one stands clear in front of the bridge, the after one on top of the after superstructure.',
+    'Wakes look like real ones: white water churns and breaks up in the sea itself rather than being painted on behind the ship, so the ship draws away from it. Close astern it is solid foam, then it spreads into patches and streaks and leaves a pale, smoothed slick. The bow wave and the waves spreading from it break into scattered foam.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -3364,7 +3370,7 @@ function cvMesh(cv,cs,opt={}){
   const grey=mat('#6E777D'), dark=mat('#2B3034',{roughness:.6}), black=mat('#151719'), glassM=mat('#1C2328',{roughness:.3,metalness:.2,envMapIntensity:.6}), steel=mat('#6A7176',{roughness:.6,metalness:.3}), bronze=mat('#8A6A3C',{roughness:.4,metalness:.7});
   const add=(geo,m,x,y,z,to)=>{ const o=new THREE.Mesh(geo,m); o.position.set(x||0,y||0,z||0); (to||grp).add(o); return o; };
   const box=(lx,ly,lz,x,y,z,m)=>add(new THREE.BoxGeometry(lx,ly,lz),m||grey,x,y,z);
-  const barrel=(len,r,from,dir,m)=>{ const g=new THREE.CylinderGeometry(r,r,len,6); g.rotateX(Math.PI/2); g.translate(0,0,len/2); const o=add(g,m||dark,from.x,from.y,from.z); o.lookAt(from.clone().add(dir)); return o; };
+  const barrel=(len,r,from,dir,m)=>{ const g=new THREE.CylinderGeometry(r,r,len,8); g.rotateX(Math.PI/2); g.translate(0,0,len/2); const o=add(g,m||dark,from.x,from.y,from.z); o.lookAt(from.clone().add(dir)); return o; };
   // hull
   const hm=mat('#ffffff',{vertexColors:true,roughness:.78,side:THREE.DoubleSide}); const wells=opt.lifts?cv.lifts.filter(l=>!l.edge).map(l=>[l.x-l.l/2,l.x+l.l/2]):null; add(cvHullGeo(cv,cs,ln,wells),hm);
   const bAt=(m,z)=>ln.b(clamp(m,0,L),z);
@@ -3441,8 +3447,8 @@ function cvMesh(cv,cs,opt={}){
   for(const g of plan.mounts){ const s=g.s, m=g.m, x=X(m);
     if(g.k==='H'){ const z=s*(hw+2.4), y=yFD-2.4, zi=hullOut(m,cs.hFD-3.65)-.3, zo=hw+4.7;
       box(5,.5,zo-zi,x,y-1.25,s*(zi+zo)/2,steel); wedge(m,4.6,y-1.5,s*zi,s*zo,Math.min(5,(zo-zi)*.8+.5));
-      if(H.id==='h1'){ box(.5,2,2.4,x+.9,y-.1,z); barrel(5,.12,new THREE.Vector3(x,y,z),new THREE.Vector3(.4,.5,s)); }
-      else { box(3.4,2.1,3.2,x,y,z); for(const o of [-.45,.45]) barrel(5.5,.13,new THREE.Vector3(x+o,y+.3,z+s*1.4),new THREE.Vector3(.35,.45,s)); } }
+      if(H.id==='h1'){ box(.5,2,2.4,x+.9,y-.1,z); barrel(4.2,.11,new THREE.Vector3(x,y,z),new THREE.Vector3(.4,.5,s)); }
+      else { box(3.4,2.1,3.2,x,y,z); for(const o of [-.45,.45]) barrel(4,.11,new THREE.Vector3(x+o,y+.3,z+s*1.4),new THREE.Vector3(.35,.45,s)); } }
     else if(g.k==='M'){ const z=s*(hw+1.9), y=yFD-1.5, zi=hullOut(m,cs.hFD-2.2)-.3, zo=hw+3.5;
       box(3.4,.35,zo-zi,x,y-.7,s*(zi+zo)/2,steel); wedge(m,3.2,y-.87,s*zi,s*zo,Math.min(4,(zo-zi)*.8+.5));
       box(1.8,1.1,1.8,x,y,z,dark); for(const o of [-.3,.3]) for(const p of [-.3,.3]) barrel(2.6,.07,new THREE.Vector3(x+o,y+.3,z+p),new THREE.Vector3(.5,.8,s*.3),black); }
@@ -3486,6 +3492,16 @@ function seaTexture(){
   for(let i=0;i<700;i++){ const x=rnd()*256, y=rnd()*256, w=3+rnd()*9; g.fillStyle=`rgba(${rnd()<.5?'175,200,215':'8,25,38'},${.03+rnd()*.06})`; g.fillRect(x,y,w,1+rnd()); }
   const t=new THREE.CanvasTexture(o); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(140,140); t.anisotropy=8; return t;
 }
+// Churning foam: tileable value noise in four octaves, contrast stretched, so a threshold on it gives patches of white water that
+// range from scattered flecks to solid as the threshold falls. Made once and shared.
+let FOAMN=null;
+function foamNoise(){ if(FOAMN) return FOAMN; const N=256, c=document.createElement('canvas'); c.width=c.height=N; const g=c.getContext('2d'), im=g.createImageData(N,N); let r=11; const rnd=()=>(r=(r*9301+49297)%233280)/233280;
+  const oct=[8,16,32,64].map(G=>{ const a=new Float32Array(G*G); for(let i=0;i<a.length;i++) a[i]=rnd(); return {G,a}; }), sm=x=>x*x*(3-2*x);
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){ let v=0, amp=.5, tot=0;
+    for(const {G,a} of oct){ const fx=x/N*G, fy=y/N*G, x0=Math.floor(fx), y0=Math.floor(fy), tx=sm(fx-x0), ty=sm(fy-y0), X0=x0%G, X1=(x0+1)%G, Y0=y0%G, Y1=(y0+1)%G;
+      const p=a[Y0*G+X0]+(a[Y0*G+X1]-a[Y0*G+X0])*tx, q=a[Y1*G+X0]+(a[Y1*G+X1]-a[Y1*G+X0])*tx; v+=amp*(p+(q-p)*ty); tot+=amp; amp*=.55; }
+    v=clamp((v/tot-.5)*1.9+.5,0,1); const k=(y*N+x)*4; im.data[k]=im.data[k+1]=im.data[k+2]=v*255; im.data[k+3]=255; }
+  g.putImageData(im,0,0); const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; return FOAMN=t; }
 function foamTexture(){
   const o=document.createElement('canvas'); o.width=256; o.height=64; const g=o.getContext('2d'); let r=5; const rnd=()=>(r=(r*9301+49297)%233280)/233280;
   for(let i=0;i<1400;i++){ const x=rnd()*256, y=rnd()*64, a=Math.max(0,1-x/256)*(1-Math.abs(y-32)/32)*.8; g.fillStyle=`rgba(245,250,252,${a*rnd()})`; g.fillRect(x,y,2+rnd()*6,1+rnd()*2); }
@@ -4740,17 +4756,23 @@ function seaMesh(tex){ const P=[], U=[], N=[], I=[], NA=320, rs=[0]; for(let r=1
   for(const r of rs) for(let j=0;j<NA;j++){ const a=j/NA*2*Math.PI, x=r*Math.cos(a), z=r*Math.sin(a); P.push(x,0,z); U.push(x/SEATILE,-z/SEATILE); N.push(0,1,0); }
   for(let i=0;i<rs.length-1;i++) for(let j=0;j<NA;j++){ const a=i*NA+j, b=i*NA+(j+1)%NA, c=a+NA, d=b+NA; I.push(a,b,c,b,d,c); }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2)); g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3)); g.setIndex(I);
-  const u=TR3.seaU={uW:{value:Array.from({length:10},()=>new THREE.Vector4())},uQ:{value:Array.from({length:10},()=>new THREE.Vector2())},uCalm:{value:Array.from({length:8},()=>new THREE.Vector4())},uKel:{value:Array.from({length:8},()=>new THREE.Vector4())},uSp:{value:.03}};
+  const u=TR3.seaU={uW:{value:Array.from({length:10},()=>new THREE.Vector4())},uQ:{value:Array.from({length:10},()=>new THREE.Vector2())},uCalm:{value:Array.from({length:8},()=>new THREE.Vector4())},uKel:{value:Array.from({length:8},()=>new THREE.Vector4())},uSp:{value:.03},uFN:{value:foamNoise()},uFo:{value:new THREE.Vector3()}};
   tex.repeat.set(1,1); const m=new THREE.MeshStandardMaterial({map:tex,roughness:.32,metalness:0,envMapIntensity:.7}); m.extensions={derivatives:true};
   const head='uniform vec4 uW[10];\nuniform vec2 uQ[10];\nuniform vec4 uCalm[8];\nvarying vec2 vWP;\n'+SEA_KELV;
-  const KF='#include <map_fragment>\nvec2 kfw=fwidth(vWP); float kPx=max(kfw.x,kfw.y), kFo, kF2, kH=kelv(vWP,kPx,kFo), kHx=kelv(vWP+vec2(0.3,0.0),kPx,kF2), kHz=kelv(vWP+vec2(0.0,0.3),kPx,kF2);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.93,0.96,0.98),clamp(kFo,0.0,0.85));\n';
+  const KF='#include <map_fragment>\nvec2 kfw=fwidth(vWP); float kPx=max(kfw.x,kfw.y), kFo, kF2, kH=kelv(vWP,kPx,kFo), kHx=kelv(vWP+vec2(0.3,0.0),kPx,kF2), kHz=kelv(vWP+vec2(0.0,0.3),kPx,kF2);\n'+
+    // the foam is broken up by churning noise fixed in the water, not the ship: thin foam is scattered patches, thick foam nearly solid
+    'vec2 kwp=vWP+uFo.xy; float kN=texture2D(uFN,kwp/64.0+vec2(uFo.z*0.004,uFo.z*0.0015)).r*0.6+texture2D(uFN,kwp/16.0+vec2(-uFo.z*0.006,uFo.z*0.01)).r*0.4;\n'+
+    'float kf=clamp(kFo,0.0,1.0), kA=smoothstep(1.0-kf,1.0-kf+0.25,kN)*(0.5+0.5*kf);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.93,0.96,0.98),clamp(kA,0.0,0.9));\n';
   m.onBeforeCompile=sh=>{ Object.assign(sh.uniforms,u); sh.vertexShader=head+'uniform float uSp;\n'+sh.vertexShader.replace('#include <beginnormal_vertex>',SEA_GLSL).replace('#include <begin_vertex>','vec3 transformed=position+gd;');
-    sh.fragmentShader=head+sh.fragmentShader.replace('#include <map_fragment>',KF).replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n'+SEA_FRAG); };
+    sh.fragmentShader=head+'uniform sampler2D uFN;\nuniform vec3 uFo;\n'+sh.fragmentShader.replace('#include <map_fragment>',KF).replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n'+SEA_FRAG); };
   const o=new THREE.Mesh(g,m); o.receiveShadow=true; o.frustumCulled=false; return o; }
 // Each frame: the phase of every wave at the focus, and the hulls to calm the water around (x, z of the centre, her yaw, her length).
 function seaUpdate(t,FE,FN,calm){ const u=TR3.seaU, W=TR3.waves; if(!u||!W) return;
   W.forEach((w,i)=>{ u.uW.value[i].set(w.dx,w.dz,w.k,w.a); u.uQ.value[i].set((w.k*(w.dx*FE-w.dz*FN)-w.w*t)%(2*Math.PI),w.q); });
-  for(let i=0;i<8;i++){ const c=calm[i]; u.uCalm.value[i].set(c?c.x:0,c?c.z:0,c?c.th:0,c?c.L:0); u.uKel.value[i].set(c?(c.kn||0)*KN:0,c?c.B||20:20,c&&c.wake?1:0,0); } }
+  for(let i=0;i<8;i++){ const c=calm[i]; u.uCalm.value[i].set(c?c.x:0,c?c.z:0,c?c.th:0,c?c.L:0); u.uKel.value[i].set(c?(c.kn||0)*KN:0,c?c.B||20:20,c&&c.wake?1:0,0); }
+  u.uFo.value.set(foamOrg(FE),foamOrg(-FN),t%20000); if(TR3.wake&&TR3.wake.material.uniforms) TR3.wake.material.uniforms.uFo.value.copy(u.uFo.value); }
+// Foam noise is laid in the water: the focus east and south, wrapped to 1024 m (a whole number of noise tiles) so it stays precise.
+const foamOrg=v=>((v%1024)+1024)%1024;
 // Moving the 3D view: zooming out past the limit goes back to the chart; panning moves the focus over the sea.
 function tr3Dist(d){ if(TR.view.chase){ TR3.cdist=clamp(d*(TR3.cdist||45)/TR3.dist,12,900); return; } if(d>DIST2D){ trLeave3D(); return; } TR3.dist=Math.max(40,d); }
 function tr3Yaw(){ const L=TR.view.follow?TR.ship:trLockT(), th=L?(90-L.hdg)*DEG:0; return TR3.follow&&L?TR3.yaw-th:TR3.yaw; }
@@ -4762,6 +4784,36 @@ function tr3Click(e){ const r=$('#tr3').getBoundingClientRect(), nd=new THREE.Ve
   const o=rc.ray.origin, d=rc.ray.direction; if(d.y>=-1e-4) return; const k=-o.y/d.y; trMapClick((TR3.FE+o.x+d.x*k)/1000,(TR3.FN-(o.z+d.z*k))/1000); }
 function smokeTexture(){ const o=document.createElement('canvas'); o.width=o.height=64; const g=o.getContext('2d'), gr=g.createRadialGradient(32,32,2,32,32,31);
   gr.addColorStop(0,'rgba(255,255,255,.9)'); gr.addColorStop(.55,'rgba(255,255,255,.4)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(o); }
+// Her wake astern, on the ribbon laid along her track (u: its age, 0 at her stern to 1 at the end; v: across it). White water churned
+// up by her propellers, solid close astern, then spreading and breaking into patches and streaks that thin out and die away. The
+// churning is laid in the water (the same noise as the sea's foam), so she draws away from it rather than towing a picture behind her.
+function wakeMaterial(){
+  const m=new THREE.ShaderMaterial({uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{uOp:{value:.6},uFo:{value:new THREE.Vector3()}}]),
+    vertexShader:`varying vec2 vUv;
+varying vec2 vW;
+#include <fog_pars_vertex>
+void main(){ vUv=uv; vW=position.xz; vec4 mvPosition=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mvPosition;
+#include <fog_vertex>
+}`,
+    fragmentShader:`uniform sampler2D uFN;
+uniform vec3 uFo;
+uniform float uOp;
+varying vec2 vUv;
+varying vec2 vW;
+#include <fog_pars_fragment>
+void main(){ float age=vUv.x, v=abs(vUv.y*2.0-1.0);
+  vec2 wp=vW+uFo.xy;
+  float n=texture2D(uFN,wp/64.0+vec2(uFo.z*0.003,-uFo.z*0.002)).r*0.55+texture2D(uFN,wp/16.0+vec2(-uFo.z*0.008,uFo.z*0.012)).r*0.3+texture2D(uFN,wp/5.0).r*0.15;
+  float core=exp(-v*v*mix(1.5,4.5,age));
+  float dens=clamp(core*exp(-age*6.0)*uOp+core*(1.0-smoothstep(0.0,0.03,age))*0.6,0.0,1.0);   // solid only close astern, patchy within a few hundred metres
+  float edge=1.0-smoothstep(0.7,1.0,v+0.25*(n-0.5));
+  float th=1.0-dens*0.9, a=smoothstep(th,th+0.28,n)*(0.35+0.65*dens);
+  float slick=0.16*core*(1.0-age)*uOp*edge;   // the smoothed, paler water of the wake after the foam has gone
+  a*=edge; vec3 col=mix(vec3(0.62,0.80,0.88),vec3(0.94,0.97,0.99),clamp(a*3.0,0.0,1.0));
+  gl_FragColor=vec4(col,max(a*0.95,slick));
+#include <fog_fragment>
+}`,transparent:true,depthWrite:false,side:THREE.DoubleSide,fog:true});
+  m.uniforms.uFN={value:foamNoise()}; return m; }   // set after the merge, which would otherwise copy the texture
 // Foam along the waterline, heaviest at the bow.
 function foamRibbon(cv,cs){ const L=cv.L, ln=cvLines(cv,cs), fm=new THREE.MeshBasicMaterial({map:foamTexture(),transparent:true,depthWrite:false,side:THREE.DoubleSide}), P=[], U=[], I=[];
   for(const s of [1,-1]){ const base=P.length/3; for(let i=0;i<=60;i++){ const m=ln.foot+(L-ln.foot)*i/60, w=ln.b(m,cs.T), wide=1.2+5*Math.exp(-(((m-ln.foot)/(L*.08))**2));
@@ -4812,7 +4864,7 @@ function tr3Build(){
   // her wake: a ribbon laid along the track her stern has followed, widening and fading astern
   const NW=120, wpos=new Float32Array(NW*6), wuv=new Float32Array(NW*4), wi=[]; for(let i=0;i<NW-1;i++){ const a=2*i; wi.push(a,a+1,a+3,a,a+3,a+2); }
   const wg=new THREE.BufferGeometry(); wg.setAttribute('position',new THREE.BufferAttribute(wpos,3)); wg.setAttribute('uv',new THREE.BufferAttribute(wuv,2)); wg.setIndex(wi); wg.setDrawRange(0,0);
-  const wake=new THREE.Mesh(wg,new THREE.MeshBasicMaterial({map:foamTexture(),transparent:true,opacity:.6,depthWrite:false,side:THREE.DoubleSide})); wake.frustumCulled=false; sc.add(wake);
+  const wake=new THREE.Mesh(wg,wakeMaterial()); wake.frustumCulled=false; sc.add(wake);
   // funnel smoke: puffs that drift away on the true wind as she steams on
   const stx=smokeTexture(), puffs=[]; for(let i=0;i<70;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0x5d6266,transparent:true,depthWrite:false,opacity:0,fog:true})); s.visible=false; sc.add(s); puffs.push({s,t0:-1e9}); }
   // aircraft: one model per design, cloned for each aircraft, gear down, and the height that puts its wheels on the deck
@@ -4854,10 +4906,10 @@ function tr3Frame(){
   const hs=Math.sin(sh.hdg*DEG), hc=Math.cos(sh.hdg*DEG), se=E-hs*cv.L*.46, sn=N-hc*cv.L*.46, life=150, tr=(R.track||[]).filter(p=>t-p.t<=life).slice(0,TR3.NW-1);
   { const pts=[{e:se,n:sn,t},...tr.filter((p,i)=>i||Math.hypot(p.e-se,p.n-sn)>1)], P=TR3.wpos, U=TR3.wuv, n=pts.length;
     for(let i=0;i<n;i++){ const a=pts[Math.max(0,i-1)], b=pts[Math.min(n-1,i+1)]; let de=a.e-b.e, dn=a.n-b.n; const l=Math.hypot(de,dn); if(l<1e-3){ de=hs; dn=hc; } else { de/=l; dn/=l; }
-      const p=pts[i], age=t-p.t, hw2=Math.min(cv.B*2.2,cv.B*.42+age*.9), x=p.e-FE, z=-(p.n-FN), px=-dn*hw2, pz=-de*hw2, wy=.12+Math.min(1,age/25)*waveH(p.e,-p.n,t);
+      const p=pts[i], age=t-p.t, hw2=Math.min(cv.B*1.2,cv.B*.45+age*.3), x=p.e-FE, z=-(p.n-FN), px=-dn*hw2, pz=-de*hw2, wy=.12+Math.min(1,age/25)*waveH(p.e,-p.n,t);
       P.set([x+px,wy,z+pz,x-px,wy,z-pz],i*6); const u=Math.min(1,(age/life)**1.6); U.set([u,0,u,1],i*4); }
     TR3.wake.geometry.setDrawRange(0,Math.max(0,n-1)*6); TR3.wake.geometry.attributes.position.needsUpdate=true; TR3.wake.geometry.attributes.uv.needsUpdate=true;
-    TR3.wake.material.opacity=clamp(.1+sh.kn/18,.1,.95); }
+    TR3.wake.material.uniforms.uOp.value=clamp(.1+sh.kn/18,.1,.95); }
   // smoke from the funnels, carried off by the true wind
   { const [wx,wy]=hdgV(R.wind.from+180), ws=R.wind.kn*KN, P=TR3.puffs; if(jump) for(const q of P){ q.t0=-1e9; q.s.visible=false; } TR3.nextPuff=Math.max(TR3.nextPuff,t-12);
     while(TR3.nextPuff<=t){ for(const v of TR3.smokeAt){ const wv=TR3.ship.localToWorld(v.clone()), q=P.reduce((a,b)=>a.t0<b.t0?a:b); q.t0=TR3.nextPuff; q.e=FE+wv.x; q.n=FN-wv.z; q.y=wv.y; } TR3.nextPuff+=1.6; }
@@ -4988,11 +5040,11 @@ function warshipMesh(T){ const s=T.spec, fcv={L:s.L,B:s.B,D:s.D,Cb:s.Cb,bow:'pla
   add(cvHullGeo(fcv,fcs,ln),mat('#ffffff',{vertexColors:true,side:THREE.DoubleSide}),0,0,0);
   const bw=f=>ln.b(clamp(f*s.L,0,s.L),s.D);
   // turrets: the inner one of a pair superfires over the outer; aft turrets face aft
-  s.tur.forEach(([f,n,cal])=>{ const x=X(f*s.L), fwd=f<.5, sup=s.tur.some(([g])=>Math.abs(g-f)<.12&&(fwd?g<f:g>f)), lift=sup?(cal>.3?3.4:2.5):0, w=Math.min(bw(f)*1.6,s.B*(cal>.3?.36:cal>.18?.3:cal>.14?.27:.24)), l=w*1.2, h=cal>.3?3.3:cal>.18?2.6:2.1;
+  s.tur.forEach(([f,n,cal])=>{ const x=X(f*s.L), fwd=f<.5, sup=s.tur.some(([g])=>Math.abs(g-f)<.12&&(fwd?g<f:g>f)), lift=sup?(cal>.3?3.4:2.5):0, w=Math.min(bw(f)*1.6,s.B*(cal>.3?.36:cal>.18?.3:cal>.14?.27:.3)), l=Math.max(w*1.2,cal*32), h=cal>.3?3.3:cal>.18?2.6:2.1;
     if(sup) add(new THREE.CylinderGeometry(w*.42,w*.46,lift+.2,16),grey,x,yD+lift/2,0);
     const tg=new THREE.Group(); tg.position.set(x,yD+lift,0); if(!fwd) tg.rotation.y=Math.PI; grp.add(tg);
     add(new THREE.CylinderGeometry(w*.46,w*.48,.9,16),grey,0,.45,0,tg); add(new THREE.BoxGeometry(l,h,w),light,l*.06,.9+h/2,0,tg);
-    const bl=cal*42; for(let k=0;k<n;k++){ const g=new THREE.CylinderGeometry(cal*.5,cal*.75,bl,8); g.rotateZ(-Math.PI/2); add(g,dark,l*.56+bl/2,.9+h*.42,(k-(n-1)/2)*w*.28,tg); } });
+    const bl=gunVis(cal), r=gunR(cal); for(let k=0;k<n;k++){ const g=new THREE.CylinderGeometry(r,r*1.5,bl,10); g.rotateZ(-Math.PI/2); add(g,dark,l*.56-.2+bl/2,.9+h*.42,(k-(n-1)/2)*w*.28,tg); } });
   // the superstructure: a deckhouse amidships, the bridge stacked over it, a tower mast, funnels and a mainmast
   const fl=s.fun, x0=X((s.br-.04)*s.L), x1=X((fl[fl.length-1]+.07)*s.L), sw=Math.min(bw(.45)*1.25,s.B*.62), hh=2.6;
   add(new THREE.BoxGeometry(x0-x1,hh,sw),light,(x0+x1)/2,yD+hh/2,0);
@@ -5011,15 +5063,19 @@ function warshipMesh(T){ const s=T.spec, fcv={L:s.L,B:s.B,D:s.D,Cb:s.Cb,bow:'pla
 // on their barbettes (the inner ones superfiring), a rounded bridge in tiers with a tower and the main-battery director on top,
 // raked funnels with caps, twin dual-purpose mounts and light AA tubs along the superstructure, an after superstructure with its
 // own director, masts with radar, and on the quarterdeck catapults with a floatplane and a crane.
+// Naval guns to scale: how much of the barrel shows outside the gunhouse (its length in calibres, less the part inside), and its
+// radius at the muzzle (the breech end is fatter). 16-inch/50, 15-inch/42, 8-inch/55, 6-inch/47, and 5-inch/38 and smaller.
+const gunVis=cal=>cal*(cal>=.4?50:cal>=.37?42:cal>=.19?55:cal>=.14?47:38)*.82;
+const gunR=cal=>Math.max(.08,cal*.78);
 const WARLOOK={
   BB:{sf:.34,sa:.72,tr:.5,rake:.035,shF:.7,shA:.08,flare:.22,fun:[.43,.53],funR:.105,funH:11,br:.31,brLv:5,brL:.075,tower:12,cT:true,deckHs:[.29,.72],
       dirs:[.63],aft:[.59,.7],sec:[.35,.41,.47,.53,.59],secMid:[],aa:[.27,.37,.44,.5,.56,.66,.74],cat:[[.95,-.27],[.95,.27]],crane:.985,main:.585,rf:true},
   BC:{sf:.33,sa:.74,tr:.48,rake:.03,shF:.45,shA:.05,flare:.18,fun:[.41,.5],funR:.085,funH:10,br:.31,brLv:5,brL:.07,tower:9,cT:true,tripod:true,deckHs:[.3,.71],
       dirs:[.66],aft:[.6,.69],sec:[.37,.45,.53],secMid:[],aa:[.34,.42,.48,.56,.64],cat:[],crane:0,main:.6,rf:true},
-  CA:{sf:.38,sa:.72,tr:.58,rake:.03,shF:.6,shA:.1,flare:.24,fun:[.43,.53],funR:.088,funH:8,br:.31,brLv:4,brL:.07,tower:8,cT:false,deckHs:[.27,.71],
-      dirs:[.65],aft:[.6,.7],sec:[.4,.5],secMid:[.275,.675],aa:[.33,.45,.56,.63,.72],cat:[[.94,-.2],[.94,.2]],crane:.985,main:.585,rf:true},
-  CL:{sf:.38,sa:.72,tr:.6,rake:.03,shF:.6,shA:.1,flare:.24,fun:[.43,.53],funR:.085,funH:7.5,br:.3,brLv:4,brL:.07,tower:7,cT:false,deckHs:[.265,.69],
-      dirs:[.64],aft:[.59,.69],sec:[.39,.49],secMid:[.265,.665],aa:[.34,.46,.56,.62],cat:[[.95,-.2],[.95,.2]],crane:.99,main:.58,rf:false}};
+  CA:{sf:.38,sa:.72,tr:.58,rake:.03,shF:.6,shA:.1,flare:.24,fun:[.43,.53],funR:.088,funH:8,br:.34,brLv:4,brL:.07,tower:8,cT:false,deckHs:[.265,.71],
+      dirs:[.65],aft:[.6,.7],sec:[.4,.5],secMid:[.285,.685],aa:[.33,.45,.56,.63,.72],cat:[[.94,-.2],[.94,.2]],crane:.985,main:.585,rf:true},
+  CL:{sf:.38,sa:.72,tr:.6,rake:.03,shF:.6,shA:.1,flare:.24,fun:[.43,.53],funR:.085,funH:7.5,br:.325,brLv:4,brL:.07,tower:7,cT:false,deckHs:[.25,.69],
+      dirs:[.64],aft:[.59,.69],sec:[.39,.49],secMid:[.27,.675],aa:[.34,.46,.56,.62],cat:[[.95,-.2],[.95,.2]],crane:.99,main:.58,rf:false}};
 // Her lines: waterline half-breadth b(u), deck height zD(u) and keel height zK(u) above the base line, u from bow (0) to stern (1).
 const WARLN=new Map();
 function warLines(s,ty){ if(WARLN.has(ty)) return WARLN.get(ty); const lk=WARLOOK[ty]||WARLOOK.CA, L=s.L, B=s.B, T=s.T, D=s.D, F=D-T;
@@ -5069,12 +5125,15 @@ function bigShipMesh(T){ const s=T.spec, lk=WARLOOK[T.type], ln=warLines(s,T.typ
   // a gun turret: n guns of calibre cal (m); its face sloped, on a barbette raised by lift; aft-facing when fwd is false
   const turret=(u,n,cal,fwd,lift,zc,small,yAt,ry)=>{ const w=n*cal*8.5+2.4, l=w*1.15+cal*6, h=1.5+cal*5.2, x=X(u), y0=(yAt??dY(u))+lift, tg=new THREE.Group(); tg.position.set(x,y0,zc||0); tg.rotation.y=(fwd?0:Math.PI)+(ry||0); G.add(tg);
     if(lift>.5) cyl(w*.44,w*.46,lift+.3,M.side,x,dY(u)-.3,zc||0,20);
-    const sh=new THREE.Shape(); sh.moveTo(-l*.5,0); sh.lineTo(l*.3,0); sh.lineTo(l*.5,h*.38); sh.lineTo(l*.4,h); sh.lineTo(-l*.46,h); sh.lineTo(-l*.5,h*.8); sh.closePath();
-    const hg=new THREE.ExtrudeGeometry(sh,{depth:w,bevelEnabled:false}); hg.translate(0,0,-w/2); const hm=new THREE.Mesh(hg,small?M.top:M.top); hm.position.y=.35; tg.add(hm);
+    // the gunhouse in profile: the face slopes back from its foot to the roof, the guns come out of the face a little under half way up
+    const sh=new THREE.Shape(); sh.moveTo(-l*.5,0); sh.lineTo(l*.5,0); sh.lineTo(l*.5,h*.25); sh.lineTo(l*.34,h); sh.lineTo(-l*.46,h); sh.lineTo(-l*.5,h*.8); sh.closePath();
+    const hg=new THREE.ExtrudeGeometry(sh,{depth:w,bevelEnabled:false}); hg.translate(0,0,-w/2); const hm=new THREE.Mesh(hg,M.top); hm.position.y=.35; tg.add(hm);
     const ring=new THREE.Mesh(new THREE.CylinderGeometry(w*.47,w*.49,.4,20),M.side); ring.position.y=.2; tg.add(ring);
-    if(!small&&lk.rf&&cal>.15){ const rf=new THREE.Mesh(new THREE.BoxGeometry(1.1,.9,w+cal*14),M.dark); rf.position.set(-l*.3,h*.82,0); tg.add(rf); }
-    const bl=cal*(small?36:46); for(let k=0;k<n;k++){ const g=new THREE.CylinderGeometry(cal*.75,cal*1.25,bl,10); g.rotateZ(-Math.PI/2); const b=new THREE.Mesh(g,M.gun); b.position.set(l*.42+bl/2,.35+h*.4,(k-(n-1)/2)*w/(n+.6)); tg.add(b);
-      const bg=new THREE.CylinderGeometry(cal*1.7,cal*1.7,cal*3,10); bg.rotateZ(-Math.PI/2); const bm=new THREE.Mesh(bg,M.dark); bm.position.set(l*.42+cal*1.2,.35+h*.4,b.position.z); tg.add(bm); }
+    // the rangefinder across the back of the roof, its ends just clear of the sides
+    if(!small&&lk.rf&&cal>.15){ const rf=new THREE.Mesh(new THREE.BoxGeometry(1.1,.9,w+2.4),M.side); rf.position.set(-l*.28,.35+h-.1,0); tg.add(rf); }
+    const yb=.35+h*.45, xf=l*(.5-.16*(.45-.25)/.75), bl=gunVis(cal), r=gunR(cal);
+    for(let k=0;k<n;k++){ const zb=(k-(n-1)/2)*w/(n+.6), g=new THREE.CylinderGeometry(r,r*1.6,bl,12); g.rotateZ(-Math.PI/2); const b=new THREE.Mesh(g,M.gun); b.position.set(xf-.2+bl/2,yb,zb); tg.add(b);
+      const bg=new THREE.CylinderGeometry(r*2.1,r*2.3,cal*3.2,12); bg.rotateZ(-Math.PI/2); const bm=new THREE.Mesh(bg,M.dark); bm.position.set(xf,yb,zb); tg.add(bm); }
     return h+.35; };
   // the hull and her deck
   const hg=warHullGeo(s,T.type); const hull=new THREE.Mesh(hg.hull,mat('#ffffff',{vertexColors:true,side:THREE.DoubleSide})); hull.castShadow=true; hull.receiveShadow=false; hull.userData.noRecv=true;
@@ -5093,30 +5152,34 @@ function bigShipMesh(T){ const s=T.spec, lk=WARLOOK[T.type], ln=warLines(s,T.typ
       box(2.2,.3,B*.64,M.top,x+l*.3,y+lv*.9,0); } y+=lv; }
   // the tower stands on the back of the top tier, the director on the tower, and the foremast with its radar behind the director
   const xT=xF-lt*.7, tw=B*.15; if(lk.tower>8){ const to=add(new THREE.CylinderGeometry(tw*.55,tw*.75,lk.tower,8),M.side,xT,y+lk.tower/2,0); to.scale.set(1.25,1,1); } else box(tw*1.3,lk.tower,tw,M.side,xT,y,0); y+=lk.tower;
-  box(4.5,2.6,3.6,M.top,xT,y,0); box(1,1,B*.45,M.dark,xT-1,y+1.4,0); y+=2.6;
+  box(4.5,2.6,3.6,M.top,xT,y,0); box(1,1,Math.min(B*.3,8),M.side,xT-1,y+1.4,0); y+=2.6;   // the director, its rangefinder arms
   if(lk.tripod){ for(const [dx,dz] of [[2.5,0],[-2,1.6],[-2,-1.6]]) add(new THREE.CylinderGeometry(.18,.25,lk.tower+8,6),M.dark,xT+dx*.5,y-lk.tower/2,dz*.5); }
-  cyl(.18,.24,11,M.dark,xT-.4,y,0,6); box(.3,2.6,3.6,M.dark,xT,y+6,0); box(.2,.2,B*.32,M.dark,xT-.4,y+8.5,0);   // pole mast, radar mattress and yard
+  cyl(.18,.24,11,M.dark,xT-.4,y,0,6); box(.25,2.6,3.6,M.dark,xT-.8,y+6,0); box(.2,.2,Math.min(B*.32,9),M.dark,xT-.4,y+8.5,0);   // pole mast, the radar mattress on its after side, and the yard
   // funnels: raked, oval, capped
   for(const f of lk.fun){ const x=X(f*L/L), r=B*lk.funR, h=lk.funH+(T.type==='BB'?2:0), o=cyl(r*.92,r,h,M.side,x,y1,0,20,1.55); o.rotation.z=.07; o.position.x-=h*.035;
     const cp=cyl(r*.97,r*.95,.9,M.dark,x-h*.07,y1+h-.2,0,20,1.55); cp.rotation.z=.07; }
   // after superstructure and its director
   { const [a0,a1]=lk.aft, x=X((a0+a1)/2); house(L*(a1-a0),lv,B*.4,M.side,x,y1,-1); house(L*(a1-a0)*.55,lv,B*.3,M.side,x+L*(a1-a0)*.1,y1+lv,-1);
-    for(const d of lk.dirs){ box(3.6,2.2,3,M.top,X(d),y1+lv*2,0); box(.8,.8,B*.3,M.dark,X(d)-.8,y1+lv*2+1.2,0); } }
+    for(const d of lk.dirs){ box(3.6,2.2,3,M.top,X(d),y1+lv*2,0); box(.8,.8,Math.min(B*.25,6.5),M.side,X(d)-.8,y1+lv*2+1.2,0); } }
   // mainmast
   { const x=X(lk.main); if(lk.tripod){ for(const dz of [-1.4,1.4]){ const o=add(new THREE.CylinderGeometry(.16,.22,20,6),M.dark,x-1.8,y1+9.5,dz); o.rotation.x=-Math.sign(dz)*.07; o.rotation.z=-.1; } }
     cyl(.18,.26,22,M.dark,x,y1,0,6); box(.2,.2,B*.28,M.dark,x,y1+17,0); }
   // dual-purpose twin mounts: along each side of the superstructure deck, and on the centreline fore and aft of it
   for(const u of lk.sec) for(const sg of [-1,1]) turret(u,2,.127,true,0,sg*(hw/2-1.6),true,y1,sg>0?-.6:.6);   // the side mounts stand on the 01 deck, trained out
-  for(const u of lk.secMid) turret(u,2,.127,u<.5,0,0,true,y1);
+  for(const u of lk.secMid) turret(u,2,.127,u<.5,0,0,true,u>=lk.aft[0]-.01?y1+lv:y1);   // the after one stands on the after superstructure
   // light AA: quadruple 40 mm in open tubs on the superstructure edges
-  for(const u of lk.aa) for(const sg of [-1,1]){ const x=X(u), z=sg*(hw/2+.4); cyl(1.5,1.5,1.1,M.side,x,y1,z,14); for(let k=0;k<4;k++){ const g=new THREE.CylinderGeometry(.06,.07,3,6); g.rotateZ(-Math.PI/2-.35); add(g,M.gun,x+1.2,y1+1.6,z+(k-1.5)*.35); } }
+  for(const u of lk.aa) for(const sg of [-1,1]){ const x=X(u), z=sg*(hw/2+.4); cyl(1.5,1.5,1.1,M.side,x,y1,z,14); for(let k=0;k<4;k++){ const g=new THREE.CylinderGeometry(.06,.07,3,6); g.rotateZ(-Math.PI/2+.35); /* elevated, not into the deck */ add(g,M.gun,x+1.2,y1+1.6,z+(k-1.5)*.35); } }
   // boats beside the funnels
   for(const sg of [-1,1]){ const o=add(new THREE.SphereGeometry(1,12,8),M.boat,X((lk.fun[0]+lk.fun[1])/2),y1+.7,sg*(hw/2-1.2)); o.scale.set(4.2,.8,1.1); }
   // aircraft: catapults on the quarterdeck, a floatplane on each, and the crane to recover them
   for(const [u,zf] of lk.cat){ const x=X(u), z=zf*B, yy=dY(u); cyl(.7,.9,1.4,M.dark,x,yy,z,10); const c=box(18,.5,1.1,M.dark,x,yy+1.4,z); c.rotation.y=zf>0?.35:-.35;
-    const pg=new THREE.Group(); pg.position.set(x,yy+2.6,z); pg.rotation.y=zf>0?.35:-.35; G.add(pg); const fu=new THREE.Mesh(new THREE.CylinderGeometry(.55,.4,9,10),M.boat); fu.rotation.z=Math.PI/2; pg.add(fu);
-    const wg=new THREE.Mesh(new THREE.BoxGeometry(1.8,.15,11),M.boat); wg.position.set(.8,.5,0); pg.add(wg); const fl=new THREE.Mesh(new THREE.BoxGeometry(5.5,.7,.8),M.boat); fl.position.set(.6,-1.2,0); pg.add(fl); }
-  if(lk.crane){ const x=X(lk.crane), yy=dY(lk.crane); cyl(.5,.6,6,M.dark,x,yy,0,8); const j=box(.5,.5,13,M.dark,x,yy+6.5,6); j.rotation.x=.45; }
+    // the floatplane sits on the catapult: float on the rail, struts up to the fuselage, wing, tail
+    const pg=new THREE.Group(); pg.position.set(x,yy+3.5,z); pg.rotation.y=zf>0?.35:-.35; G.add(pg); const fu=new THREE.Mesh(new THREE.CylinderGeometry(.55,.3,9,10),M.boat); fu.rotation.z=-Math.PI/2; pg.add(fu);
+    const wg=new THREE.Mesh(new THREE.BoxGeometry(1.8,.15,11),M.boat); wg.position.set(.8,.5,0); pg.add(wg); const fl=new THREE.Mesh(new THREE.BoxGeometry(5.5,.7,.8),M.boat); fl.position.set(.6,-1.2,0); pg.add(fl);
+    for(const sx of [-.4,1.6]){ const st=new THREE.Mesh(new THREE.BoxGeometry(.12,1,.12),M.dark); st.position.set(sx,-.6,0); pg.add(st); }
+    const fin=new THREE.Mesh(new THREE.BoxGeometry(1.3,1.5,.12),M.boat); fin.position.set(-4,.75,0); pg.add(fin); const tp=new THREE.Mesh(new THREE.BoxGeometry(1,.1,3.4),M.boat); tp.position.set(-4,.15,0); pg.add(tp); }
+  // the crane: a post, and a jib hinged at its head, angled up over the quarterdeck
+  if(lk.crane){ const x=X(lk.crane), yy=dY(lk.crane); cyl(.5,.6,6,M.dark,x,yy,0,8); const jg=new THREE.BoxGeometry(13,.5,.5); jg.translate(6.5,0,0); add(jg,M.dark,x,yy+5.8,0,0,.6); }
   const out=mergeByMat(G); out.add(hull); out.add(deck); G.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); return out; }
 // Burnt out: every surface of her blackened, once.
 function tgt3Char(g){ if(g.userData.charred) return; g.userData.charred=true; g.traverse(o=>{ if(o.isMesh&&o.material&&o.material.color&&!o.userData.dmg){ o.material=o.material.clone(); o.material.color.multiplyScalar(.22); if(o.material.vertexColors) o.material.color.setRGB(.2,.19,.18); } }); }
