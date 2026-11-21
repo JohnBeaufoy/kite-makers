@@ -3271,6 +3271,11 @@ const DROPS=[
     'The cruisers\' centreline 5-inch mounts no longer sit inside the bridge and the after superstructure: the forward one stands clear in front of the bridge, the after one on top of the after superstructure.',
     'Wakes look like real ones: white water churns and breaks up in the sea itself rather than being painted on behind the ship, so the ship draws away from it. Close astern it is solid foam, then it spreads into patches and streaks and leaves a pale, smoothed slick. The bow wave and the waves spreading from it break into scattered foam.',
   ]},
+  {at:'2026-11-21T23:00:00+13:00',items:[
+    'A ship that fire has beaten is now “consumed by fire, ship abandoned” instead of “burnt out”. Every space in her catches fire within a couple of minutes and goes on burning until the sea reaches it. She stays blackened, with her fires 30% bigger than before and twice the smoke.',
+    'Abandoned ships no longer float for ever: the sea creeps in from one end and she settles slowly, going down after a few hours, her fires going out one by one as the water reaches them. Water still pours in through her holes too, and if that fills her first she goes down as fast as any other sinking ship. About one abandoned ship in four still blows up when the fire reaches a magazine.',
+    'Fixed: a carrier’s flight deck did not always turn black when she was consumed by fire, and bomb holes made after that stayed pale.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -3604,7 +3609,7 @@ function etfHTML(){ const e=etfOf(), ok=S.classes.filter(c=>!cvStats(c.cv).errs.
       <span class="label">Their carriers' class</span><div class="chips">${ok.map(c=>`<button class="chip" data-etfcls="${c.id}" aria-pressed="${c===cls}"><span class="n">${esc(c.name)} class</span><span class="d">${f1(cvStats(c.cv).speed)} kn</span></button>`).join('')}</div></div>
     <div><span class="label">Aircraft on each carrier</span><div class="sqrows">${air}</div></div></div>`; }
 // What has happened to a ship, in a line.
-function shipDmgText(T){ if(T.status!=='afloat') return {sinking:'Sinking',capsizing:'Rolling over',blown:'Blown up and broken in two',burnt:'Burnt out, dead in the water',sunk:'Sunk'}[T.status]; const h=T.hits, n=h.bomb+h.torp+h.near;
+function shipDmgText(T){ if(T.status!=='afloat') return {sinking:'Sinking',capsizing:'Rolling over',blown:'Blown up and broken in two',burnt:'Consumed by fire, ship abandoned',sunk:'Sunk'}[T.status]; const h=T.hits, n=h.bomb+h.torp+h.near;
   if(!n&&T.flood<1&&!T.fires) return 'None';
   return [h.bomb&&`${h.bomb} bomb${h.bomb>1?'s':''}`,h.torp&&`${h.torp} torpedo${h.torp>1?'es':''}`,h.near&&`${h.near} near miss${h.near>1?'es':''}`,T.flood>1&&`${fmtK(T.flood)} t of water`,Math.abs(T.list)>.5&&`list ${f1(Math.abs(T.list))}°`,T.fires&&`${T.fires} fire${T.fires>1?'s':''}`,T.deckHoles&&`${T.deckHoles} hole${T.deckHoles>1?'s':''} in the flight deck`,shipSys(T)].filter(Boolean).join(' · '); }
 function trAirList(cv,cs){ const ts=trS(), out=[]; for(const d of trLib()){ const a=compute(d), f=cvAircraft(cv,cs,a,d), n=f.ok?(ts.air[d.name]||0):0; for(let i=0;i<n;i++) out.push({d,a,f}); } return out; }
@@ -3709,7 +3714,7 @@ function shipSys(T){ if(T.status!=='afloat'||!T.comps) return ''; const out=[], 
   if(T.aa0&&T.aa){ const a0=T.aa0.h+T.aa0.l, a=T.aa.h+T.aa.l; if(a0&&a<a0*.97) out.push(`${f0(100*a/a0)}% of her anti-aircraft guns left`); }
   return out.join(' · '); }
 // Why a damaged carrier cannot fly: going down, holes in the flight deck (patched in about 25 minutes each), fire in the hangar, or a heavy list.
-function cvHold(T){ const t=TR.t; if(T.status==='burnt') return 'She is a burnt-out wreck.'; if(T.status!=='afloat') return 'She is going down.';
+function cvHold(T){ const t=TR.t; if(T.status==='burnt') return 'Consumed by fire, ship abandoned.'; if(T.status!=='afloat') return 'She is going down.';
   if(T.deckHoles>0){ T.deckFixT=T.deckFixT??t+1500; if(t>=T.deckFixT){ T.deckHoles--; T.deckFixT=T.deckHoles>0?t+1500:null; if(!T.deckHoles) tgtNote(T,'The holes in her flight deck are patched: she can fly again.'); }
     if(T.deckHoles>0) return `Bomb holes in the flight deck are being patched, ${mmss(T.deckFixT-t)} to go.`; }
   if(T.comps.some(c=>c.ufire>.25)) return 'Fire in the hangar.';
@@ -4470,8 +4475,11 @@ function tgtDeckHit(T,w){ const C=T.cvC; if(!C) return; const ds=deckStart(C.cv)
   if(C.cv.cats>0&&!T.catsOut&&w.x-ds<45&&Math.random()<.6){ T.catsOut=true; tgtNote(T,'A bomb forward wrecked the catapults.'); } }
 // A magazine going up breaks her in two at the magazine, and both halves go down.
 function tgtBlow(T,why,c){ T.status='blown'; T.sinkT=0; T.blowSide=Math.random()<.5?-1:1; T.blowX=c?(c.x0+c.x1)/2:T.L*.3; tgtNote(T,`${why}. She blew up and broke in two.`); const p=c?tgtPt(T,c):T; TR.fx.push({kind:'boom',x:p.x,y:p.y,t:TR.t,size:T.L*.6}); }
-// Consumed by fire: she is left to burn, dead in the water, a blackened wreck. She still sinks if enough water gets into her.
-function tgtBurnt(T,why){ T.status='burnt'; T.burntT=TR.t; T.dc=false; T.dead=true; T.ordKn=0; T.steerKn=0; tgtNote(T,`${why}.`); }
+// Consumed by fire, ship abandoned: she is left to burn, dead in the water, blackened. Every space in her soon burns, and a fire goes out only
+// when the sea reaches it. Water keeps coming in through her holes, and she settles slowly besides, going down in a few hours; if her
+// holes fill her first, she goes down at the usual speed.
+function tgtBurnt(T,why){ T.status='burnt'; T.burntT=TR.t; T.magGo=Math.random()<.25;   // one abandoned ship in four has a magazine the fire can still set off
+  T.dc=false; T.dead=true; T.ordKn=0; T.steerKn=0; tgtNote(T,`${why}.`); }
 // A weapon arriving: w.kind is 'bomb', 'torp', 'near' (a bomb close alongside) or 'dud'; w.kg the charge (bombs: their weight), w.pen what
 // a bomb would go through in mm of deck, w.x where along her from the bow in metres, w.side +1 starboard or -1 port.
 function tgtHit(T,w){ if(T.status==='sunk') return;
@@ -4552,12 +4560,19 @@ function tgtStep(T,dt){ const t=TR.t;
       if(k==='ufire'&&c.ufire>.8&&Math.random()<.001*dt) c.fire=Math.max(c.fire,.3); }
     const hot=Math.max(c.fire,T.comps[c.i-1]?T.comps[c.i-1].fire:0,T.comps[c.i+1]?T.comps[c.i+1].fire:0);
     if(c.kind==='mag'&&!c.mflood&&hot>.45){ c.mfT=c.mfT??t; if(T.dc&&t-c.mfT>45){ c.mflood=true; c.fp=Math.max(c.fp,c.cap*.12); c.fs=Math.max(c.fs,c.cap*.12); tgtNote(T,'Fire next to a magazine: it has been flooded.'); }
-      else if(hot>.85){ c.heat=(c.heat||0)+hot*dt; if(c.heat>480&&Math.random()<.0008*dt*hot){ tgtBlow(T,'Fire reached a magazine',c); return; } } }
+      else if(hot>.85&&(T.status!=='burnt'||T.magGo)){ c.heat=(c.heat||0)+hot*dt; if(c.heat>480&&Math.random()<.0008*dt*hot){ tgtBlow(T,'Fire reached a magazine',c); return; } } }
     if(c.kind==='avgas'&&c.fire>.6&&(c.secN||0)<2&&Math.random()<.002*dt*({dc0:1,dc1:.6,dc2:.4}[(T.cvm||{}).dc]??1)) tgtSecondary(T,c,'avgas','Petrol vapour from the aviation fuel tanks exploded, tearing open the decks around them.');
     // a carrier's burning hangar: armed and fuelled aircraft, bombs and torpedoes going off one after another, each blast spreading the
     // fire along the hangar, for as long as there is anything left there to go off
     if(T.spec.cv&&c.ufire>.45&&t-(c.secT??-1e9)>20){ const H=hangarHere(T,c);
       if(H.w>.5&&Math.random()<.004*c.ufire*H.w*hangarK(T)*dt) tgtSecondary(T,c,'ammo',H.rearm?'Aircraft being refuelled and rearmed in the burning hangar are exploding, with the bombs and torpedoes beside them.':H.armed?'Fuelled and armed aircraft in the burning hangar are exploding.':'Petrol left in the aircraft in the burning hangar has exploded.'); } }
+  if(T.status==='burnt'){
+    // the sea creeps in from one end (the end already lower), compartment by compartment, filling her to her reserve in about four hours (less, with water already in her)
+    T.seepEnd=T.seepEnd??(Mt>=0?1:-1); let add=T.reserve*1.02/(4*3600)*dt;
+    for(const c of T.comps.slice().sort((a,b)=>T.seepEnd*((b.x0+b.x1)-(a.x0+a.x1)))){ if(add<=0) break; for(const k of ['fp','fs']){ const room=c.cap/2-c[k], d=Math.min(room,add/2); if(d>0){ c[k]+=d; add-=d; W+=d; Mt+=d*((c.x0+c.x1)/2-T.L/2); } } }
+    if(add>1e-6) W=Math.max(W,T.reserve*1.01);   // nowhere left for the sea to go: she is full, and goes
+    // every space burns, quickly, right up to the top; only the sea puts a fire out
+    for(const c of T.comps){ const wet=(c.fp+c.fs)/c.cap; if(wet>.9){ c.fire=Math.max(0,c.fire-.05*dt); c.ufire=Math.max(0,c.ufire-.05*dt); } else { c.fire=Math.min(1,c.fire+.01*dt); c.ufire=Math.min(1,c.ufire+.01*dt); } } }
   const Dp=T.disp+W, gm=T.GM-fsm/Dp; T.flood=W; T.gm=gm; T.sink=W/(T.L*T.B*.72*1.025); T.fires=T.comps.filter(c=>c.fire>.05||c.ufire>.05).length;
   T.list=Math.atan2(Ms,Dp*Math.max(.05,gm))*180/Math.PI; T.trim=Math.atan2(Mt,Dp*1.1*T.L)*180/Math.PI;
   const burn=T.comps.reduce((s,c)=>s+Math.max(c.fire,c.ufire),0)/T.comps.length; T.burn=burn;
@@ -4566,11 +4581,11 @@ function tgtStep(T,dt){ const t=TR.t;
     T.past=past; if(past>1&&decisive){ T.doom=(T.doom||0)+dt*clamp((past-.9)/.35,0,3); if(T.doom>300&&!T.doomNote){ T.doomNote=true; tgtNote(T,'She is in a bad way: the damage is getting ahead of her damage control.'); } }
     else { T.doom=Math.max(0,(T.doom||0)-dt*.5); if(T.doom<60) T.doomNote=false; }
     if(T.doom>900&&W<=T.reserve){ T.abandoned=true;
-      if(burn>.4&&W<T.reserve*.75){ tgtBurnt(T,'Burning beyond saving, she has been abandoned. She will burn out, but she floats'); return; }
+      if(burn>.4&&W<T.reserve*.75){ tgtBurnt(T,'Burning beyond saving: consumed by fire, ship abandoned. She will burn until the sea puts her fires out, settling slowly as she goes'); return; }
       T.status='sinking'; T.sinkT=0; const why=W/T.reserve>.75?'Too deep in the water to be saved':Math.abs(T.list)>T.cap*.55?'Heeling too far to be saved':'Dead in the water and wrecked beyond saving';
       tgtNote(T,`${why}, she has been abandoned and is going down.`); return; } }
   // nobody aboard (a target ship, or a wreck already given up): once fire has had most of her for long enough, she is burnt out
-  if(T.status==='afloat'&&!T.dc){ T.doom=burn>.4?(T.doom||0)+dt:Math.max(0,(T.doom||0)-dt*.5); if(T.doom>900){ tgtBurnt(T,'Fire has consumed her. She is a burnt-out wreck, but she floats'); return; } }
+  if(T.status==='afloat'&&!T.dc){ T.doom=burn>.4?(T.doom||0)+dt:Math.max(0,(T.doom||0)-dt*.5); if(T.doom>900){ tgtBurnt(T,'Consumed by fire, ship abandoned. She will burn until the sea puts her fires out, settling slowly as she goes'); return; } }
   if(W>T.reserve){ T.status='sinking'; T.sinkT=0; tgtNote(T,`She has more water in her than she can float with, and is going down by the ${Mt>0?'stern':'head'}.`); }
   else if(Math.abs(T.list)>T.cap||gm<=.02){ T.status='capsizing'; T.sinkT=0; tgtNote(T,gm<=.02?'The water sloshing in her has taken away her stability: she is rolling over.':`At ${f0(Math.abs(T.list))}° of list she cannot recover: she is rolling over.`); } }
 // On the chart: every target ship always shows, to scale close in, coloured by how she is.
@@ -4581,7 +4596,7 @@ function tgtDrawMap(c,PX,PY,s){ const R=TR;
     c.save(); c.translate(x,y); c.rotate(T.hdg*Math.PI/180); c.fillStyle=col; c.beginPath(); c.moveTo(0,-len/2); c.lineTo(wid/2,-len*.25); c.lineTo(wid/2,len/2); c.lineTo(-wid/2,len/2); c.lineTo(-wid/2,-len*.25); c.closePath(); c.fill(); if(T.status==='burnt'){ c.strokeStyle='rgba(255,255,255,.4)'; c.lineWidth=1; c.stroke(); } c.restore();
     if(T.tf&&R.view.km>15) continue;   // far out, a task force is labelled once, not ship by ship
     c.fillStyle=base; c.textAlign='left'; c.fillText(`${T.side==='red'?'Enemy ':''}${T.type} ${T.name}`,x+len/2+6,y-2);
-    if(hurt) { c.fillStyle='rgba(255,255,255,.75)'; c.fillText(T.status!=='afloat'?{sinking:'sinking',capsizing:'capsizing',blown:'blown up',burnt:'burnt out'}[T.status]:`${T.fires?`${T.fires} fire${T.fires>1?'s':''} · `:''}list ${f0(Math.abs(T.list))}°`,x+len/2+6,y+11); } }
+    if(hurt) { c.fillStyle='rgba(255,255,255,.75)'; c.fillText(T.status!=='afloat'?{sinking:'sinking',capsizing:'capsizing',blown:'blown up',burnt:'consumed by fire, abandoned'}[T.status]:`${T.fires?`${T.fires} fire${T.fires>1?'s':''} · `:''}list ${f0(Math.abs(T.list))}°`,x+len/2+6,y+11); } }
   if(R.view.km>15) for(const tf of R.tfs){ const sh=tf.ships.filter(T=>T.status!=='sunk'&&!(hid&&T.side==='red'&&!T.vis)); if(!sh.length) continue; const x=PX(sh.reduce((s,T)=>s+T.x,0)/sh.length), y=PY(sh.reduce((s,T)=>s+T.y,0)/sh.length);
     c.fillStyle=tf.side==='red'?'#F08A7E':'#8EC1EA'; c.textAlign='left'; c.fillText(`${tf.name} · ${sh.length} ship${sh.length>1?'s':''}`,x+14,y+16); }
   if(TR.view.km<60) for(const q of R.torps){ if(q.done&&R.t-q.doneT>30) continue; c.strokeStyle=q.fail?'rgba(255,255,255,.3)':'rgba(255,255,255,.75)'; c.lineWidth=1; c.beginPath(); c.moveTo(PX(q.x0),PY(q.y0)); c.lineTo(PX(q.x),PY(q.y)); c.stroke(); }
@@ -4600,7 +4615,7 @@ function burstGlyph(c,x,y,r,col,op){ if(!(op>.02)||!(r>0)) return; op=Math.min(1
   c.fillStyle=`rgba(255,255,255,${op*.6})`; c.beginPath(); c.arc(0,0,r*.22,0,2*Math.PI); c.fill(); c.restore(); }
 function tgtRowsHTML(){ const R=TR; if(!R.tgts.length) return '<p class="muted" style="margin:0;font-size:13px">None anchored. Pick a type above the chart, then click the chart where she should be.</p>';
   return R.tgts.map(T=>{ const d=Math.hypot(T.x-R.ship.x,T.y-R.ship.y), h=T.hits, hit=[h.bomb&&`${h.bomb} bomb${h.bomb>1?'s':''}`,h.torp&&`${h.torp} torpedo${h.torp>1?'es':''}`,h.near&&`${h.near} near miss${h.near>1?'es':''}`,h.dud&&`${h.dud} dud${h.dud>1?'s':''}`,h.col&&`${h.col} collision${h.col>1?'s':''}`].filter(Boolean).join(', ');
-    const st=T.status==='sunk'?'sunk':T.status==='afloat'?(T.flood>1||T.fires?'damaged':'undamaged')+(T.ev&&T.ev.until>R.t?', evading':'')+(T.firing?', firing':''):{sinking:'sinking',capsizing:'rolling over',blown:'blown up',burnt:'burnt out'}[T.status];
+    const st=T.status==='sunk'?'sunk':T.status==='afloat'?(T.flood>1||T.fires?'damaged':'undamaged')+(T.ev&&T.ev.until>R.t?', evading':'')+(T.firing?', firing':''):{sinking:'sinking',capsizing:'rolling over',blown:'blown up',burnt:'consumed by fire, ship abandoned'}[T.status];
     return `<div class="trfl"><div><strong>${esc(T.type)} ${esc(T.name)}</strong> <span class="st">${T.side==='blue'?'yours':T.side==='red'?'enemy':'target'} · ${fmtK(T.disp)} t ${T.spec.name.toLowerCase()} · ${f0(d)} km, ${String(Math.round(bearing(T.x-R.ship.x,T.y-R.ship.y))).padStart(3,'0')}° · ${st}</span>
       <div class="st">${hit?`Hit by ${hit}`:'Not hit'}${T.status==='afloat'&&T.flood>1?` · ${fmtK(T.flood)} t of water in her (${f0(T.flood/T.reserve*100)}% of what she can take) · list ${f1(Math.abs(T.list))}°${Math.abs(T.list)>.5?(T.list>0?' to starboard':' to port'):''}`:''}${T.status==='afloat'&&T.fires?` · ${T.fires} fire${T.fires>1?'s':''}`:''}${shipSys(T)?` · ${shipSys(T)}`:''}</div>
       ${T.log[0]?`<div class="st">${mmss(T.log[0].t)} ${esc(T.log[0].s)}</div>`:''}</div>
@@ -5182,7 +5197,9 @@ function bigShipMesh(T){ const s=T.spec, lk=WARLOOK[T.type], ln=warLines(s,T.typ
   if(lk.crane){ const x=X(lk.crane), yy=dY(lk.crane); cyl(.5,.6,6,M.dark,x,yy,0,8); const jg=new THREE.BoxGeometry(13,.5,.5); jg.translate(6.5,0,0); add(jg,M.dark,x,yy+5.8,0,0,.6); }
   const out=mergeByMat(G); out.add(hull); out.add(deck); G.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); return out; }
 // Burnt out: every surface of her blackened, once.
-function tgt3Char(g){ if(g.userData.charred) return; g.userData.charred=true; g.traverse(o=>{ if(o.isMesh&&o.material&&o.material.color&&!o.userData.dmg){ o.material=o.material.clone(); o.material.color.multiplyScalar(.22); if(o.material.vertexColors) o.material.color.setRGB(.2,.19,.18); } }); }
+const charMat=m=>{ if(!m||!m.color) return m; m=m.clone(); m.color.multiplyScalar(.22); if(m.vertexColors||m.map) m.color.setRGB(.2,.19,.18); return m; };   // a deck texture is darkened as a whole
+function tgt3Char(g){ if(g.userData.charred) return; g.userData.charred=true;
+  g.traverse(o=>{ if(o.isMesh&&o.material&&!o.userData.dmg) o.material=Array.isArray(o.material)?o.material.map(charMat):charMat(o.material); }); }
 // Broken in two: the ship is drawn twice, each copy cut off at the break by a clipping plane that moves with it, so the bow half and
 // the stern half can each tip up and go down on their own.
 function tgt3Break(T,r){ const src=r.inner, kids=src.children.slice(), bx=T.L/2-(T.blowX??T.L*.3); r.bx=bx; r.halves=[];
@@ -5207,18 +5224,18 @@ function tgt3Marks(T,grp){ if(!T.marks||!T.marks.length) return; const done=grp.
   const yDeck=T.spec.cv?((T.csm||TR.cs).hFD-T.T):T.D-T.T, halfDeck=T.spec.cv?(T.cvm||TR.cv).deckW/2:T.B/2;
   for(const m of T.marks){ if(done.has(m)) continue; done.add(m); const x=T.L/2-m.x, seed=Math.floor(m.t*7+m.x*13)%233280+1;
     if(m.k==='bomb'){ const z=clamp(m.v,-halfDeck+m.s*.6,halfDeck-m.s*.6), y=(WARLOOK[T.type]&&!T.spec.cv?warLines(T.spec,T.type).deckY(m.x/T.L):yDeck)+.06;
-      for(const [geo,mat,dy] of [[new THREE.CircleGeometry(m.s*1.6,20),M.soot,.02],[jagGeo(m.s*.75,seed+3),M.rim,.04],[jagGeo(m.s*.5,seed),M.hole,.06]]){ const o=new THREE.Mesh(geo,mat); o.rotation.x=-Math.PI/2; o.position.set(x,y+dy,z); grp.add(o); } }
+      for(const [geo,mat,dy] of [[new THREE.CircleGeometry(m.s*1.6,20),M.soot,.02],[jagGeo(m.s*.75,seed+3),M.rim,.04],[jagGeo(m.s*.5,seed),M.hole,.06]]){ const o=new THREE.Mesh(geo,grp.userData.charred?charMat(mat):mat); o.rotation.x=-Math.PI/2; o.position.set(x,y+dy,z); grp.add(o); } }
     else { const sd=m.v>=0?1:-1, u=x, hw=(typeof hullHalf==='function'?hullHalf(T,u):T.B/2)||T.B/2*.6, z=sd*(hw+.1);
       for(const [geo,mat,sx,sy,dy,dz] of [[new THREE.CircleGeometry(m.s*1.2,20),M.soot,1.5,1.3,1.8,.02],[jagGeo(m.s*.7,seed+5),M.rim,1.5,.9,.45,.04],[jagGeo(m.s*.5,seed),M.hole,1.5,.85,.35,.06]]){
-        const o=new THREE.Mesh(geo,mat); o.scale.set(sx,sy,1); o.position.set(x,dy,z+sd*dz); o.rotation.y=sd>0?0:Math.PI; grp.add(o); } } } }
+        const o=new THREE.Mesh(geo,grp.userData.charred?charMat(mat):mat); o.scale.set(sx,sy,1); o.position.set(x,dy,z+sd*dz); o.rotation.y=sd>0?0:Math.PI; grp.add(o); } } } }
 // A pool of sprites, handed out each frame and hidden when not used.
 function sprPool(n,mk){ const a=[]; for(let i=0;i<n;i++){ const s=mk(); s.visible=false; TR3.scene.add(s); a.push(s); } a.k=0; return a; }
 const sprTake=a=>{ const s=a[a.k++]; if(s) s.visible=true; return s; };
 const sprDone=a=>{ for(let i=a.k;i<a.length;i++) a[i].visible=false; a.k=0; };
 function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
   if(!TR3.tg){ TR3.tg=new Map(); const stx=smokeTexture();
-    TR3.smk=sprPool(160,()=>new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0x3d4044,transparent:true,depthWrite:false,fog:true})));
-    TR3.fir=sprPool(40,()=>new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0xff8a2a,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:true})));
+    TR3.smk=sprPool(640,()=>new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0x3d4044,transparent:true,depthWrite:false,fog:true})));
+    TR3.fir=sprPool(90,()=>new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0xff8a2a,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,fog:true})));
     TR3.fxs=sprPool(260,()=>new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0xffffff,transparent:true,depthWrite:false,fog:true})));
     const bm=new THREE.MeshStandardMaterial({color:0x2a2d2f,roughness:.6}), bg=new THREE.CylinderGeometry(.22,.22,1.8,8); bg.rotateZ(Math.PI/2);
     TR3.bmb=sprPool(30,()=>new THREE.Mesh(bg,bm));
@@ -5252,8 +5269,8 @@ function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
     r.inner.updateMatrixWorld(true); if(r.halves) for(const h of r.halves) h.userData.plane.copy(h.userData.local).applyMatrix4(h.matrixWorld);
     for(const c of T.comps){ const k=Math.max(c.fire,c.ufire); if(k<.05||T.status!=='afloat'&&f>.6) continue;
       const lp=new THREE.Vector3(T.L/2-(c.x0+c.x1)/2,T.D-T.T+(c.ufire>c.fire?2:.5),0); r.inner.localToWorld(lp);
-      const fs=sprTake(TR3.fir); if(fs){ fs.position.copy(lp); const q=(4+k*14*(.85+.3*Math.random()))*FXBIG; fs.scale.set(q,q*1.3,1); fs.material.opacity=.55+.4*Math.random(); }
-      c.smT=c.smT??t; if(jump) c.smT=t; while(c.smT<=t){ TR3.smokes.push({x:lp.x+FE,y:lp.y,z:lp.z-FN,t0:c.smT,k:k*(T.status==='burnt'?1.3:1)}); c.smT+=2.2/(.4+k); } } }
+      const fs=sprTake(TR3.fir); if(fs){ fs.position.copy(lp); const q=(4+k*14*(.85+.3*Math.random()))*FXBIG*(T.status==='burnt'?1.3:1); fs.scale.set(q,q*1.3,1); fs.material.opacity=.55+.4*Math.random(); }
+      c.smT=c.smT??t; if(jump) c.smT=t; while(c.smT<=t){ TR3.smokes.push({x:lp.x+FE,y:lp.y,z:lp.z-FN,t0:c.smT,k:k*(T.status==='burnt'?1.3:1)}); c.smT+=2.2/(.4+k)/(T.status==='burnt'?2:1); } } }
   for(const [id,r] of TR3.tg) if(!R.tgts.some(T=>T.id===id)){ disposeTree(r.outer); TR3.scene.remove(r.outer); TR3.tg.delete(id); }
   // fire smoke, drifting downwind and spreading
   const [wx,wy]=hdgV(R.wind.from+180), ws=R.wind.kn*KN*.8; TR3.smokes=TR3.smokes.filter(q=>t-q.t0<60&&t>=q.t0-1).slice(-TR3.smk.length);
