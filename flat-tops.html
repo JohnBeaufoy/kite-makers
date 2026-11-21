@@ -3264,6 +3264,19 @@ const DROPS=[
     'Abandoned ships no longer float for ever: the sea creeps in from one end and she settles slowly, going down after a few hours, her fires going out one by one as the water reaches them. Water still pours in through her holes too, and if that fills her first she goes down as fast as any other sinking ship. About one abandoned ship in four still blows up when the fire reaches a magazine.',
     'Fixed: a carrier’s flight deck did not always turn black when she was consumed by fire, and bomb holes made after that stayed pale.',
   ]},
+  {at:'2026-11-21T23:49:00+13:00',items:[
+    'Ships are as hard to sink as real ones, no more. Water no longer stops where a hit let it in: it creeps through bulkheads into the next compartments, slowly where they are whole and quickly where a hit has wrecked them. A crew with steam for the pumps and men to shore bulkheads holds it back; an abandoned ship or a target hulk cannot.',
+    'Once a ship settles, trims or lists so far that the sea reaches her deck edge, it pours in there through hatches, ventilators and splinter holes, sooner in a rough sea. So a ship deep in the water goes down by the head or the stern, or rolls over, instead of floating for ever with half her reserve buoyancy gone.',
+    'A compartment torn open to the sea no longer counts toward her waterplane, which is what keeps her upright, so a ship with many big holes rolls over even when she is floating level.',
+    'Damage control counterfloods the torpedo-protection voids on the far side first, where water rights her fastest, as real crews did. Slack water only a little deep no longer upsets a ship as if it were a full compartment.',
+    'A torpedo blast now tears into the compartment next to where it struck, not both, unless the warhead is big. A torpedo stopped by the anti-torpedo bulge still leaves a leak the crew cannot patch.',
+    'Bombs that burst on armour now do real harm: they set the upperworks on fire, kill men on deck and at the guns, and wreck the uptakes over the machinery. Repeated hits on one stretch of armour deck tear it open, so later bombs go through.',
+    'A wrecked propeller shaft now tears open its tunnel, and the sea runs forward along it into the engine rooms, as it did in Prince of Wales.',
+    'Torpedo protection works as it did in the war rather than as designed: it stops less than it was meant to, and how much depends on where the torpedo strikes, so some hits on a battleship get through.',
+    'Battleships and battlecruisers are checked against Force Z. Given Prince of Wales’s four torpedoes and a bomb, the battleship goes down about two times in three; given Repulse’s five torpedoes, mostly to port, about three times in four, rolling over minutes after the last. The battlecruiser goes down every time, as both ships did.',
+    'Carrier hangar fires depend on what is in the hangar: fire runs along a hangar full of fuelled aircraft and creeps along an empty one. With basic damage control, a carrier with an empty hangar survives 3 bombs more often than not; with armed aircraft aboard 2 bombs usually finish her; caught refuelling and rearming, 1 bomb does, as at Midway. Better damage control saves many of them. Torpedoes: 2 sink a carrier about half the time, 3 nearly always.',
+    'Roughly, for other manned ships: a heavy or light cruiser survives one torpedo and goes down to two, or to 6 to 8 bombs; a destroyer goes down to 1 or 2 of either; a battleship needs 20 to 30 bombs. Target hulks with nobody aboard go down over hours from damage a crew would have held.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -4468,6 +4481,11 @@ function tgtBlow(T,why,c){ T.status='blown'; T.sinkT=0; T.blowSide=Math.random()
 // holes fill her first, she goes down at the usual speed.
 function tgtBurnt(T,why){ T.status='burnt'; T.burntT=TR.t; T.magGo=Math.random()<.25;   // one abandoned ship in four has a magazine the fire can still set off
   T.dc=false; T.dead=true; T.ordKn=0; T.steerKn=0; tgtNote(T,`${why}.`); }
+// A bomb that bursts above the armour still does harm: splinters and blast sweep the upperworks, kill men at the guns and on deck, and
+// wreck the boiler uptakes and ventilation over the machinery, which cuts the steam the boilers can make.
+const BOMBFX={top:.2,deck:.2,armHit:.3,armMin:.25,crew:.01,uptake:.1};
+function tgtUpper(T,c,w,k){ const big=Math.sqrt(w.kg/250); if(T.dc) T.crewLoss=Math.min(.6,(T.crewLoss||0)+BOMBFX.crew*big*k);
+  if(c.kind==='boiler'||c.kind==='engine') dmgSet(c,(c.dmg||0)+BOMBFX.uptake*big*k); }
 // A weapon arriving: w.kind is 'bomb', 'torp', 'near' (a bomb close alongside) or 'dud'; w.kg the charge (bombs: their weight), w.pen what
 // a bomb would go through in mm of deck, w.x where along her from the bow in metres, w.side +1 starboard or -1 port.
 function tgtHit(T,w){ if(T.status==='sunk') return;
@@ -4475,13 +4493,14 @@ function tgtHit(T,w){ if(T.status==='sunk') return;
     tgtNote(T,`${{torp:'A torpedo',bomb:'A bomb',near:'A near miss',dud:'A dud torpedo'}[w.kind]||'A hit'} struck her as she went down${w.kind==='dud'?'':', hastening the end'}.`); return; }
   const t=TR.t, c=tgtComp(T,w.x), sd=w.side>0?'hs':'hp', where=tgtWhere(T,c,w.side); c.hitT=t; let s='';
   if(w.kind==='dud'){ T.hits.dud++; tgtNote(T,`A ${w.what||'torpedo'} struck ${where} and failed to go off.`); return; }
-  if(w.kind==='torp'){ T.hits.torp++; const tkN='n'+(sd==='hs'?'ts':'tp'), absorb=(c.prot?70:15)*T.tps*Math.pow(.6,c[tkN]||0), ex=Math.max(0,w.kg-absorb), A=ex>0?6+ex/6:.4+w.kg/500, tk=sd==='hs'?'ts':'tp', tcap=(c.x1-c.x0)*T.tps*T.D*.6*1.025;
+  if(w.kind==='torp'){ T.hits.torp++; const tkN='n'+(sd==='hs'?'ts':'tp'), absorb=(c.prot?SPREAD.tpsK:15)*T.tps*(SPREAD.tpsLo+SPREAD.tpsVar*Math.random())*Math.pow(.6,c[tkN]||0), ex=Math.max(0,w.kg-absorb), A=ex>0?6+ex/6:.4+w.kg/SPREAD.tpsLeak, tk=sd==='hs'?'ts':'tp', tcap=(c.x1-c.x0)*T.tps*T.D*.6*1.025;
     if(T.tps) c[tk]=Math.min(tcap,(c[tk]||0)+Math.max(tcap*.6,w.kg*3)); c[tkN]=(c[tkN]||0)+1;   // the layers of the torpedo protection flood, and stay flooded
-    c[sd]+=A; if(ex>80) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q){ q[sd]+=A*.12; q.hitT=t; } }
+    c[sd]+=A; if(ex>80){ const near=(w.x-c.x0)/(c.x1-c.x0)<.5?-1:1;   // the blast tears into the compartment next to it on the side it struck nearer, and with a big charge sometimes both
+      for(const j of [near,-near]){ if(j!==near&&!(ex>200&&Math.random()<.3)) continue; const q=T.comps[c.i+j]; if(q){ q[sd]+=A*.12; q.hitT=t; } } }
     if(ex>0) dmgSet(c,.35+ex/200); tgtMark(T,{k:'torp',x:w.x,v:w.side*T.B/2,s:ex>0?Math.sqrt(A)*1.5:2});
     // aft, a torpedo can jam the rudder or wreck a shaft
     const fa=(c.x0+c.x1)/2/T.L; if(ex>0&&fa>.78){ if(!T.rudder&&Math.random()<.35){ T.rudder=(Math.random()<.5?-1:1)*(12+Math.random()*18); T.rudderT=t; tgtNote(T,`The torpedo aft has jammed her rudder ${f0(Math.abs(T.rudder))}° to ${T.rudder>0?'starboard':'port'}: she is circling.`); }
-      const P=tgtPower(T); if(P.left>0&&Math.random()<.45){ T.shaftsLost=(T.shaftsLost||0)+1; tgtNote(T,`A propeller shaft is wrecked: ${P.left-1} of ${P.n} left.`); } }
+      const P=tgtPower(T); if(P.left>0&&Math.random()<.45){ T.shaftsLost=(T.shaftsLost||0)+1; tgtNote(T,`A propeller shaft is wrecked: ${P.left-1} of ${P.n} left.`); tgtShaft(T,c,sd); } }
     if(ex>0&&(c.kind==='boiler'||c.kind==='engine')&&Math.random()<.3) c.fire=Math.max(c.fire,.3);
     if(ex>0&&c.kind==='avgas'){ c.fire=Math.max(c.fire,.5); c.ufire=Math.max(c.ufire,.3); const p=tgtPt(T,c); TR.fx.push({kind:'sec',x:p.x,y:p.y,t,size:1.2}); }
     if(ex>0&&c.kind==='mag'&&Math.random()<.12){ tgtBlow(T,`A torpedo ${where} set off the magazine`,c); return; }
@@ -4492,8 +4511,9 @@ function tgtHit(T,w){ if(T.status==='sunk') return;
       else { T.deckHoles=(T.deckHoles||0)+1; c.ufire=Math.max(c.ufire,.5+Math.random()*.35); const left=w.pen-T.fd; tgtDeckHit(T,w);
         if(left>(c.prot?T.deck:12)) below=true; else { s=`Bomb through the flight deck ${where}: it burst in the hangar and set it alight.`+gun;
           const H=hangarHere(T,c); if(H.w>.5&&Math.random()<Math.min(.85,.25*H.w*hangarK(T))) w.chain=H; } } }
-    else if(Math.random()<.3){ c.ufire=Math.max(c.ufire,.15+Math.random()*.3); s=`Bomb hit the upperworks ${where}.`+tgtAAHit(T,w,'top'); }
-    else { const arm=c.prot?T.deck:Math.min(T.deck,16); if(w.pen<arm){ c.ufire=Math.max(c.ufire,.12); s=`Bomb burst on the ${arm>40?'armoured ':''}deck ${where} without getting through.`+tgtAAHit(T,w,'deck'); } else below=true; }
+    else if(Math.random()<.3){ c.ufire=Math.max(c.ufire,BOMBFX.top+Math.random()*.3); tgtUpper(T,c,w,1); s=`Bomb hit the upperworks ${where}.`+tgtAAHit(T,w,'top'); }
+    else { const arm=(c.prot?T.deck:Math.min(T.deck,16))*Math.max(BOMBFX.armMin,1-BOMBFX.armHit*(c.deckHit||0)); if(w.pen<arm){ c.deckHit=(c.deckHit||0)+w.kg/454; c.ufire=Math.max(c.ufire,BOMBFX.deck+Math.random()*.15); tgtUpper(T,c,w,.7);
+        s=`Bomb burst on the ${arm>40?'armoured ':''}deck ${where} without getting through${c.deckHit>1.5?', tearing the deck up further':''}.`+tgtAAHit(T,w,'deck'); } else below=true; }
     tgtMark(T,{k:'bomb',x:w.x,v:w.v??0,s:2.2+w.kg/160,cv:!!T.spec.cv});
     if(below){ c.fire=Math.max(c.fire,.35+Math.random()*.35); const thin=clamp((20-T.B)/10,0,1); if(Math.random()<.35+.6*thin){ const A=w.kg/700*(1+5*thin); c[sd]+=A; if(thin>.3) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q){ q[sd]+=A*.5*thin; q.hitT=TR.t; } } }
       dmgSet(c,.5+Math.random()*.5); for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q) dmgSet(q,.15); } if(T.dc) T.crewLoss=Math.min(.5,(T.crewLoss||0)+.04*Math.sqrt(w.kg/250));
@@ -4512,6 +4532,26 @@ function tgtSysNotes(T,was){ if(was==null||T.status==='burnt') return; const mk=
   if(T.dead&&T.pf>.08){ T.dead=false; T.knShown=Math.round(mk*spdF(T)); tgtNote(T,`She has steam again and can make ${T.knShown} knots.`); return; }
   if(T.dead||!mk) return; const now=Math.round(mk*spdF(T)), was2=T.knShown??Math.round(mk);
   if(Math.abs(now-was2)>=3&&(!T.knNote||t-T.knNote>300)){ T.knNote=t; T.knShown=now; tgtNote(T,now<was2?`Machinery damage: she can make only ${now} knots.`:`Repairs to her machinery: she can make ${now} knots.`); } }
+// Water finds its way on. Bulkheads leak a little even when whole, and a great deal where a hit has wrecked them, so water creeps from
+// a flooded compartment into the next; a manned ship with power shores the bulkheads and pumps (above), a hulk cannot. And once she
+// has settled, trimmed or listed so far that the sea reaches her deck edge somewhere (sooner in a rough sea, with waves washing over),
+// it pours in there through hatches, ventilators and splinter holes, whether that compartment was holed or not: so a ship deep in
+// the water goes down by the head or the stern, or rolls over, as flooded ships do.
+// A wrecked propeller shaft, still turning, tears open its glands and the tunnel it runs in, and the sea follows it forward into the
+// engine rooms, as it did in Prince of Wales: the compartments it passes through leak, and their bulkheads are opened up.
+function tgtShaft(T,c,sd){ let any=false; for(let i=c.i-1;i>=0;i--){ const q=T.comps[i]; q[sd]+=SPREAD.shaft; dmgSet(q,Math.max(q.dmg||0,.45)); q.hitT=TR.t; any=true; if(q.kind==='engine') break; }
+  if(any) tgtNote(T,'The wrecked shaft has torn open its tunnel: the sea is running forward along it toward the engine rooms.'); }
+function tgtSpread(T,dt){ const g=9.81, C=T.comps, n=C.length, dcK=T.dc?Math.max(.15,1-.85*(T.elec??1)*(1-(T.crewLoss||0))):1;
+  for(let i=0;i<n-1;i++){ const a=C[i], b=C[i+1], wreck=Math.max(0,Math.max(a.dmg||0,b.dmg||0)-.2), k=(SPREAD.base+SPREAD.dmg*wreck)*dcK;
+    for(const sd of ['fp','fs']){ const ca=a.cap/2, cb=b.cap/2, d=a[sd]/ca-b[sd]/cb; if(Math.abs(d)<.01) continue; const [src,dst,cd]=d>0?[a,b,cb]:[b,a,ca];
+      if(dst.mflood||dst.cf) continue; const m=Math.min(Math.abs(d)*.5*cd,k*Math.abs(d)*cd*dt); src[sd]-=m; dst[sd]+=m; } }
+  const tanT=Math.tan((T.trim||0)*DEG), sinL=Math.sin((T.list||0)*DEG), wash=SPREAD.wash*((TR.sea&&TR.sea.hs)||1);
+  T.awash=0; for(const c of C){ const xm=(c.x0+c.x1)/2, sea=T.T+(T.sink||0)+(xm-T.L/2)*tanT, edge=T.D+(T.D-T.T)*.5*Math.max(0,1-xm/(.25*T.L))-wash;
+    for(const [sd,sg] of [['fp',-1],['fs',1]]){ const h=sea+sg*sinL*T.B/2-edge-SPREAD.coam; /* coamings and closed hatches keep out the first of it */ if(h<=0) continue; T.awash+=(c.x1-c.x0)/T.L/2; const cap=c.cap/2;
+      if(c[sd]<cap) c[sd]=Math.min(cap,c[sd]+SPREAD.open*(c.x1-c.x0)/10*Math.sqrt(2*g*Math.min(h,3))*1.025*dt); } } }
+// A carrier's hangar fire: what burns in an empty hangar (paint, stores, the deck's wood), and how readily fire runs along it.
+const CVFIRE={base:1.3,spread0:.2,spreadW:.4};
+const SPREAD={base:.000004,dmg:.00005,open:.05,wash:.35,pocket:.3,dead:.4,deep:.75,cfMax:.75,coam:.5,tpsLeak:250,cfRate:2.5,bm:1,tpsK:45,shaft:1.5,tpsLo:.55,tpsVar:.6};
 function tgtStep(T,dt){ const t=TR.t;
   if(T.status==='sunk') return;
   if(T.status!=='afloat'&&T.status!=='burnt'){ T.sinkT+=dt; const dur=T.status==='blown'?75:T.status==='capsizing'?200:T.flood>T.reserve*1.6?240:480; T.goneF=Math.min(1,T.sinkT/dur);
@@ -4523,15 +4563,18 @@ function tgtStep(T,dt){ const t=TR.t;
       if(!A&&c[k]>0&&!c.mflood&&!c.cf) leaks++; }
     const x=(c.fs-c.fp)*(1-T.split)*Math.min(1,.04*dt); c.fs-=x; c.fp+=x;
     if(c.fire>0||c.ufire>0) burning++; }
+  tgtSpread(T,dt);
   const PW=tgtPower(T), pkn=T.pf; T.pf=PW.pf; T.elec=PW.elec; tgtSysNotes(T,pkn);
   const pump=T.disp*.00004*dt/Math.max(1,leaks)*T.elec; if(leaks&&T.dc) for(const c of T.comps) for(const [k,hk] of [['fp','hp'],['fs','hs']]) if(!c[hk]&&c[k]>0&&!c.mflood&&!c.cf) c[k]=Math.max(0,c[k]-pump);
   // damage control counterfloods the far side once the list passes a few degrees
-  if(T.dc&&Math.abs(T.list)>3&&T.flood<T.reserve*.75){ if(T.cfT==null) T.cfT=t+150; if(t>T.cfT){ const far=T.list>0?'fp':'fs', near=T.list>0?'fs':'fp';
-      const q=T.comps.filter(c=>!c.hp&&!c.hs&&c.kind!=='mag'&&c[far]<c.cap/2*.95&&c[near]<1).sort((a,b)=>a[far]-b[far])[0];
-      if(q){ if(!T.cfOn){ T.cfOn=true; tgtNote(T,'Damage control is counterflooding to bring her upright.'); } q.cf=true; q[far]=Math.min(q.cap/2,q[far]+4*dt); } } }
+  if(T.dc&&Math.abs(T.list)>3&&T.flood<T.reserve*SPREAD.cfMax){ if(T.cfT==null) T.cfT=t+150; if(t>T.cfT){ const far=T.list>0?'fp':'fs', near=T.list>0?'fs':'fp';
+      // first the torpedo-protection voids on the high side, far out from her centreline where a ton of water rights her most, then whole compartments
+      const tk=far==='fp'?'tp':'ts', tcap=c=>(c.x1-c.x0)*T.tps*T.D*.6*1.025, v=T.tps?T.comps.filter(c=>c.prot&&(c[tk]||0)<tcap(c)*.95).sort((a,b)=>Math.abs(a.i-T.comps.length/2)-Math.abs(b.i-T.comps.length/2))[0]:null;
+      const q=v?null:T.comps.filter(c=>!c.hp&&!c.hs&&c.kind!=='mag'&&c[far]<c.cap/2*.95&&c[near]<1).sort((a,b)=>b.cap-a.cap)[0];
+      if(v||q){ if(!T.cfOn){ T.cfOn=true; tgtNote(T,'Damage control is counterflooding to bring her upright.'); } if(v) v[tk]=Math.min(tcap(v),(v[tk]||0)+SPREAD.cfRate*dt); else { q.cf=true; q[far]=Math.min(q.cap/2,q[far]+SPREAD.cfRate*.5*dt); } } } }
   else if(Math.abs(T.list)<1) T.cfOn=false;
   for(const c of T.comps){ const w=c.fp+c.fs+(c.tp||0)+(c.ts||0); W+=w; Ms+=(c.fs-c.fp)*T.B/4+((c.ts||0)-(c.tp||0))*(T.B/2-T.tps/2); Mt+=w*((c.x0+c.x1)/2-T.L/2);
-    for(const k of ['fp','fs']){ const f=c[k]/(c.cap/2); if(f>.02&&f<.97) fsm+=(c.x1-c.x0)*Math.pow(T.B/2,3)/12*1.025; } }
+    for(const k of ['fp','fs']){ const f=c[k]/(c.cap/2); if(f>.02&&f<.97) fsm+=(c.x1-c.x0)*Math.pow(T.B/2,3)/12*1.025*Math.min(1,f/SPREAD.pocket,(1-f)/.08); } }   // shallow water pockets between frames and fittings, so its free surface counts in full only once it is deep
   // fires: they grow, spread and are fought; a magazine with fire next to it is flooded before it goes up, if there is time
   const dcRate=(T.dc?1:0)*(.004+T.disp/45000*.012)*dt*(T.dc?{dc0:1,dc1:1.4,dc2:2}[(T.cvm||{}).dc]??1:1)/Math.max(1,burning)*(.4+.6*T.elec)*(1-(T.crewLoss||0));
   if(T.dc) for(const c of T.comps) if(c.dmg>(c.dmgMin||0)) c.dmg=Math.max(c.dmgMin||0,c.dmg-.00015*dt*T.elec);   // repair parties at work
@@ -4539,10 +4582,10 @@ function tgtStep(T,dt){ const t=TR.t;
   const hSpan=T.spec.cv?hangarSpan(T):null, hRun=T.spec.cv?({open:1,closed:1.5,box:.2}[(T.cvm||TR.cv).hside]??1):0;
   for(const c of T.comps){ const wet=(c.fp+c.fs)/c.cap, Hc=hSpan&&c.ufire>0?hangarHere(T,c):null;
     // a burning hangar with fuelled aircraft in it feeds on them, and spreads along the open hangar deck (an armoured box has fire curtains)
-    if(Hc&&Hc.k>=0&&c.ufire>.7) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q&&hSpan.includes(q)) q.ufire=Math.min(1,q.ufire+.002*hRun*(c.ufire-.7)/.3*dt); }
+    if(Hc&&Hc.k>=0&&c.ufire>.7) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q&&hSpan.includes(q)) q.ufire=Math.min(1,q.ufire+.002*hRun*clamp(CVFIRE.spread0+CVFIRE.spreadW*Hc.w,CVFIRE.spread0,1)*(c.ufire-.7)/.3*dt); }   // it runs along a hangar full of fuelled aircraft, and creeps along an empty one
     // a fire up on deck or in the upperworks burns what is there, not the fuel tanks below it (a carrier's is her hangar);
     // a target ship is a stripped hulk: away from her fuel tanks (and a hangar with aircraft in it), a fire burns what is left but does not become an inferno
-    for(const k of ['fire','ufire']){ if(c[k]<=0) continue; const fuel=k==='ufire'?(T.spec.cv?((T.side==='tgt'?1.3:2.2)+.5*(Hc?Hc.w:0))*(hRun<.5?.45:1):1):c.kind==='avgas'?3:c.kind==='fuel'?1.6:1, top=T.side!=='tgt'||fuel>=1.5?1:k==='ufire'&&T.spec.cv?.65:.8;
+    for(const k of ['fire','ufire']){ if(c[k]<=0) continue; const fuel=k==='ufire'?(T.spec.cv?(CVFIRE.base+.5*(Hc?Hc.w:0))*(hRun<.5?.45:1):1):c.kind==='avgas'?3:c.kind==='fuel'?1.6:1, top=T.side!=='tgt'||fuel>=1.5?1:k==='ufire'&&T.spec.cv?.65:.8;
       c[k]=clamp(Math.min(Math.max(c[k],top),c[k]+.0013*fuel*dt)-dcRate-(k==='fire'&&wet>.5?.05*dt:0),0,1); if(c[k]>top) c[k]=Math.max(top,c[k]-.002*dt); c['b'+k]=(c['b'+k]||0)+c[k]*dt; if(c['b'+k]>1100*fuel) c[k]=Math.max(0,c[k]-.004*dt);   // and once what will burn is gone, it dies down
       if(c[k]>.7&&Math.random()<.0006*dt*(T.side==='tgt'?.5:1)){ const q=T.comps[c.i+(Math.random()<.5?-1:1)]; if(q&&q[k]<.2){ q[k]=.25; } }
       if(k==='ufire'&&c.ufire>.8&&Math.random()<.001*dt) c.fire=Math.max(c.fire,.3); }
@@ -4561,16 +4604,20 @@ function tgtStep(T,dt){ const t=TR.t;
     if(add>1e-6) W=Math.max(W,T.reserve*1.01);   // nowhere left for the sea to go: she is full, and goes
     // every space burns, quickly, right up to the top; only the sea puts a fire out
     for(const c of T.comps){ const wet=(c.fp+c.fs)/c.cap; if(wet>.9){ c.fire=Math.max(0,c.fire-.05*dt); c.ufire=Math.max(0,c.ufire-.05*dt); } else { c.fire=Math.min(1,c.fire+.01*dt); c.ufire=Math.min(1,c.ufire+.01*dt); } } }
-  const Dp=T.disp+W, gm=T.GM-fsm/Dp; T.flood=W; T.gm=gm; T.sink=W/(T.L*T.B*.72*1.025); T.fires=T.comps.filter(c=>c.fire>.05||c.ufire>.05).length;
+  // a compartment torn open to the sea and flooded to the sea outside no longer gives her any waterplane there, and the waterplane is what
+  // makes her stable: so a ship with many big holes loses her stability and rolls over, however well she is floating
+  let lostW=0; const capT=T.comps.reduce((s,c)=>s+c.cap,0); for(const c of T.comps) for(const [k,hk] of [['fp','hp'],['fs','hs']]) if(c[hk]>=2&&c[k]>=c.cap/2*.8) lostW+=c.cap/capT/2;
+  T.lostW=lostW;
+  const Dp=T.disp+W, gm=T.GM-fsm/Dp-SPREAD.bm*lostW*T.B*T.B/(12*T.T)*.9; T.flood=W; T.gm=gm; T.sink=W/(T.L*T.B*.72*1.025); T.fires=T.comps.filter(c=>c.fire>.05||c.ufire>.05).length;
   T.list=Math.atan2(Ms,Dp*Math.max(.05,gm))*180/Math.PI; T.trim=Math.atan2(Mt,Dp*1.1*T.L)*180/Math.PI;
   const burn=T.comps.reduce((s,c)=>s+Math.max(c.fire,c.ufire),0)/T.comps.length; T.burn=burn;
-  if(T.status==='afloat'&&T.dc){ const past=1.6*burn+.5*(1-(T.pf??1))+1.2*W/T.reserve+.8*Math.abs(T.list)/T.cap+.6*(T.crewLoss||0),
-      decisive=(T.pf??1)<.12||burn>.4||W/T.reserve>.75||Math.abs(T.list)>T.cap*.55;   // dead in the water, fires out of control, deep in the water or heeling far over
+  if(T.status==='afloat'&&T.dc){ const past=1.6*burn+SPREAD.dead*(1-(T.pf??1))+1.2*W/T.reserve+.8*Math.abs(T.list)/T.cap+.6*(T.crewLoss||0),
+      decisive=(T.pf??1)<.12||burn>.4||W/T.reserve>SPREAD.deep||Math.abs(T.list)>T.cap*.55;   // dead in the water, fires out of control, deep in the water or heeling far over
     T.past=past; if(past>1&&decisive){ T.doom=(T.doom||0)+dt*clamp((past-.9)/.35,0,3); if(T.doom>300&&!T.doomNote){ T.doomNote=true; tgtNote(T,'She is in a bad way: the damage is getting ahead of her damage control.'); } }
     else { T.doom=Math.max(0,(T.doom||0)-dt*.5); if(T.doom<60) T.doomNote=false; }
     if(T.doom>900&&W<=T.reserve){ T.abandoned=true;
       if(burn>.4&&W<T.reserve*.75){ tgtBurnt(T,'Burning beyond saving: consumed by fire, ship abandoned. She will burn until the sea puts her fires out, settling slowly as she goes'); return; }
-      T.status='sinking'; T.sinkT=0; const why=W/T.reserve>.75?'Too deep in the water to be saved':Math.abs(T.list)>T.cap*.55?'Heeling too far to be saved':'Dead in the water and wrecked beyond saving';
+      T.status='sinking'; T.sinkT=0; const why=W/T.reserve>SPREAD.deep?'Too deep in the water to be saved':Math.abs(T.list)>T.cap*.55?'Heeling too far to be saved':'Dead in the water and wrecked beyond saving';
       tgtNote(T,`${why}, she has been abandoned and is going down.`); return; } }
   // nobody aboard (a target ship, or a wreck already given up): once fire has had most of her for long enough, she is burnt out
   if(T.status==='afloat'&&!T.dc){ T.doom=burn>.4?(T.doom||0)+dt:Math.max(0,(T.doom||0)-dt*.5); if(T.doom>900){ tgtBurnt(T,'Consumed by fire, ship abandoned. She will burn until the sea puts her fires out, settling slowly as she goes'); return; } }
@@ -5616,6 +5663,6 @@ function numEdit(o){ if(o.querySelector('input')) return; const d=o.closest('.di
 document.addEventListener('click',e=>{ const o=e.target.closest('.dim output'); if(o) numEdit(o); });
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches&&e.target.matches('.dim output')){ e.preventDefault(); numEdit(e.target); } });
 // for testing only: ?debug exposes the inner state to the console
-if(/[?&]debug\b/.test(location.search)) window.FT={hangarHere,hangarK,advFight,advAA,advAir,trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
+if(/[?&]debug\b/.test(location.search)) window.FT={CVFIRE,tgtShaft,SPREAD,BOMBFX,hangarHere,hangarK,advFight,advAA,advAir,trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
 })();
 </script>
