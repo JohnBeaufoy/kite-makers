@@ -310,6 +310,12 @@ legend{padding:0;margin-bottom:6px}
 .agp .n{position:absolute;right:-1px;bottom:-1px;font:700 9px/1 "IBM Plex Mono",monospace;background:var(--ink);color:var(--bg);border-radius:3px;padding:1px 2px}
 .agp.off svg{opacity:.4}
 .agsqs{display:flex;flex-direction:column;gap:4px}
+.dim .armtip{display:block;margin-top:3px;color:var(--olive);font-style:italic}
+.agcvs{display:flex;flex-direction:column;gap:14px}
+.agcv{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.agcv>h4{margin:0;font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.agcv>h4 .mono{font-size:12px;font-weight:400;color:var(--muted)}
+.agall{position:sticky;bottom:-14px;background:var(--surface);padding:8px 0;border-top:1px solid var(--line)}
 .agsq{display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:6px;font-size:13.5px;flex-wrap:wrap}
 .agsq .st{font-size:12.5px;color:var(--muted)}
 .trfl .st{font-size:12.5px;color:var(--muted)}
@@ -429,7 +435,7 @@ legend{padding:0;margin-bottom:6px}
           <span class="trbtns"><button class="btn ghost" data-trspeed="0">Pause</button><button class="btn ghost" data-trspeed="1">1×</button><button class="btn ghost" data-trspeed="5">5×</button><button class="btn ghost" data-trspeed="20">20×</button><button class="btn ghost" data-trspeed="60">60×</button><button class="btn ghost" data-trspeed="120">120×</button><button class="btn ghost" id="trend">End trials</button></span></div>
         <div class="panel"><div class="trhead"><span class="trbtns" id="trspawn"><span class="label" style="margin:0">Target ships</span>
             <button class="btn ghost" data-trspawn="DD" title="Destroyer">DD</button><button class="btn ghost" data-trspawn="CL" title="Light cruiser">CL</button><button class="btn ghost" data-trspawn="CA" title="Heavy cruiser">CA</button><button class="btn ghost" data-trspawn="BC" title="Battlecruiser">BC</button><button class="btn ghost" data-trspawn="BB" title="Battleship">BB</button><button class="btn ghost" data-trspawn="CV" title="Carrier">CV</button></span>
-            <span class="trbtns"><button class="btn ghost" id="trtfbtn" hidden>Enemy task force</button><button class="btn" id="trair">Air group</button></span></div>
+            <span class="trbtns"><button class="btn ghost" id="trtfbtn" hidden>Enemy task force</button><button class="btn" id="trair">Airgroups</button></span></div>
           <div class="trview"><canvas id="trmap" aria-label="Chart of the trials area, with the ship, the wind, target ships and the flights aloft. Drag to move it, scroll or pinch to zoom, and zoom right in to see that spot in 3D. Click to steer toward a point."></canvas>
             <canvas id="tr3" hidden aria-label="The sea in 3D at the spot you zoomed in on. Drag to turn the view, right-drag or shift-drag to move it, scroll to zoom; zoom out to go back to the chart."></canvas></div>
           <div class="trbtns"><button class="btn ghost" id="trzin" aria-label="Zoom in">+</button><span class="mono" id="trzoom"></span><button class="btn ghost" id="trzout" aria-label="Zoom out">−</button>
@@ -462,12 +468,10 @@ legend{padding:0;margin-bottom:6px}
 
   <div id="agd" class="agd" role="dialog" aria-modal="true" aria-labelledby="agtitle" hidden>
     <div class="agbox">
-      <div class="trhead"><h3 id="agtitle">Air group</h3><span class="trbtns"><button class="btn ghost" id="agclose">Close</button></span></div>
-      <p class="muted" style="margin:0;font-size:13px">Click aircraft to pick them, or a type's name to pick all of that type in that column. Make the picked aircraft a squadron. Then tick squadrons and send them on a sortie, or to protect the carrier.</p>
-      <div class="agcols" id="agcols"></div>
-      <div class="trbtns"><button class="btn" id="agmake">Create squadron</button><button class="btn ghost" id="agclear">Clear picks</button><span class="mono" id="agseln" style="font-size:12.5px"></span></div>
-      <span class="label">Squadrons</span><div id="agsqs" class="agsqs"></div>
-      <div class="trbtns"><button class="btn" id="agsortie">Create sortie</button><button class="btn ghost" id="agcap">Protect carriers</button><button class="btn ghost" id="agrecall">Recall to land</button><button class="btn ghost" id="agdisband">Disband</button><span class="mono" id="agsqn" style="font-size:12.5px"></span></div>
+      <div class="trhead"><h3 id="agtitle">Airgroups</h3><span class="trbtns"><button class="btn ghost" id="agclose">Close</button></span></div>
+      <p class="muted" style="margin:0;font-size:13px">Each of your carriers has her own box. Click aircraft to pick them, or a type's name to pick all of that type in that column. Make the picked aircraft a squadron. Then tick squadrons, on any of your carriers, and send them all on one sortie with the button at the bottom, or have them protect the carriers.</p>
+      <div class="agcvs" id="agcvs"></div>
+      <div class="trbtns agall"><button class="btn" id="agsortie">Create sortie</button><span class="mono" id="agsortien" style="font-size:12.5px"></span></div>
     </div></div>
   <section id="sortie" hidden>
     <div class="hud">
@@ -768,12 +772,19 @@ Object.assign(PARTS2,{
   ],
   load:[
     {id:'none',name:'No bomb or torpedo',note:'A fighter carries only its guns.',from:1935.0,roles:['fighter'],mass:0,drag:0,kind:''},
+    {id:'b113',name:'Bomb, 113 kg',note:'A 250 lb bomb. Light, so the aircraft flies further, but against a warship it only wrecks guns and starts fires.',from:1935.0,roles:['dive','torpedo'],mass:113,drag:.014,kind:'bomb',len:1.2,dia:.28},
     {id:'b250',name:'Bomb, 250 kg',note:'A 500 lb or 250 kg bomb. Enough to wreck a flight deck.',from:1935.0,roles:['dive','torpedo'],mass:250,drag:.02,kind:'bomb',len:1.6,dia:.36},
     {id:'b500',name:'Bomb, 450 kg',note:'A 1,000 lb bomb. Can go through a lightly armoured deck before it bursts.',from:1936.5,roles:['dive','torpedo'],mass:454,drag:.028,kind:'bomb',len:1.9,dia:.47},
+    {id:'b250s',name:'Semi-armour-piercing bomb, 250 kg',note:'A 250 kg bomb with a thicker case and a delay fuse, so it goes deeper before it bursts. Type 99 No. 25-style.',from:1939.0,roles:['dive','torpedo'],mass:250,drag:.02,kind:'bomb',len:1.6,dia:.34},
+    {id:'b500s',name:'Semi-armour-piercing bomb, 450 kg',note:'A 1,000 lb bomb with a hardened case, to burst deep inside a ship rather than on her deck. AN-M59-style.',from:1941.0,roles:['dive','torpedo'],mass:454,drag:.028,kind:'bomb',len:1.9,dia:.43},
     {id:'b726',name:'Armour-piercing bomb, 726 kg',note:'A 1,600 lb bomb with a hardened nose, made to go through battleship decks.',from:1942.0,roles:['dive','torpedo'],mass:726,drag:.03,kind:'bomb',len:2.1,dia:.36},
     {id:'b800',name:'Armour-piercing bomb, 800 kg',note:'A battleship shell turned into a bomb, dropped from level flight. Torpedo bombers only.',from:1941.5,roles:['torpedo'],mass:800,drag:.032,kind:'bomb',len:2.4,dia:.45},
+    {id:'b900',name:'Bomb, 900 kg',note:'A 2,000 lb general-purpose bomb, dropped from level flight. Only a big torpedo bomber can lift it.',from:1942.0,roles:['torpedo'],mass:907,drag:.036,kind:'bomb',len:2.3,dia:.59},
     {id:'t18',name:'Torpedo, 18-inch',note:'A light 450 mm torpedo, 702 kg. Must be dropped slow and low.',from:1935.0,roles:['torpedo'],mass:702,drag:.04,kind:'torp',len:5.0,dia:.45},
     {id:'t91',name:'Torpedo, 450 mm, Type 91-style',note:'838 kg, with a heavy warhead and fins that let it be dropped faster.',from:1936.0,roles:['torpedo'],mass:838,drag:.04,kind:'torp',len:5.3,dia:.45},
+    {id:'t91m3',name:'Torpedo, Type 91 Mod 3-style',note:'A 240 kg warhead and a stronger tail, so it can be dropped faster and higher than the first Type 91s. 935 kg.',from:1942.0,roles:['torpedo'],mass:935,drag:.042,kind:'torp',len:5.5,dia:.45},
+    {id:'t91m7',name:'Torpedo, Type 91 Mod 7-style',note:'The last of the line, with a 420 kg warhead that can break a battleship\'s back. 1,060 kg, so only the biggest torpedo bombers carry it.',from:1944.0,roles:['torpedo'],mass:1060,drag:.045,kind:'torp',len:5.7,dia:.45},
+    {id:'t13t',name:'Torpedo, Mk 13 with Torpex',note:'The improved Mk 13: a Torpex warhead as strong as 360 kg of TNT, and a drag ring and shroud for high, fast drops. Reliable. 1,000 kg.',from:1944.5,roles:['torpedo'],mass:1000,drag:.045,kind:'torp',len:4.1,dia:.57},
     {id:'t13',name:'Torpedo, 22.4-inch, Mk 13-style',note:'980 kg and short and fat. Early ones ran deep or failed to explode until late 1943.',from:1938.0,roles:['torpedo'],mass:980,drag:.045,kind:'torp',len:4.1,dia:.57},
   ],
   stow:[
@@ -1105,8 +1116,7 @@ const CVP={
     {id:'closed',name:'Enclosed hangar',note:'Steel sides keep weather out, but petrol fumes collect inside, and a fire or explosion in the hangar has nowhere to go.',from:1920,cut:6.5},
     {id:'box',name:'Armoured box hangar',note:'Armoured sides and ends, with the flight deck armour as its lid, and fire curtains to divide it. Heavy, narrow, very hard to burn out.',from:1937.5,cut:10}],
   island:[{id:'none',name:'Flush deck',note:'No island. All the deck is clear, but the ship is conned from under the flight deck and the smoke goes out the side.',from:1920,w:0,len:0,bw:0},
-    {id:'small',name:'Small island',note:'A narrow island with the bridge and funnel.',from:1920,w:180,len:25,bw:5},
-    {id:'large',name:'Large island',note:'Room for the bridge, air operations, radar and fighter direction. Heavy and high up.',from:1920,w:420,len:45,bw:8}],
+    {id:'small',name:'Island',note:'A narrow island with the bridge and funnel. Pick its look under Island layout.',from:1920,w:180,len:25,bw:5}],
   cat:[{id:'c34',name:'Early accelerator',note:'A hydraulic launching trolley like those fitted to Courageous and Glorious. Up to 2.7 t, to 95 km/h.',from:1934.5,kg:2700,v:95,w:30},
     {id:'c38',name:'Hydraulic catapult',note:'Throws aircraft up to 3.2 t to 110 km/h.',from:1937.5,kg:3200,v:110,w:40},
     {id:'c40',name:'Improved hydraulic catapult',note:'Up to 5 t, to 125 km/h. BH III and H-2 style.',from:1940,kg:5000,v:125,w:55},
@@ -1131,7 +1141,11 @@ const CVP={
     {id:'long',name:'Long and low',note:'A long, low island with the bridge at its forward end and a broad funnel amidships. Ark Royal and Illustrious.',from:1920},
     {id:'compact',name:'Compact bridge',note:'A small bridge block well forward and a tall tripod mast. Hiryu and Shokaku.',from:1920},
     {id:'split',name:'Bridge and great funnel',note:'A bridge tower forward and a huge, flat-sided funnel standing aft of it. Lexington and Saratoga.',from:1920},
-    {id:'stepped',name:'Canted funnel',note:'A stepped island with the funnel leaning out over the side to carry smoke clear of the deck. Taiho.',from:1920}],
+    {id:'stepped',name:'Canted funnel',note:'A stepped island with the funnel leaning out over the side to carry smoke clear of the deck. Taiho.',from:1920},
+    {id:'bridge',name:'Bridge only',note:'A small, narrow bridge block and a tripod mast, with the deck left as clear as possible. Akagi and Kaga.',from:1920},
+    {id:'lattice',name:'Lattice mast',note:'A box bridge, a short funnel and a tall lattice mast at the after end. Wasp and Ranger.',from:1920},
+    {id:'tiered',name:'Tiered',note:'Narrowing decks stacked one on another, the bridge at the top, and the funnel behind. Junyo and Hiyo.',from:1920},
+    {id:'stream',name:'Streamlined',note:'A smooth-sided island, its front stepped back to ease the wind over the deck, with a broad funnel. Implacable.',from:1920}],
   fore:[{id:'open',name:'Open bow',note:'The flight deck stands on posts over an open forecastle. Light, but heavy seas break into the space under it and spray sweeps the deck.',from:1920},
     {id:'closed',name:'Enclosed bow',note:'The bow plated up to the flight deck, as in Illustrious and the later carriers. Heavier forward, but much drier in a head sea.',from:1920}],
   iside:[{id:'stbd',name:'Island to starboard',note:'The usual side. Pilots circle to port to land, clear of the island.',from:1920},
@@ -1787,8 +1801,29 @@ function cvChipHTML(cat,p,on){ const lock=p.from>techDate()+1e-6;
 const cvBeaten=(cat,p,cv)=>{ if(cat!=='boiler'||cv[cat]===p.id) return false; const d=techDate()+1e-6;
   return CVP.boiler.some(q=>q!==p&&q.from<=d&&q.kg<=p.kg&&q.m3<=p.m3&&q.sfc<=p.sfc&&(q.kg<p.kg||q.m3<p.m3||q.sfc<p.sfc)); };
 const cvChips=(cat,legend,cv)=>`<fieldset><legend class="label">${legend}</legend><div class="chips">${CVP[cat].filter(p=>!cvBeaten(cat,p,cv)).map(p=>cvChipHTML(cat,p,cv[cat]===p.id)).join('')}</div></fieldset>`;
-function cvSlider(k,label,unit,min,max,step,v,hint,fmt){ const f=fmt||(step<.1?f2:step<1?f1:f0);
-  return `<div class="dim"><label for="cvd-${k}">${label}</label><output id="cvo-${k}" tabindex="0" title="Click to type a value">${f(v)} ${unit}</output><input type="range" id="cvd-${k}" data-cvk="${k}" min="${min}" max="${max}" step="${step}" value="${v}"><small>${hint||''}</small></div>`; }
+function cvSlider(k,label,unit,min,max,step,v,hint,fmt){ const f=fmt||(step<.1?f2:step<1?f1:f0), tip=ARMK.includes(k)?`<small class="armtip" id="cvt-${k}">${esc(armTip(k,cvSel()?cvSel().cv:{[k]:v}))}</small>`:'';
+  return `<div class="dim"><label for="cvd-${k}">${label}</label><output id="cvo-${k}" tabindex="0" title="Click to type a value">${f(v)} ${unit}</output><input type="range" id="cvd-${k}" data-cvk="${k}" min="${min}" max="${max}" step="${step}" value="${v}"><small>${hint||''}</small>${tip}</div>`; }
+// What a protection slider's setting is worth, in words: worked out from how far each bomb goes through deck armour (bombPen), how
+// much a torpedo's charge the side protection soaks up (SPREAD), and how much a belt keeps near misses from springing the plating.
+const ARMK=['deckArm','hdArm','belt','tps'];
+const armList=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const ARMBOMBS=()=>[['strafing',8],['250 kg bombs from level flight',bombPen('b250',250,120)],['250 kg dive bombs',bombPen('b250',250,200)],['450 kg dive bombs',bombPen('b500',454,200)],
+  ['800 kg armour-piercing bombs from level flight',bombPen('b800',800,150)],['726 kg armour-piercing dive bombs',bombPen('b726',726,220)]].sort((a,b)=>a[1]-b[1]);
+function armTip(k,cv){ const v=cv[k]||0, band=(x,cuts)=>['Extremely low protection','Minimal protection','Light protection','Moderate protection','Strong protection','Heavy protection'][cuts.findIndex(c=>x<c)<0?5:cuts.findIndex(c=>x<c)];
+  if(k==='deckArm'){ if(!v) return 'Unarmoured: every bomb goes straight through into the hangar.';
+    const B=ARMBOMBS(), ok=B.filter(b=>b[1]<=v).map(b=>b[0]), no=B.filter(b=>b[1]>v).map(b=>b[0]);
+    return `${band(v,[10,25,50,75,100])}: ${ok.length===1?'only resistant to strafing runs':ok.length?'stops '+armList(ok):'splinter-proof only'}${no.length?`; ${no[0]}${no.length>1?' and anything heavier':''} still go through`:''}.`; }
+  if(k==='hdArm'){ const fd=cv.deckArm||0; if(!v) return 'Unarmoured: a bomb that gets through the flight deck can go on down into the engines and magazines.';
+    const B=ARMBOMBS().slice(1), ok=B.filter(b=>b[1]-fd<=v).map(b=>b[0]), no=B.filter(b=>b[1]-fd>v).map(b=>b[0]);
+    return `${band(v,[20,40,60,90,120])}: with the ${fd} mm flight deck above it, it keeps ${ok.length?armList(ok):'nothing heavier than splinters'} out of the vitals${no.length?`; ${no[0]}${no.length>1?' and anything heavier':''} still reach them`:''}.`; }
+  if(k==='belt'){ if(!v) return 'Unarmoured: near misses spring the plating over the machinery and magazines at full strength.';
+    const cut=Math.round((1-Math.max(.25,1-v/120))*100);
+    return `${band(v,[25,50,80,110,150])}: near misses let in about ${cut}% less water over the machinery, magazines and aviation fuel${v>=90?', as much as a belt can do against bombs':''}.`; }
+  if(k==='tps'){ if(!v) return 'None: a torpedo bursts against the hull itself and tears it wide open.';
+    const avg=SPREAD.tpsK*v*(SPREAD.tpsLo+SPREAD.tpsVar/2), lo=SPREAD.tpsK*v*SPREAD.tpsLo, hi=SPREAD.tpsK*v*(SPREAD.tpsLo+SPREAD.tpsVar), T=[['early aircraft torpedoes (176 kg)',176],['Japanese Type 91s (225 kg)',225],['American Mk 13s (300 kg)',300]];
+    const usu=T.filter(q=>q[1]<=avg).map(q=>q[0]), some=T.filter(q=>q[1]>avg&&q[1]<=hi).map(q=>q[0]);
+    return `${band(v,[1,2,3.5,4.5,5.5])}: soaks up ${Math.round(lo)}–${Math.round(hi)} kg of explosive, depending on where a torpedo strikes. ${usu.length?`Usually holds ${armList(usu)}`:'Holds no aircraft torpedo for certain'}${some.length?`; sometimes ${armList(some)}`:''}.`; }
+  return ''; }
 const fmtK=v=>Math.round(v).toLocaleString();
 function cvControls(cv,cs){
   const req=cs.reqs.map(r=>{ const pc=r.need>0?Math.min(100,r.have/r.need*100):100, ok=r.have>=r.need*.995;
@@ -1838,8 +1873,16 @@ const ISLAND={
     funnel:[.5,1,0,1.25,.78],rake:0,mast:[.2,.77],dish:[.3,.8],noFunnel:[[.55,.9,0,.25,.8]]},
   stepped:{blocks:[[0,1,0,.34,1],[0,.58,.34,.52,.9]],glass:[[0,.59,.45,.5,.92]],roof:[[0,.62,.52,.54,1.1]],bands:[[0,1,0,.34,1]],
     funnel:[.62,.9,.18,1.05,.8],rake:.05,cant:.45,mast:[.35,.54],dish:[.1,.6]},
+  bridge:{blocks:[[0,.42,0,.45,.8],[.04,.38,.45,.66,.72]],glass:[[.03,.39,.55,.6,.74]],roof:[[0,.44,.66,.69,1.1]],bands:[[0,.42,0,.45,.8]],
+    funnel:[.55,.85,0,.9,.7],rake:.06,mast:[.25,.69],mastL:10,dish:[.4,.7],noFunnel:[[.5,.72,0,.16,.7]]},
+  lattice:{blocks:[[0,.8,0,.36,1],[.02,.42,.36,.56,.88]],glass:[[.02,.43,.46,.51,.9]],roof:[[0,.46,.56,.58,1.15]],bands:[[0,.8,0,.36,1]],
+    funnel:[.48,.78,.36,1.1,.82],rake:.08,mast:[.9,0],mastL:H=>H*1.3,dish:[.15,.58],lattice:true},
+  tiered:{blocks:[[0,1,0,.28,1],[.05,.8,.28,.46,.85],[.1,.56,.46,.63,.7],[.15,.44,.63,.77,.56]],glass:[[.14,.45,.69,.73,.58]],roof:[[.12,.47,.77,.8,.78]],bands:[[0,1,0,.28,1]],
+    funnel:[.62,.92,.28,1.02,.75],rake:.1,mast:[.29,.8],mastL:8,dish:[.62,.46]},
+  stream:{blocks:[[.06,1,0,.3,1],[.12,.78,.3,.52,.95],[.18,.5,.52,.7,.9],[0,.06,0,.18,.9],[.06,.12,.3,.42,.9]],glass:[[.17,.51,.6,.66,.92]],roof:[[.16,.53,.7,.72,1.2]],bands:[[.06,1,0,.3,1]],
+    funnel:[.52,.84,.3,.96,.9],rake:.03,mast:[.56,.52],mastL:11,dish:[.3,.72]},
 };
-const islH0=cv=>cv.island==='large'?17:12;
+const islH0=cv=>12;
 function islStyle(cv){ const s=ISLAND[cv.istyle]||ISLAND.tower, H=islH0(cv); return typeof s.mastL==='function'?{...s,mastL:s.mastL(H)}:s; }
 // The island's footprint on the flight deck: x in metres from the forward end of the deck, dy across it (starboard negative), and
 // how far in from the centreline its inboard face stands. The island overhangs the deck edge a little, on a sponson.
@@ -2022,6 +2065,7 @@ $('#cvcontrols').addEventListener('input',e=>{ const k=e.target.dataset.cvk; if(
   const m=k.match(/^lift(\d)([xlw])$/); if(m) cv.lifts[+m[1]][m[2]]=v; else cv[k]=v;
   if(k==='hFrom'&&cv.hFrom>cv.hTo-10) cv.hFrom=cv.hTo-10; if(k==='hTo'&&cv.hTo<cv.hFrom+10) cv.hTo=cv.hFrom+10;
   if(k==='n'){ return; }
+  if(ARMK.includes(k)) for(const q of ARMK){ const t=$('#cvt-'+q); if(t) t.textContent=armTip(q,cv); }
   const o=$('#cvo-'+k); if(o){ const step=+e.target.step; o.textContent=`${k==='shp'?fmtK(v):k==='islX'?Math.round(v*100)+'%':step<.1?f2(v):step<1?f1(v):f0(v)} ${o.textContent.split(' ').slice(1).join(' ')}`; }
   cvChanged(false); });
 $('#cvga').addEventListener('click',e=>{ const c=cvSel(); if(!c) return; const r=e.currentTarget.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*1000, y=(e.clientY-r.top)/r.width*1000;
@@ -3277,6 +3321,21 @@ const DROPS=[
     'Carrier hangar fires depend on what is in the hangar: fire runs along a hangar full of fuelled aircraft and creeps along an empty one. With basic damage control, a carrier with an empty hangar survives 3 bombs more often than not; with armed aircraft aboard 2 bombs usually finish her; caught refuelling and rearming, 1 bomb does, as at Midway. Better damage control saves many of them. Torpedoes: 2 sink a carrier about half the time, 3 nearly always.',
     'Roughly, for other manned ships: a heavy or light cruiser survives one torpedo and goes down to two, or to 6 to 8 bombs; a destroyer goes down to 1 or 2 of either; a battleship needs 20 to 30 bombs. Target hulks with nobody aboard go down over hours from damage a crew would have held.',
   ]},
+  {at:'2026-11-22T14:17:00+13:00',items:[
+    'The Air group button is now Airgroups, and shows every carrier in your fleet at once, each in her own box with her aircraft, squadrons and orders, so you can run several carriers without switching between them.',
+    'One Create sortie button at the foot of the Airgroups screen sends the squadrons ticked on any of your carriers on one sortie, all at the target you pick; each carrier launches her own.',
+    'The bridge windows on battleships, battlecruisers and cruisers wrap round the front of the bridge and along both sides, instead of showing on one side only.',
+    'The aircraft symbols in the Airgroups screen have straight wings and tailplanes, their edges parallel.',
+    'On the chart, ships no longer leave a white line behind them (torpedo tracks still show), and a ship that has been hit no longer turns yellow.',
+    'Every type of ship has its own shape on the chart: a carrier’s flat deck and island, a battleship’s broad hull and big turrets, a battlecruiser long with four turrets, cruisers narrower with theirs, and a destroyer a slim needle.',
+    'The trials chart is 20% bigger: 960 km across.',
+    'Large islands are gone (saved designs get the normal island). Four new island layouts: Bridge only (Akagi and Kaga), Lattice mast (Wasp), Tiered (Junyo and Hiyo) and Streamlined (Implacable).',
+    'The battleship’s second turret no longer runs into her bridge.',
+    'A bomb that bursts on a ship’s armour or upperworks leaves a scorch mark in 3D, not a hole. Only bombs that go through leave holes, and bigger bombs and torpedoes leave bigger ones.',
+    'Each protection slider in the carrier designer has a tip saying what that much armour does: which bombs the flight deck and armoured deck keep out, how much the torpedo protection soaks up and which torpedoes it holds, and how much the side belt keeps near misses from flooding her. The belt now does that.',
+    'More bombs and torpedoes, each offered only to the aircraft that can carry it. Bombs: 113 kg, semi-armour-piercing 250 kg and 450 kg (they go deeper before bursting), and a 900 kg bomb for torpedo bombers. Torpedoes: Type 91 Mod 3 (240 kg warhead) and Mod 7 (420 kg), and the Mk 13 with a Torpex warhead (as strong as 360 kg). A bigger bomb bursting below decks starts a bigger fire and wrecks more around it.',
+    'Wakes look more like water: the crests of the waves spreading from a ship waver and come in lengths instead of ruled lines, the waves across her track die away behind her, and she leaves a smooth, paler slick astern where her passage flattens the small waves.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -3437,7 +3496,10 @@ function cvMesh(cv,cs,opt={}){
     else if(St.noFunnel) for(const b of St.noFunnel) blk(b);
     // the mast: a tripod with a yard, and the radar at its head
     const [mf,mh0]=St.mast, mx=X(ix+il*mf), mb=yFD+H*mh0, ml=St.mastL||9, mt=mb+ml; add(new THREE.CylinderGeometry(.2,.3,ml,6),steel,mx,mb+ml/2,zc);
-    for(const s2 of [-1,1]){ const leg=add(new THREE.CylinderGeometry(.14,.18,ml*.93,5),steel,mx+1.2,mb+ml*.46,zc+s2*1.1); leg.rotation.x=-s2*.13; leg.rotation.z=.14; }
+    if(St.lattice){ const bs=1.6, ts=.45;   // a lattice mast: four legs leaning in, braced at every stage
+      for(const [dx,dz] of [[-1,-1],[-1,1],[1,-1],[1,1]]){ const leg=add(new THREE.CylinderGeometry(.08,.1,ml*1.01,4),steel,mx+dx*(bs+ts)/2,mb+ml/2,zc+dz*(bs+ts)/2); leg.rotation.z=dx*Math.atan((bs-ts)/ml); leg.rotation.x=-dz*Math.atan((bs-ts)/ml); }
+      for(let k=1;k<6;k++){ const h=ml*k/6, w=bs-(bs-ts)*k/6; box(w*2,.12,.12,mx,mb+h,zc-w,steel); box(w*2,.12,.12,mx,mb+h,zc+w,steel); box(.12,.12,w*2,mx-w,mb+h,zc,steel); box(.12,.12,w*2,mx+w,mb+h,zc,steel); } }
+    else for(const s2 of [-1,1]){ const leg=add(new THREE.CylinderGeometry(.14,.18,ml*.93,5),steel,mx+1.2,mb+ml*.46,zc+s2*1.1); leg.rotation.x=-s2*.13; leg.rotation.z=.14; }
     box(.25,.25,bw2*2,mx,mt-2.2,zc,steel);
     if(cv.radar!=='none'){ box(.3,2.6,4.2,mx,mt+1.2,zc,steel); if(cv.radar==='r2'){ const [rf,rh]=St.dish, d=add(new THREE.CylinderGeometry(1.1,1.1,.25,14),steel,X(ix+il*rf),yFD+H*rh+1.2,zc); d.rotation.z=Math.PI/2.4; } } }
   else { box(1.2,1.4,cv.deckW*.6,X(dS+.8),yFD-1.7,0,glassM); }   // a flush deck: the bridge looks out from under the front of the flight deck
@@ -4111,11 +4173,14 @@ function shipCollide(dt){ const R=TR, B=shipBodies(), t=R.t; R.contacts=R.contac
 const TORPS={t18:{wh:176,kn:40,dropKn:120,dropH:20,rd:900,fail:{sank:.05,erratic:.04,dud:.03}},
   t91:{wh:225,kn:42,dropKn:180,dropH:100,rd:1000,fail:{sank:.03,erratic:.03,dud:.02}},
   t13:{wh:300,kn:33.5,dropKn:110,dropH:15,rd:800,fail:{sank:.08,erratic:.06,deep:.16,dud:.14},
-    late:{dropKn:260,dropH:240,fail:{sank:.03,erratic:.02,deep:.02,dud:.02}}}};
+    late:{dropKn:260,dropH:240,fail:{sank:.03,erratic:.02,deep:.02,dud:.02}}},
+  t91m3:{wh:240,kn:42,dropKn:260,dropH:150,rd:1000,fail:{sank:.02,erratic:.03,dud:.02}},
+  t91m7:{wh:420,kn:41,dropKn:260,dropH:150,rd:1000,fail:{sank:.02,erratic:.03,dud:.02}},
+  t13t:{wh:360,kn:33.5,dropKn:280,dropH:240,rd:900,fail:{sank:.02,erratic:.02,deep:.02,dud:.02}}};
 const torpOf=d=>{ const k=part('load',d.load).id, b=TORPS[k]; if(!b) return null; return b.late&&techDate()>=1943.9?Object.assign({},b,b.late):b; };
 const loadKind=p=>(part('load',p.d.load)||{}).kind||'';
 // How far through deck armour a bomb goes, in mm, from its weight, how hard-nosed it is, and how fast it is falling when it arrives.
-const BOMBK={b250:.8,b500:.85,b726:1.7,b800:1.8};
+const BOMBK={b113:.75,b250:.8,b500:.85,b250s:1.15,b500s:1.2,b726:1.7,b800:1.8,b900:.9};
 const bombPen=(id,kg,v)=>14*Math.cbrt(kg)*Math.pow(v/160,1.3)*(BOMBK[id]||.8);
 const gauss=()=>{ let u=0; for(let i=0;i<6;i++) u+=Math.random(); return (u-3)/Math.sqrt(.5); };
 // A point in a ship's own frame: metres ahead of her middle (u) and to starboard (v); and how far it is outside her hull.
@@ -4237,9 +4302,9 @@ function atkWeapons(dt){ const R=TR, t=R.t;
 // In 3D, each attacking aircraft where its run has taken it.
 function atkPose(map,FE,FN,t){ for(const C of cvAll()) for(const f of C.flights) for(const p of f.planes){ if(!p.atk) continue;
   map.set(p.id,{par:'world',x:p.ax*1000-FE,y:p.alt,z:-(p.ay*1000-FN),yaw:(90-p.ahdg)*DEG,pitch:p.pitchA||0,roll:-(p.rollA||0),fold:0,spin:true,gear:1,snap:false}); } }
-// The trials area: an 800 km box with the ship starting in the middle. The chart zooms from the whole box down to a kilometre or
+// The trials area: a 960 km box with the ship starting in the middle. The chart zooms from the whole box down to a kilometre or
 // two across, and closer than that the same spot is shown in 3D.
-const BOXKM=400, KM3D=1.1, DIST2D=4200;
+const BOXKM=480, KM3D=1.1, DIST2D=4200;
 // what the view centres on: your carrier, a ship you chose to watch (the view stays on her as she moves), or a fixed point
 const trLockT=()=>{ const v=TR.view; if(v.lock==null) return null; const T=TR.tgts.find(q=>q.id===v.lock); if(!T||T.status==='sunk'&&TR.t-T.sunkT>60){ v.lock=null; if(T){ v.x=T.x; v.y=T.y; } return null; } return T; };
 const trFocus=()=>{ const v=TR.view; if(v.chase&&TR3.chasePos) return {x:TR3.chasePos.x,y:TR3.chasePos.y}; if(v.follow) return {x:TR.ship.x,y:TR.ship.y}; const T=trLockT(); if(T){ v.x=T.x; v.y=T.y; return {x:T.x,y:T.y}; } return {x:v.x,y:v.y}; };
@@ -4276,9 +4341,10 @@ function trGroupAt(x,y,s){ const R=TR, cand=[];
   if(R.view.km>15) for(const tf of R.tfs){ if(tf.side!=='red') continue; const p=grpShow({k:'tf',id:tf.id}); if(p&&(tf.contact||!sightOn())) cand.push({g:{k:'tf',id:tf.id},d:Math.hypot(p.x-x,p.y-y)*s}); }
   const b=cand.filter(q=>q.d<24).sort((a,b)=>a.d-b.d)[0]; if(!b) return null; const p=grpShow(b.g); return p?{g:b.g,x:p.x,y:p.y,last:!!b.last}:null; }
 // A flight or sortie sent to a task force, or to a point.
-function trPickAt(x,y){ const R=TR, pk=R.pick; R.pick=null; const s=trScale()||1, G=trGroupAt(x,y,s), g=G?G.g:null, tx=G?G.x:x, ty=G?G.y:y;
+function trPickAt(x,y){ const R=TR, pk=R.pick; if(pk&&pk.C&&pk.C!==R.cur){ const C=pk.C; pk.C=null; return withC(C,()=>trPickAt(x,y)); } R.pick=null; const s=trScale()||1, G=trGroupAt(x,y,s), g=G?G.g:null, tx=G?G.x:x, ty=G?G.y:y;
   const what=g?`attack ${grpName(g)}${G.last?', starting where it was last seen':''}`:`strike the point ${f0(Math.hypot(tx-R.ship.x,ty-R.ship.y))} km out`;
-  if(pk.so!=null){ const so=R.sorties.find(q=>q.id===pk.so); if(so){ so.tgt=null; so.tgtG=g; so.tx=tx; so.ty=ty; trLog(`Sortie ${so.id} will ${what}.`); trSortieGo(so); } trPanels(true); return; }
+  if(pk.so!=null){ const go=()=>{ const so=TR.sorties.find(q=>q.id===pk.so&&q.state==='pick'); if(so){ so.tgt=null; so.tgtG=g; so.tx=tx; so.ty=ty; trLog(`${TR.cur&&pk.also&&pk.also.length?TR.name+': ':''}Sortie ${so.id} will ${what}.`); trSortieGo(so); } };
+    go(); for(const m of pk.also||[]) withC(m.C,()=>{ const so=TR.sorties.find(q=>q.id===m.so&&q.state==='pick'); if(so){ so.tgt=null; so.tgtG=g; so.tx=tx; so.ty=ty; trLog(`${TR.name}: sortie ${so.id} will ${what}.`); trSortieGo(so); } }); trPanels(true); return; }
   const f=R.flights.find(q=>q.id===pk.f); if(f){ const d=Math.hypot(tx-R.ship.x,ty-R.ship.y), rad=Math.min(...f.planes.map(p=>strikeKm(p.st)));
     f.mission=pk.mi; f.phase='out'; f.tx=tx; f.ty=ty; f.tgt=null; f.tgtG=pk.mi==='strike'?g:null; f.srch=null;
     trLog(`${f.name} sent ${f0(d)} km to ${String(Math.round(bearing(tx-R.ship.x,ty-R.ship.y))).padStart(3,'0')}°${f.tgtG?` to ${what}`:''}${d>rad?`, beyond its ${f0(rad)} km strike range`:''}.`); }
@@ -4375,9 +4441,7 @@ function trDrawMap(){
   selDraw(c,PX,PY,s);
   if(R.circuit.length){ c.strokeStyle='rgba(255,255,255,.5)'; c.setLineDash([3,3]); c.beginPath(); c.arc(PX(sh.x),PY(sh.y),Math.max(10,3*s),0,Math.PI*2); c.stroke(); c.setLineDash([]); }
   // the ship, to scale when zoomed in
-  const len=Math.max(14,R.cv.L/1000*s), [hx,hy]=hdgV(sh.hdg), sx=PX(sh.x), sy=PY(sh.y); c.save(); c.translate(sx,sy); c.rotate(sh.hdg*Math.PI/180); c.fillStyle=sh.status==='burnt'?'#0B0C0D':'#E9EDF0'; c.strokeStyle='rgba(255,255,255,.4)';
-  c.beginPath(); c.moveTo(0,-len/2); c.lineTo(len*.09,-len*.3); c.lineTo(len*.09,len/2); c.lineTo(-len*.09,len/2); c.lineTo(-len*.09,-len*.3); c.closePath(); c.fill(); c.restore();
-  c.strokeStyle='rgba(255,255,255,.35)'; c.beginPath(); c.moveTo(sx-hx*len/2,sy+hy*len/2); c.lineTo(sx-hx*len*2,sy+hy*len*2); c.stroke();
+  { const sx=PX(sh.x), sy=PY(sh.y); c.save(); c.translate(sx,sy); c.rotate(sh.hdg*Math.PI/180); shipGlyph(c,'CV',R.cv.L/1000*s,R.cv.B/1000*s,sh.status==='burnt'?'#0B0C0D':'#E9EDF0',{deckW:R.cv.deckW/1000*s,port:R.cv.iside==='port'}); c.restore(); }
   const msg=R.spawn==='TF'?'Click the chart to place the enemy task force there. Esc to stop.':R.spawn?`Click the chart to anchor a ${TGT[R.spawn]?TGT[R.spawn].name.toLowerCase():'carrier'} there. Esc to stop.`:R.pick?(R.pick.so!=null?'Click a task force (or where one was last seen), or a point, for the sortie to attack':'Click the map to send the flight there'):'';
   if(msg){ c.fillStyle='rgba(0,0,0,.45)'; c.fillRect(0,0,W,30); c.fillStyle='#fff'; c.textAlign='center'; c.fillText(msg,W/2,19); }
   // compass card with the wind
@@ -4505,7 +4569,7 @@ function tgtHit(T,w){ if(T.status==='sunk') return;
     if(ex>0&&c.kind==='avgas'){ c.fire=Math.max(c.fire,.5); c.ufire=Math.max(c.ufire,.3); const p=tgtPt(T,c); TR.fx.push({kind:'sec',x:p.x,y:p.y,t,size:1.2}); }
     if(ex>0&&c.kind==='mag'&&Math.random()<.12){ tgtBlow(T,`A torpedo ${where} set off the magazine`,c); return; }
     s=ex>0?`Torpedo hit ${where}: about ${f0(A)} m² of her side torn open.`:`Torpedo hit ${where}: the torpedo protection held, with some flooding behind it.`; }
-  else if(w.kind==='near'){ T.hits.near++; const A=w.kg/450*(w.d<5?1.1:.45); c[sd]+=A; if(c.kind==='boiler'||c.kind==='engine') dmgSet(c,(c.dmg||0)+.18*A); s=`Near miss ${where}${A>.3?': the blast sprung her plating':''}.`+(w.d<10?tgtAAHit(T,w,'near'):''); }
+  else if(w.kind==='near'){ T.hits.near++; const A=w.kg/450*(w.d<5?1.1:.45)*(c.prot?Math.max(.25,1-(T.belt||0)/120):1); c[sd]+=A; if(c.kind==='boiler'||c.kind==='engine') dmgSet(c,(c.dmg||0)+.18*A); s=`Near miss ${where}${A>.3?': the blast sprung her plating':''}.`+(w.d<10?tgtAAHit(T,w,'near'):''); }
   else { T.hits.bomb++; let below=false;
     if(T.spec.cv){ const gun=tgtAAHit(T,w,Math.abs(w.v??0)>((T.cvm||TR.cv).deckW||T.B)*.35?'top':'deck'); if(w.pen<T.fd){ c.ufire=Math.max(c.ufire,.2); s=`Bomb burst on the armoured flight deck ${where}.`+gun; }
       else { T.deckHoles=(T.deckHoles||0)+1; c.ufire=Math.max(c.ufire,.5+Math.random()*.35); const left=w.pen-T.fd; tgtDeckHit(T,w);
@@ -4514,9 +4578,9 @@ function tgtHit(T,w){ if(T.status==='sunk') return;
     else if(Math.random()<.3){ c.ufire=Math.max(c.ufire,BOMBFX.top+Math.random()*.3); tgtUpper(T,c,w,1); s=`Bomb hit the upperworks ${where}.`+tgtAAHit(T,w,'top'); }
     else { const arm=(c.prot?T.deck:Math.min(T.deck,16))*Math.max(BOMBFX.armMin,1-BOMBFX.armHit*(c.deckHit||0)); if(w.pen<arm){ c.deckHit=(c.deckHit||0)+w.kg/454; c.ufire=Math.max(c.ufire,BOMBFX.deck+Math.random()*.15); tgtUpper(T,c,w,.7);
         s=`Bomb burst on the ${arm>40?'armoured ':''}deck ${where} without getting through${c.deckHit>1.5?', tearing the deck up further':''}.`+tgtAAHit(T,w,'deck'); } else below=true; }
-    tgtMark(T,{k:'bomb',x:w.x,v:w.v??0,s:2.2+w.kg/160,cv:!!T.spec.cv});
-    if(below){ c.fire=Math.max(c.fire,.35+Math.random()*.35); const thin=clamp((20-T.B)/10,0,1); if(Math.random()<.35+.6*thin){ const A=w.kg/700*(1+5*thin); c[sd]+=A; if(thin>.3) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q){ q[sd]+=A*.5*thin; q.hitT=TR.t; } } }
-      dmgSet(c,.5+Math.random()*.5); for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q) dmgSet(q,.15); } if(T.dc) T.crewLoss=Math.min(.5,(T.crewLoss||0)+.04*Math.sqrt(w.kg/250));
+    tgtMark(T,{k:'bomb',x:w.x,v:w.v??0,s:2.2+w.kg/160,cv:!!T.spec.cv,scorch:!(below||T.spec.cv&&w.pen>=T.fd)});   // a hole only where it went through; where it burst on top, a scorch
+    if(below){ const big=Math.sqrt(w.kg/450); c.fire=Math.max(c.fire,Math.min(1,(.35+Math.random()*.35)*big)); const thin=clamp((20-T.B)/10,0,1); if(Math.random()<.35+.6*thin){ const A=w.kg/700*(1+5*thin); c[sd]+=A; if(thin>.3) for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q){ q[sd]+=A*.5*thin; q.hitT=TR.t; } } }
+      dmgSet(c,Math.min(1,(.5+Math.random()*.5)*big)); for(const j of [-1,1]){ const q=T.comps[c.i+j]; if(q){ dmgSet(q,Math.min(.7,.15*big*big)); if(w.kg>=700) q.fire=Math.max(q.fire,.3); } } if(T.dc) T.crewLoss=Math.min(.5,(T.crewLoss||0)+.04*Math.sqrt(w.kg/250));
       if(c.kind==='mag'&&Math.random()<(w.pen>130?.35:.12)*Math.sqrt(w.kg/450)){ tgtBlow(T,`A bomb went down ${where} and set off the magazine`,c); return; }
       if(c.kind==='avgas'&&Math.random()<.35){ tgtSecondary(T,c,'avgas',`A bomb burst among the aviation fuel tanks ${where}: a great explosion of petrol vapour.`); return; }
       if((c.kind==='mag'||c.kind==='avgas')&&Math.random()<.5){ tgtSecondary(T,c,'ammo',`A bomb burst ${where}: ammunition and stores are going off.`); return; }
@@ -4627,8 +4691,8 @@ function tgtStep(T,dt){ const t=TR.t;
 function tgtDrawMap(c,PX,PY,s){ const R=TR;
   const hid=sightOn(); for(const T of R.tgts){ if(T===R.ship||hid&&T.side==='red'&&!T.vis) continue; const x=PX(T.x), y=PY(T.y), len=Math.max(10,T.L/1000*s), wid=Math.max(3,T.B/1000*s*1.2), base=T.side==='red'?'#F08A7E':T.side==='blue'?'#8EC1EA':'#D9DEE2';
     if(T.status==='sunk'){ c.strokeStyle='rgba(255,255,255,.3)'; c.beginPath(); c.arc(x,y,4,0,Math.PI*2); c.stroke(); c.fillStyle='rgba(255,255,255,.35)'; c.textAlign='left'; c.fillText(`${T.type} ${T.name} (sunk)`,x+8,y+4); continue; }
-    const hurt=T.flood>1||T.fires||T.hits.bomb+T.hits.torp+T.hits.near>0, col=T.status==='burnt'?'#0B0C0D':T.status!=='afloat'?'#E0604E':hurt?'#E6B24A':base;
-    c.save(); c.translate(x,y); c.rotate(T.hdg*Math.PI/180); c.fillStyle=col; c.beginPath(); c.moveTo(0,-len/2); c.lineTo(wid/2,-len*.25); c.lineTo(wid/2,len/2); c.lineTo(-wid/2,len/2); c.lineTo(-wid/2,-len*.25); c.closePath(); c.fill(); if(T.status==='burnt'){ c.strokeStyle='rgba(255,255,255,.4)'; c.lineWidth=1; c.stroke(); } c.restore();
+    const hurt=T.flood>1||T.fires||T.hits.bomb+T.hits.torp+T.hits.near>0, col=T.status==='burnt'?'#0B0C0D':T.status!=='afloat'?'#E0604E':base;
+    c.save(); c.translate(x,y); c.rotate(T.hdg*Math.PI/180); shipGlyph(c,T.spec.cv?'CV':T.type,T.L/1000*s,T.B/1000*s,col,T.spec.cv?{deckW:((T.cvm||TR.cv).deckW||T.B)/1000*s,port:(T.cvm||TR.cv).iside==='port'}:{tur:T.spec.tur,fun:T.spec.fun},T.status==='burnt'); c.restore();
     if(T.tf&&R.view.km>15) continue;   // far out, a task force is labelled once, not ship by ship
     c.fillStyle=base; c.textAlign='left'; c.fillText(`${T.side==='red'?'Enemy ':''}${T.type} ${T.name}`,x+len/2+6,y-2);
     if(hurt) { c.fillStyle='rgba(255,255,255,.75)'; c.fillText(T.status!=='afloat'?{sinking:'sinking',capsizing:'capsizing',blown:'blown up',burnt:'consumed by fire, abandoned'}[T.status]:`${T.fires?`${T.fires} fire${T.fires>1?'s':''} · `:''}list ${f0(Math.abs(T.list))}°`,x+len/2+6,y+11); } }
@@ -4645,6 +4709,22 @@ function tgtDrawMap(c,PX,PY,s){ const R=TR;
 const FXBIG=1.3;   // fire and explosions drawn this much bigger than life-size glyphs would be
 const FXMAP={hit:{col:'255,214,40',r:5,life:22,op:.95},col:{col:'255,214,40',r:6,life:22,op:.95},near:{col:'245,248,250',r:4,life:14,op:.85},splash:{col:'220,230,236',r:2.2,life:10,op:.45},
   sec:{col:'255,138,42',r:6,life:28,op:.95},boom:{col:'232,53,43',r:10,life:45,op:1},crash:{col:'200,206,210',r:4,life:14,op:.8},tsplash:{col:'230,236,240',r:1.6,life:4,op:.4}};
+// A ship seen from above on the chart, bow up, centred: to scale when zoomed in, never smaller than a readable size for her type, and
+// each type its own shape. A carrier is a long flat deck with her island to one side; a battleship broad, with her big turrets; a
+// battlecruiser long and lean with four; cruisers narrower with their turrets; a destroyer a slim needle.
+const SHIPMIN={CV:[18,4.2],BB:[17,4.2],BC:[17,3.4],CA:[14,3],CL:[13,2.8],DD:[10,1.9]};
+function shipGlyph(c,ty,L,B,col,o={},outline){ const [ml,mw]=SHIPMIN[ty]||[12,3], k=L<ml?ml/L:1, len=L*k, wid=Math.max(mw,B*k*1.15), h=len/2, w=wid/2, dark='rgba(0,0,0,.38)';
+  c.fillStyle=col; c.beginPath();
+  if(ty==='CV'){ const dw=Math.max(wid*1.15,(o.deckW||B)*k), d=dw/2; c.moveTo(0,-h); c.quadraticCurveTo(w*.9,-h*.6,w*.9,-h*.3); c.lineTo(w*.9,h*.9); c.lineTo(-w*.9,h*.9); c.lineTo(-w*.9,-h*.3); c.quadraticCurveTo(-w*.9,-h*.6,0,-h); c.fill();
+    c.beginPath(); c.moveTo(-d*.75,-h*.86); c.lineTo(d*.75,-h*.86); c.lineTo(d,-h*.7); c.lineTo(d,h*.96); c.lineTo(-d,h*.96); c.lineTo(-d,-h*.7); c.closePath(); c.fill(); if(outline){ c.strokeStyle='rgba(255,255,255,.45)'; c.lineWidth=1; c.stroke(); }
+    c.fillStyle=dark; const sx=o.port?-1:1; c.fillRect(sx>0?d*.45:-d*.95,-h*.18,d*.5,h*.28); c.fillRect(-d*.12,-h*.82,d*.24,len*.003+.6); return; }
+  const bowF=ty==='DD'?.6:ty==='BB'?.42:.5, sternR=ty==='BB'?.9:.75;
+  c.moveTo(0,-h); c.quadraticCurveTo(w,-h*(1-bowF),w,-h*.25); c.lineTo(w,h*.7); c.quadraticCurveTo(w*sternR,h,0,h); c.quadraticCurveTo(-w*sternR,h,-w,h*.7); c.lineTo(-w,-h*.25); c.quadraticCurveTo(-w,-h*(1-bowF),0,-h); c.fill(); if(outline){ c.strokeStyle='rgba(255,255,255,.45)'; c.lineWidth=1; c.stroke(); }
+  if(ty==='DD'||len<12) return;
+  c.fillStyle=dark; const tr=o.tur||[], fn=o.fun||[.45,.55];
+  // the superstructure from the bridge to the after funnel
+  const y0=-h+len*(Math.min(...fn)-.12), y1=-h+len*(Math.max(...fn)+.06); c.fillRect(-w*.42,y0,w*.84,y1-y0);
+  for(const [f,n,cal] of tr){ const r=Math.max(.9,w*(cal>.3?.62:cal>.18?.55:.5)); c.beginPath(); c.arc(0,-h+f*len,r,0,2*Math.PI); c.fill(); } }
 function burstGlyph(c,x,y,r,col,op){ if(!(op>.02)||!(r>0)) return; op=Math.min(1,op); c.save(); c.translate(x,y); c.fillStyle=`rgba(${col},${op})`; c.beginPath();
   for(let i=0;i<16;i++){ const a=i/16*2*Math.PI, q=i%2?r*.5:r; c.lineTo(Math.cos(a)*q,Math.sin(a)*q); } c.closePath(); c.fill();
   c.fillStyle=`rgba(255,255,255,${op*.6})`; c.beginPath(); c.arc(0,0,r*.22,0,2*Math.PI); c.fill(); c.restore(); }
@@ -4764,23 +4844,34 @@ const waveH=(x,z,t)=>{ let h=0; for(const w of (TR3.waves||[]).slice(0,6)) h+=w.
 // angle th where tan a = tan th / (1 + 2 tan^2 th), and their phase is k0 (s + |v| tan th) sec th. Foam: the breaking crests of the bow
 // wave, white water along her sides from the bow, and (for ships other than your own, whose wake follows her track) the wake astern.
 const SEA_KELV=`uniform vec4 uKel[8];
-float kelv(vec2 p,float px,out float foam){ float h=0.0; foam=0.0;
+uniform vec3 uFo;
+// A gentle unevenness laid in the water itself (world position, slowly changing), so wake crests waver, break into lengths and are
+// never ruled straight, and the ship moves on through it.
+float wn(vec2 p,float t){ vec2 q=p+uFo.xy; return sin(dot(q,vec2(.071,.033))+t*.31)*.5+sin(dot(q,vec2(-.043,.061))*1.7-t*.23)*.3+sin(dot(q,vec2(.027,-.089))*2.9+t*.17)*.2; }
+float kelv(vec2 p,float px,out float foam){ float h=0.0; foam=0.0; float tt=uFo.z;
   for(int i=0;i<8;i++){ vec4 c=uCalm[i], k=uKel[i]; if(c.w<=0.0||k.x<0.8) continue;
     vec2 d=p-c.xy; float cs=cos(c.z), sn=sin(c.z); float u=d.x*cs-d.y*sn, v=d.x*sn+d.y*cs;
     float L=c.w, B=k.y, s=L*0.5-u, av=abs(v), k0=9.81/(k.x*k.x), lam=6.2832/k0, reach=min(30.0*lam+2.0*L,5000.0);
-    if(s<-L*0.08||s>reach||av>s*0.42+B) continue;
-    float sp=max(s,0.5), q=av/sp/0.35355, a=min(q,1.0)*0.35355, disc=sqrt(max(0.0,1.0-8.0*a*a));
+    if(s<-L*0.08||s>reach||av>s*0.45+B) continue;
+    float sp=max(s,0.5), w1=wn(p,tt), w2=wn(p*1.9+vec2(37.0,11.0),tt*1.3), q=av/sp/0.35355, a=min(q,1.0)*0.35355, disc=sqrt(max(0.0,1.0-8.0*a*a));
     float t1=a<1e-4?a:(1.0-disc)/(4.0*a), t2=a<1e-3?250.0:(1.0+disc)/(4.0*a);
-    float ph1=k0*(sp+av*t1)*sqrt(1.0+t1*t1), ph2=k0*(sp+av*t2)*sqrt(1.0+t2*t2);
+    float ph1=k0*(sp+av*t1)*sqrt(1.0+t1*t1)+w1*0.8, ph2=k0*(sp+av*t2)*sqrt(1.0+t2*t2)+w2*1.3;
     float A=clamp(0.035*k.x,0.0,0.7)*sqrt(B/20.0)*sqrt(L/(L+s))*smoothstep(-L*0.08,L*0.1,s);
-    float edge=1.0-smoothstep(1.0,1.18,q), cusp=1.0+1.3*smoothstep(0.7,1.0,q)*edge;
+    float edge=1.0-smoothstep(0.92,1.22,q+0.08*w1), cusp=1.0+0.9*smoothstep(0.7,1.0,q)*edge, feather=0.7+0.3*w2, tfade=exp(-s/(12.0*lam+1.5*L));
     float f1=1.0-smoothstep(0.12,0.35,px*k0*(1.0+t1*t1)/6.2832), f2=(1.0-smoothstep(0.06,0.2,px*k0*(1.0+t2*t2)/6.2832))*smoothstep(0.3,0.85,min(q,1.0));
-    float c2=cos(ph2); h+=A*edge*cusp*(0.6*cos(ph1)*f1+0.3*c2*f2);
+    float c2=cos(ph2); h+=A*edge*cusp*(0.6*cos(ph1)*f1*tfade+0.32*c2*f2*feather);
     float fr=clamp((k.x-2.5)/9.0,0.0,1.0);
-    foam+=fr*edge*f2*smoothstep(0.55,0.95,c2)*exp(-s/(3.0*lam+L*0.5))*0.7;
+    foam+=fr*edge*f2*feather*smoothstep(0.55,0.95,c2)*exp(-s/(3.0*lam+L*0.5))*0.7;
     foam+=fr*exp(-pow((av-B*0.5)/(B*0.35+s*0.02),2.0))*(1.0-smoothstep(L*0.2,L*0.9,s))*smoothstep(-L*0.05,L*0.02,s)*0.8;
     if(k.z>0.5) foam+=fr*exp(-pow(av/(B*0.45+(s-L)*0.035),2.0))*exp(-(s-L)/(L*3.5))*smoothstep(L*0.85,L,s)*0.5; }
   return h; }
+// The slick: astern of a moving ship her turbulent wake smooths the small waves into a glassy, paler path that widens and fades.
+float wakeSlick(vec2 p){ float m=0.0;
+  for(int i=0;i<8;i++){ vec4 c=uCalm[i], k=uKel[i]; if(c.w<=0.0||k.x<0.8) continue;
+    vec2 d=p-c.xy; float cs=cos(c.z), sn=sin(c.z); float u=d.x*cs-d.y*sn, v=d.x*sn+d.y*cs; float L=c.w, B=k.y, s=L*0.5-u;
+    if(s<L*0.85||s>L*12.0) continue; float w=B*0.6+(s-L)*0.04;
+    m=max(m,exp(-(v*v)/(w*w))*exp(-(s-L)/(L*5.0))*smoothstep(L*0.85,L*1.05,s)*clamp((k.x-1.0)/5.0,0.0,1.0)); }
+  return m; }
 `;
 const SEA_GLSL=`vec3 gp=position; float rr=length(gp.xz), calm=1.0;
 for(int i=0;i<8;i++){ vec4 c=uCalm[i]; if(c.w>0.0){ vec2 d=gp.xz-c.xy; float cs=cos(c.z), sn=sin(c.z); float u=d.x*cs-d.y*sn, v=d.x*sn+d.y*cs; calm*=smoothstep(1.0,2.4,length(vec2(u/(c.w*.6),v/(c.w*.13)))); } }
@@ -4797,7 +4888,7 @@ vec3 objectTangent=vec3(tangent.xyz);
 const SEA_FRAG=`{ float calm=1.0;
   for(int i=0;i<8;i++){ vec4 c=uCalm[i]; if(c.w>0.0){ vec2 d=vWP-c.xy; float cs=cos(c.z), sn=sin(c.z); float u=d.x*cs-d.y*sn, v=d.x*sn+d.y*cs; calm*=smoothstep(1.0,2.4,length(vec2(u/(c.w*.6),v/(c.w*.13)))); } }
   vec2 fw=fwidth(vWP); float px=max(fw.x,fw.y); vec3 gn=vec3(0.0,1.0,0.0);
-  for(int i=0;i<10;i++){ vec4 w=uW[i]; float lam=6.2832/max(w.z,1e-4); float a=w.w*(i<6?calm:max(calm,.35))*(1.0-smoothstep(lam*.08,lam*.3,px)); float ph=w.z*dot(w.xy,vWP)+uQ[i].x; float C=cos(ph), S=sin(ph), wa=w.z*a;
+  for(int i=0;i<10;i++){ vec4 w=uW[i]; float lam=6.2832/max(w.z,1e-4); float a=w.w*(i<6?calm:max(calm,.35))*(1.0-smoothstep(lam*.08,lam*.3,px))*(1.0-(i<6?0.3:0.85)*kSlk); float ph=w.z*dot(w.xy,vWP)+uQ[i].x; float C=cos(ph), S=sin(ph), wa=w.z*a;
     gn-=vec3(w.x*wa*C,uQ[i].y*wa*S,w.y*wa*C); }
   gn-=vec3((kHx-kH)/0.3,0.0,(kHz-kH)/0.3);
   normal=normalize((viewMatrix*vec4(normalize(gn),0.0)).xyz); }
@@ -4812,9 +4903,9 @@ function seaMesh(tex){ const P=[], U=[], N=[], I=[], NA=320, rs=[0]; for(let r=1
   const KF='#include <map_fragment>\nvec2 kfw=fwidth(vWP); float kPx=max(kfw.x,kfw.y), kFo, kF2, kH=kelv(vWP,kPx,kFo), kHx=kelv(vWP+vec2(0.3,0.0),kPx,kF2), kHz=kelv(vWP+vec2(0.0,0.3),kPx,kF2);\n'+
     // the foam is broken up by churning noise fixed in the water, not the ship: thin foam is scattered patches, thick foam nearly solid
     'vec2 kwp=vWP+uFo.xy; float kN=texture2D(uFN,kwp/64.0+vec2(uFo.z*0.004,uFo.z*0.0015)).r*0.6+texture2D(uFN,kwp/16.0+vec2(-uFo.z*0.006,uFo.z*0.01)).r*0.4;\n'+
-    'float kf=clamp(kFo,0.0,1.0), kA=smoothstep(1.0-kf,1.0-kf+0.25,kN)*(0.5+0.5*kf);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.93,0.96,0.98),clamp(kA,0.0,0.9));\n';
+    'float kf=clamp(kFo,0.0,1.0), kA=smoothstep(1.0-kf,1.0-kf+0.25,kN)*(0.5+0.5*kf);\nfloat kSlk=wakeSlick(vWP); diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*1.08+vec3(0.03,0.05,0.055),kSlk*0.6);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.93,0.96,0.98),clamp(kA,0.0,0.9));\n';
   m.onBeforeCompile=sh=>{ Object.assign(sh.uniforms,u); sh.vertexShader=head+'uniform float uSp;\n'+sh.vertexShader.replace('#include <beginnormal_vertex>',SEA_GLSL).replace('#include <begin_vertex>','vec3 transformed=position+gd;');
-    sh.fragmentShader=head+'uniform sampler2D uFN;\nuniform vec3 uFo;\n'+sh.fragmentShader.replace('#include <map_fragment>',KF).replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n'+SEA_FRAG); };
+    sh.fragmentShader=head+'uniform sampler2D uFN;\n'+sh.fragmentShader.replace('#include <map_fragment>',KF).replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n'+SEA_FRAG); };
   const o=new THREE.Mesh(g,m); o.receiveShadow=true; o.frustumCulled=false; return o; }
 // Each frame: the phase of every wave at the focus, and the hulls to calm the water around (x, z of the centre, her yaw, her length).
 function seaUpdate(t,FE,FN,calm){ const u=TR3.seaU, W=TR3.waves; if(!u||!W) return;
@@ -5118,7 +5209,7 @@ function warshipMesh(T){ const s=T.spec, fcv={L:s.L,B:s.B,D:s.D,Cb:s.Cb,bow:'pla
 const gunVis=cal=>cal*(cal>=.4?50:cal>=.37?42:cal>=.19?55:cal>=.14?47:38)*.82;
 const gunR=cal=>Math.max(.08,cal*.78);
 const WARLOOK={
-  BB:{sf:.34,sa:.72,tr:.5,rake:.035,shF:.7,shA:.08,flare:.22,fun:[.43,.53],funR:.105,funH:11,br:.31,brLv:5,brL:.075,tower:12,cT:true,deckHs:[.29,.72],
+  BB:{sf:.34,sa:.72,tr:.5,rake:.035,shF:.7,shA:.08,flare:.22,fun:[.43,.53],funR:.105,funH:11,br:.345,brLv:5,brL:.075,tower:12,cT:true,deckHs:[.30,.72],
       dirs:[.63],aft:[.59,.7],sec:[.35,.41,.47,.53,.59],secMid:[],aa:[.27,.37,.44,.5,.56,.66,.74],cat:[[.95,-.27],[.95,.27]],crane:.985,main:.585,rf:true},
   BC:{sf:.33,sa:.74,tr:.48,rake:.03,shF:.45,shA:.05,flare:.18,fun:[.41,.5],funR:.085,funH:10,br:.31,brLv:5,brL:.07,tower:9,cT:true,tripod:true,deckHs:[.3,.71],
       dirs:[.66],aft:[.6,.69],sec:[.37,.45,.53],secMid:[],aa:[.34,.42,.48,.56,.64],cat:[],crane:0,main:.6,rf:true},
@@ -5198,7 +5289,7 @@ function bigShipMesh(T){ const s=T.spec, lk=WARLOOK[T.type], ln=warLines(s,T.typ
   // the bridge: tiers with rounded fronts, the navigating bridge with its windows and wings, then the tower and the director
   const bx=X(lk.br); let y=y1; if(lk.cT) cyl(B*.07,B*.075,lv*1.6,M.side,bx+L*.012,y1,0,20);
   const l0=L*lk.brL, xF=bx+l0/2; let lt=l0; for(let i=0;i<lk.brLv;i++){ const l=l0*(1-i*.16), w=B*.44*(1-i*.05), x=xF-l/2; lt=l; house(l,lv,w,M.side,x,y,1);
-    if(i===lk.brLv-2){ const gw=new THREE.Mesh(new THREE.CylinderGeometry(w/2+.06,w/2+.06,.8,20,1,true,-Math.PI/2,Math.PI),M.glass); gw.scale.set(Math.min(1,(l*.45)/(w/2)),1,1); gw.position.set(x+l/2-Math.min(w/2,l*.45),y+lv*.62,0); G.add(gw);
+    if(i===lk.brLv-2){ const gw=new THREE.Mesh(new THREE.CylinderGeometry(w/2+.06,w/2+.06,.8,20,1,true,0,Math.PI),M.glass); gw.scale.set(Math.min(1,(l*.45)/(w/2)),1,1); gw.position.set(x+l/2-Math.min(w/2,l*.45),y+lv*.62,0); G.add(gw); { const r=Math.min(w/2,l*.45), ls=(l-r)*.5; for(const sg of [-1,1]){ const sw=new THREE.Mesh(new THREE.BoxGeometry(ls,.8,.06),M.glass); sw.position.set(x+l/2-r-ls/2,y+lv*.62,sg*(w/2+.03)); G.add(sw); } }   // and the windows run back along both sides
       box(2.2,.3,B*.64,M.top,x+l*.3,y+lv*.9,0); } y+=lv; }
   // the tower stands on the back of the top tier, the director on the tower, and the foremast with its radar behind the director
   const xT=xF-lt*.7, tw=B*.15; if(lk.tower>8){ const to=add(new THREE.CylinderGeometry(tw*.55,tw*.75,lk.tower,8),M.side,xT,y+lk.tower/2,0); to.scale.set(1.25,1,1); } else box(tw*1.3,lk.tower,tw,M.side,xT,y,0); y+=lk.tower;
@@ -5259,7 +5350,7 @@ function tgt3Marks(T,grp){ if(!T.marks||!T.marks.length) return; const done=grp.
   const yDeck=T.spec.cv?((T.csm||TR.cs).hFD-T.T):T.D-T.T, halfDeck=T.spec.cv?(T.cvm||TR.cv).deckW/2:T.B/2;
   for(const m of T.marks){ if(done.has(m)) continue; done.add(m); const x=T.L/2-m.x, seed=Math.floor(m.t*7+m.x*13)%233280+1;
     if(m.k==='bomb'){ const z=clamp(m.v,-halfDeck+m.s*.6,halfDeck-m.s*.6), y=(WARLOOK[T.type]&&!T.spec.cv?warLines(T.spec,T.type).deckY(m.x/T.L):yDeck)+.06;
-      for(const [geo,mat,dy] of [[new THREE.CircleGeometry(m.s*1.6,20),M.soot,.02],[jagGeo(m.s*.75,seed+3),M.rim,.04],[jagGeo(m.s*.5,seed),M.hole,.06]]){ const o=new THREE.Mesh(geo,grp.userData.charred?charMat(mat):mat); o.rotation.x=-Math.PI/2; o.position.set(x,y+dy,z); grp.add(o); } }
+      for(const [geo,mat,dy] of (m.scorch?[[new THREE.CircleGeometry(m.s*1.3,20),M.soot,.02]]:[[new THREE.CircleGeometry(m.s*1.6,20),M.soot,.02],[jagGeo(m.s*.75,seed+3),M.rim,.04],[jagGeo(m.s*.5,seed),M.hole,.06]])){ const o=new THREE.Mesh(geo,grp.userData.charred?charMat(mat):mat); o.rotation.x=-Math.PI/2; o.position.set(x,y+dy,z); grp.add(o); } }
     else { const sd=m.v>=0?1:-1, u=x, hw=(typeof hullHalf==='function'?hullHalf(T,u):T.B/2)||T.B/2*.6, z=sd*(hw+.1);
       for(const [geo,mat,sx,sy,dy,dz] of [[new THREE.CircleGeometry(m.s*1.2,20),M.soot,1.5,1.3,1.8,.02],[jagGeo(m.s*.7,seed+5),M.rim,1.5,.9,.45,.04],[jagGeo(m.s*.5,seed),M.hole,1.5,.85,.35,.06]]){
         const o=new THREE.Mesh(geo,grp.userData.charred?charMat(mat):mat); o.scale.set(sx,sy,1); o.position.set(x,dy,z+sd*dz); o.rotation.y=sd>0?0:Math.PI; grp.add(o); } } } }
@@ -5339,8 +5430,8 @@ function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
 // then flies to its target at the speed of the slowest aircraft; or they protect the carrier, circling over her and coming down to
 // refuel and going up again for as long as the order stands.
 const AGCOL=[['hangar','Hangar',s=>s==='hangar'||s==='liftdown'],['deck','On deck',s=>['liftup','deckq','spotting','ranged','fwd','spotfwd'].includes(s)],['air','Airborne',s=>s==='air'||s==='circuit']];
-const planeSVG=(col,big)=>`<svg viewBox="0 0 24 24" width="${big?26:24}" height="${big?26:24}" aria-hidden="true"><path fill="${col}" stroke="rgba(0,0,0,.35)" stroke-width=".5" d="M12 1.6c.9 0 1.3.9 1.3 2.2v5.1l8.4 3.4v2.1l-8.4-1.7v4.8l2.7 2v1.7L12 20.1l-4-.9v-1.7l2.7-2v-4.8l-8.4 1.7v-2.1l8.4-3.4V3.8c0-1.3.4-2.2 1.3-2.2z"/></svg>`;
-const AG={sel:new Set(),ssel:new Set(),open:false};
+const planeSVG=(col,big)=>`<svg viewBox="0 0 24 24" width="${big?26:24}" height="${big?26:24}" aria-hidden="true"><path fill="${col}" stroke="rgba(0,0,0,.35)" stroke-width=".5" d="M12 1.6c.9 0 1.3.9 1.3 2.2V9h8.9v3.4h-8.9v4.7h3.6v2.2h-3.4L12 21.8l-1.5-2.5H7.1v-2.2h3.6v-4.7H1.8V9h8.9V3.8c0-1.3.4-2.2 1.3-2.2z"/></svg>`;
+const AG={sel:new Set(),ssel:new Set(),open:false,by:new Map()};
 const trSq=id=>TR.sq.find(q=>q.id===id);
 const sqPlanes=sq=>TR.planes.filter(p=>p.sq===sq.id);
 const trSortiePlanes=so=>TR.planes.filter(p=>so.sqs.includes(p.sq));
@@ -5386,43 +5477,65 @@ function agStatus(sq){ const R=TR, ps=sqPlanes(sq), c={}; for(const p of ps){ co
   const job=sq.task==='cap'?'protecting the carrier':so?(so.state==='ranging'?`sortie ${so.id}: getting ready to launch`:`sortie ${so.id}: ${(()=>{ const f=R.flights.find(q=>q.sortie===so.id); return !f?'':f.phase==='out'?'outbound':f.phase==='attack'?'attacking':'returning'; })()}`):'standing by';
   return `${job} · ${where}`; }
 function agTypes(ps){ const m=new Map(); for(const p of ps){ const k=p.d.name; if(!m.has(k)) m.set(k,[]); m.get(k).push(p); } return [...m.entries()]; }
+// The airgroups screen: a box for each of your carriers, with her aircraft by where they are, her squadrons and the orders for them.
+// Picks and ticks are kept per carrier; whatever is done in a box is done with that carrier swapped in.
+const agCvs=()=>{ trKeep(); return TR.cvs.filter(C=>C.side!=='red'&&!C.gone); };
+const agSt=C=>{ if(!AG.by.has(C)) AG.by.set(C,{sel:new Set(),ssel:new Set()}); return AG.by.get(C); };
+function agWith(C,fn){ const st=agSt(C), s0=AG.sel, s1=AG.ssel; AG.sel=st.sel; AG.ssel=st.ssel; try{ return withC(C,fn); } finally{ AG.sel=s0; AG.ssel=s1; } }
 function agHTML(){ const R=TR, cols=AGCOL.map(([k,name,f])=>{ const ps=R.planes.filter(p=>f(p.state));
     return `<div class="agcol"><h4><span>${name}</span><span class="mono">${ps.length}</span></h4>${agTypes(ps).map(([nm,qs])=>`<button class="agtype" data-agtype="${esc(nm)}" data-agcol="${k}">${esc(nm)} · ${qs.length}</button>
       <div class="agps">${qs.map(p=>{ const sq=p.sq&&trSq(p.sq); return `<button class="agp${p.armed?'':' off'}" data-agp="${p.id}" aria-pressed="${AG.sel.has(p.id)}" title="${esc(p.d.name)} · ${esc(part('role',p.role).name)}${p.armed?'':' · not armed'}${sq?` · ${esc(sq.name)}`:''}">${planeSVG(ROLECOL[p.role])}${sq?`<span class="n">${sq.id}</span>`:''}</button>`; }).join('')}</div>`).join('')||'<span class="muted" style="font-size:12.5px">None</span>'}</div>`; }).join('');
-  const lost=R.planes.filter(p=>p.state==='lost').length;
+  const lost=R.planes.filter(p=>p.state==='lost').length, ns=AG.sel.size, nq=AG.ssel.size, dis=nq?'':' disabled';
   const sqs=R.sq.length?R.sq.map(sq=>{ const ps=sqPlanes(sq), mix=agTypes(ps).map(([nm,qs])=>`${qs.length} × ${esc(nm)}`).join(', ');
       return `<label class="agsq"><input type="checkbox" data-agsq="${sq.id}"${AG.ssel.has(sq.id)?' checked':''}><strong>${esc(sq.name)}</strong><span>${mix||'no aircraft left'}</span><span class="st">${esc(agStatus(sq))}</span></label>`; }).join('')
     :'<p class="muted" style="margin:0;font-size:13px">No squadrons yet. Pick some aircraft above and press Create squadron.</p>';
-  return {cols:cols+(lost?`<p class="muted" style="margin:0;font-size:12.5px;grid-column:1/-1">${lost} lost.</p>`:''),sqs}; }
+  return `<div class="agcols">${cols}${lost?`<p class="muted" style="margin:0;font-size:12.5px;grid-column:1/-1">${lost} lost.</p>`:''}</div>
+    <div class="trbtns"><button class="btn" data-agact="make"${ns?'':' disabled'}>Create squadron</button><button class="btn ghost" data-agact="clear">Clear picks</button><span class="mono" style="font-size:12.5px">${ns?`${ns} aircraft picked`:''}</span></div>
+    <span class="label">Squadrons</span><div class="agsqs">${sqs}</div>
+    <div class="trbtns"><button class="btn ghost" data-agact="cap"${dis}>Protect carriers</button><button class="btn ghost" data-agact="recall"${dis}>Recall to land</button><button class="btn ghost" data-agact="disband"${dis}>Disband</button><span class="mono" style="font-size:12.5px">${nq?`${nq} squadron${nq>1?'s':''} ticked`:''}</span></div>`; }
 let agT=0;
-function agRender(force){ if(!AG.open||!TR) return; const now=performance.now(); if(!force&&now-agT<600) return; agT=now; const h=agHTML(); morph($('#agcols'),h.cols); morph($('#agsqs'),h.sqs);
-  for(const id of [...AG.sel]) if(!TR.planes.some(p=>p.id===id&&p.state!=='lost')) AG.sel.delete(id); for(const id of [...AG.ssel]) if(!trSq(id)) AG.ssel.delete(id);
-  $('#agseln').textContent=AG.sel.size?`${AG.sel.size} aircraft picked`:''; $('#agmake').disabled=!AG.sel.size;
-  $('#agsqn').textContent=AG.ssel.size?`${AG.ssel.size} squadron${AG.ssel.size>1?'s':''} ticked`:''; for(const id of ['agsortie','agcap','agrecall','agdisband']) $('#'+id).disabled=!AG.ssel.size; }
-function agOpen(){ if(!TR) return; AG.open=true; $('#agd').hidden=false; $('#agtitle').textContent=`Air group · ${TR.name}`; agRender(true); $('#agclose').focus(); }
+function agRender(force){ if(!AG.open||!TR) return; const now=performance.now(); if(!force&&now-agT<600) return; agT=now;
+  const cur=TR.cur, html=agCvs().map(C=>agWith(C,()=>{ for(const id of [...AG.sel]) if(!TR.planes.some(p=>p.id===id&&p.state!=='lost')) AG.sel.delete(id); for(const id of [...AG.ssel]) if(!trSq(id)) AG.ssel.delete(id);
+    const n=TR.planes.filter(p=>p.state!=='lost').length; return `<section class="agcv" data-agcv="${TR.cvs.indexOf(C)}"><h4><span>${esc(C.name)}</span><span class="mono">${n} aircraft${C===cur?' · on view':''}</span></h4>${agHTML()}</section>`; })).join('');
+  morph($('#agcvs'),html||'<p class="muted">No carriers at sea.</p>');
+  const tick=agCvs().reduce((n,C)=>n+agSt(C).ssel.size,0), ncv=agCvs().filter(C=>agSt(C).ssel.size).length;
+  $('#agsortie').disabled=!tick; $('#agsortien').textContent=tick?`${tick} squadron${tick>1?'s':''} ticked${ncv>1?` on ${ncv} carriers`:''}`:'Tick squadrons on any carrier to send them on a sortie together'; }
+// One sortie from every carrier with squadrons ticked: each carrier gets a sortie of her own squadrons, and all of them are sent at the
+// one target picked on the chart. Each launches and forms up over her own carrier.
+function agSortieAll(){ const cvs=agCvs().filter(C=>agSt(C).ssel.size); if(!cvs.length) return;
+  const busy=[]; for(const C of cvs) agWith(C,()=>{ for(const sq of TR.sq.filter(q=>AG.ssel.has(q.id))) if(TR.sorties.some(so=>so.sqs.includes(sq.id)&&(so.state==='ranging'||so.state==='out'))) busy.push(`${C.name}'s ${sq.name}`); });
+  if(busy.length){ toast(`${busy.join(', ')} ${busy.length>1?'are':'is'} already on a sortie. Recall first.`); return; }
+  const made=[]; for(const C of cvs) agWith(C,()=>{ const R=TR, sqs=R.sq.filter(q=>AG.ssel.has(q.id)); const so={id:++R.soid,sqs:sqs.map(q=>q.id),state:'pick',tgt:null,tx:0,ty:0}; R.sorties.push(so);
+    for(const sq of sqs) sq.task=null; for(const p of R.planes) if(so.sqs.includes(p.sq)&&p.task==='cap') p.task=null; made.push({C,so:so.id}); AG.ssel.clear(); });
+  TR.pick={so:made[0].so,C:made[0].C,also:made.slice(1)}; TR.spawn=null; trSpawnBtns(); agClose();
+  toast(`Click the target for the sortie${made.length>1?` from ${made.map(m=>m.C.name).join(', ')}`:''} on the chart: a target ship, or a point.`); }
+$('#agsortie').addEventListener('click',agSortieAll);
+function agOpen(){ if(!TR) return; AG.open=true; $('#agd').hidden=false; const n=agCvs().length; $('#agtitle').textContent=n>1?`Airgroups · ${n} carriers`:`Airgroups · ${TR.name}`; agRender(true); $('#agclose').focus(); }
 function agClose(){ AG.open=false; $('#agd').hidden=true; $('#trair').focus(); }
 $('#agclose').addEventListener('click',agClose);
-$('#agd').addEventListener('click',e=>{ if(e.target.id==='agd'){ agClose(); return; } const b=e.target.closest('button'); if(!b||!TR) return; const R=TR;
+$('#agd').addEventListener('click',e=>{ if(e.target.id==='agd'){ agClose(); return; } const b=e.target.closest('button'), box=e.target.closest('[data-agcv]'); if(!b||!TR||!box) return;
+  const C=TR.cvs[+box.dataset.agcv]; if(!C) return; let after=null; agWith(C,()=>{ after=agAct(b,C); }); if(typeof after==='function') after(); });
+function agAct(b,C){ const R=TR;
   if(b.dataset.agp){ const id=+b.dataset.agp; AG.sel.has(id)?AG.sel.delete(id):AG.sel.add(id); agRender(true); return; }
   if(b.dataset.agtype){ const col=AGCOL.find(c=>c[0]===b.dataset.agcol), ps=R.planes.filter(p=>p.d.name===b.dataset.agtype&&col[2](p.state)), all=ps.every(p=>AG.sel.has(p.id)); for(const p of ps) all?AG.sel.delete(p.id):AG.sel.add(p.id); agRender(true); return; }
-  if(b.id==='agclear'){ AG.sel.clear(); agRender(true); return; }
-  if(b.id==='agmake'){ const ps=R.planes.filter(p=>AG.sel.has(p.id)); if(!ps.length) return; const sq={id:++R.sqid,name:`Squadron ${R.sqid}`};
+  if(b.dataset.agact==='clear'){ AG.sel.clear(); agRender(true); return; }
+  if(b.dataset.agact==='make'){ const ps=R.planes.filter(p=>AG.sel.has(p.id)); if(!ps.length) return; const sq={id:++R.sqid,name:`Squadron ${R.sqid}`};
     const moved=ps.filter(p=>p.sq).length; for(const p of ps){ p.sq=sq.id; p.task=null; p.order=false; p.respot=false; } R.sq.push(sq); R.sq=R.sq.filter(q=>sqPlanes(q).length);
     AG.sel.clear(); AG.ssel.add(sq.id); trLog(`${sq.name} formed: ${agTypes(ps).map(([nm,qs])=>`${qs.length} × ${nm}`).join(', ')}${moved?` (${moved} taken from other squadrons)`:''}.`); agRender(true); return; }
   const sqs=R.sq.filter(q=>AG.ssel.has(q.id)); if(!sqs.length) return;
   const busy=sqs.filter(sq=>R.sorties.some(so=>so.sqs.includes(sq.id)&&(so.state==='ranging'||so.state==='out')));
-  if(b.id==='agsortie'){ if(busy.length){ toast(`${busy.map(q=>q.name).join(', ')} ${busy.length>1?'are':'is'} already on a sortie. Recall first.`); return; }
+  if(b.dataset.agact==='sortie'){ if(busy.length){ toast(`${busy.map(q=>q.name).join(', ')} ${busy.length>1?'are':'is'} already on a sortie. Recall first.`); return; }
     const so={id:++R.soid,sqs:sqs.map(q=>q.id),state:'pick',tgt:null,tx:0,ty:0}; R.sorties.push(so); for(const sq of sqs) sq.task=null;
     for(const p of R.planes) if(so.sqs.includes(p.sq)&&p.task==='cap') p.task=null;
-    R.pick={so:so.id}; R.spawn=null; trSpawnBtns(); AG.ssel.clear(); agClose(); toast(`Click the target for sortie ${so.id} on the chart: a target ship, or a point.`); return; }
-  if(b.id==='agcap'){ if(busy.length){ toast(`${busy.map(q=>q.name).join(', ')} ${busy.length>1?'are':'is'} on a sortie. Recall first.`); return; }
+    R.pick={so:so.id,C}; R.spawn=null; AG.ssel.clear(); return ()=>{ trSpawnBtns(); agClose(); toast(`Click the target for ${C.name}'s sortie ${so.id} on the chart: a target ship, or a point.`); }; }
+  if(b.dataset.agact==='cap'){ if(busy.length){ toast(`${busy.map(q=>q.name).join(', ')} ${busy.length>1?'are':'is'} on a sortie. Recall first.`); return; }
     for(const sq of sqs){ sq.task='cap'; const ps=sqPlanes(sq); for(const p of ps) if(p.state!=='lost') p.task='cap'; const up=ps.filter(p=>p.state==='air'); if(up.length) trRegroup(up,{role:'fighter',name:`${sq.name} on patrol`,mission:'cap',capSq:sq.id}); }
     trLog(`${sqs.map(q=>q.name).join(', ')}: protect the carrier.`); agRender(true); return; }
-  if(b.id==='agrecall'){ for(const sq of sqs){ sq.task=null; for(const so of R.sorties) if(so.sqs.includes(sq.id)&&so.state!=='done'){ so.sqs=so.sqs.filter(id=>id!==sq.id); if(!so.sqs.length) so.state='done'; }
+  if(b.dataset.agact==='recall'){ for(const sq of sqs){ sq.task=null; for(const so of R.sorties) if(so.sqs.includes(sq.id)&&so.state!=='done'){ so.sqs=so.sqs.filter(id=>id!==sq.id); if(!so.sqs.length) so.state='done'; }
       const ps=sqPlanes(sq); for(const p of ps){ p.task=null; p.order=false; p.respot=false; } const up=ps.filter(p=>p.state==='air'); if(up.length) trRegroup(up,{role:roleMix(up),name:`${sq.name}, recalled`,mission:'home'}); }
     trLog(`${sqs.map(q=>q.name).join(', ')} recalled to land.`); agRender(true); return; }
-  if(b.id==='agdisband'){ for(const sq of sqs){ for(const p of sqPlanes(sq)){ p.sq=null; if(p.task==='cap') p.task=null; } } R.sq=R.sq.filter(q=>!AG.ssel.has(q.id)); AG.ssel.clear(); agRender(true); return; } });
-$('#agd').addEventListener('change',e=>{ const id=+e.target.dataset.agsq; if(!id) return; e.target.checked?AG.ssel.add(id):AG.ssel.delete(id); agRender(true); });
+  if(b.dataset.agact==='disband'){ for(const sq of sqs){ for(const p of sqPlanes(sq)){ p.sq=null; if(p.task==='cap') p.task=null; } } R.sq=R.sq.filter(q=>!AG.ssel.has(q.id)); AG.ssel.clear(); agRender(true); return; } }
+$('#agd').addEventListener('change',e=>{ const id=+e.target.dataset.agsq, box=e.target.closest('[data-agcv]'); if(!id||!box) return; const st=agSt(TR.cvs[+box.dataset.agcv]); e.target.checked?st.ssel.add(id):st.ssel.delete(id); agRender(true); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&AG.open) agClose(); });
 // Controls
 $('#tab-trials').addEventListener('click',e=>{
@@ -5486,7 +5599,7 @@ $('#tab-trials').addEventListener('change',e=>{ if(e.target.dataset.trn!=null) r
   cvs.addEventListener('pointercancel',e=>{ pts.delete(e.pointerId); down=null; pinch=null; });
   cvs.addEventListener('wheel',e=>{ if(!TR) return; e.preventDefault(); const r=cvs.getBoundingClientRect(); trZoom(Math.exp(e.deltaY*.0022),e.clientX-r.left-r.width/2,e.clientY-r.top-r.height/2); },{passive:false});
   cvs.addEventListener('dblclick',e=>{ if(!TR) return; const r=cvs.getBoundingClientRect(); trZoom(1/3,e.clientX-r.left-r.width/2,e.clientY-r.top-r.height/2); }); }
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&TR&&(TR.spawn||TR.pick)&&$('#agd').hidden){ if(TR.pick&&TR.pick.so!=null){ const so=TR.sorties.find(q=>q.id===TR.pick.so); if(so) so.state='done'; trLog('Sortie cancelled.'); } TR.spawn=null; TR.pick=null; trSpawnBtns(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&TR&&(TR.spawn||TR.pick)&&$('#agd').hidden){ if(TR.pick&&TR.pick.so!=null){ const pk=TR.pick, end=id=>()=>{ const so=TR.sorties.find(q=>q.id===id); if(so) so.state='done'; }; for(const m of [{C:pk.C,so:pk.so},...(pk.also||[])]) if(m.C&&m.C!==TR.cur) withC(m.C,end(m.so)); else end(m.so)(); trLog('Sortie cancelled.'); } TR.spawn=null; TR.pick=null; trSpawnBtns(); } });
 function trSpawnBtns(){ for(const x of document.querySelectorAll('[data-trspawn]')) x.setAttribute('aria-pressed',String(TR&&TR.spawn===x.dataset.trspawn)); }
 
 function viewerBuild(){
@@ -5639,7 +5752,7 @@ $('#touragain').addEventListener('click',()=>{ $('#setd').hidden=true; tourStart
 trimRivals();
 fixDesign(S.design);
 for(const c of S.classes){ if(!c.cv) c.cv=newCV(c.tons||12000); delete c.tons; if(!c.cv.funnel) c.cv.funnel=c.cv.island==='none'?'down':'island'; if(!c.cv.istyle) c.cv.istyle='tower';
-  if(c.cv.island==='built'){ const q=c.cv.islp||{}; c.cv.island=(q.flag||(q.dirs||0)>0)?'large':'small'; } delete c.cv.islp; }
+  if(c.cv.island==='built'||c.cv.island==='large') c.cv.island='small'; delete c.cv.islp; }
 if(!S.cvView) S.cvView={comp:true,d3:false,water:true};
 if(!clsOf(S.cvSel)&&S.classes.length) S.cvSel=S.classes[0].id;
 applyTheme();
