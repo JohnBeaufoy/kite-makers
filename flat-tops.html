@@ -545,7 +545,7 @@ legend{padding:0;margin-bottom:6px}
 </div>
 <div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-label="Your design in 3D">
   <div class="vbar"><span class="nm" id="vtitle"></span>
-    <span class="vtools"><button class="btn ghost" data-vcam="q">3/4</button><button class="btn ghost" data-vcam="f">Front</button><button class="btn ghost" data-vcam="s">Side</button><button class="btn ghost" data-vcam="t">Top</button><button class="btn ghost" id="vspin" aria-pressed="true">Turn</button><button class="btn ghost" id="vsize" aria-pressed="true">Sizes</button><button class="btn ghost" id="vxray" aria-pressed="false">X-ray</button><button class="btn ghost" id="vrival" aria-pressed="false">Rival</button><button class="btn ghost" id="vengine" aria-pressed="false">Run engine</button><button class="btn ghost" id="vgear" hidden>Gear up</button><button class="btn ghost" id="vfold" hidden aria-pressed="false">Fold wings</button><button class="btn ghost" id="vdock" aria-pressed="false">Dock</button><button class="btn" id="vclose">Close</button></span></div>
+    <span class="vtools"><button class="btn ghost" id="vspin" aria-pressed="true">Turn</button><button class="btn ghost" id="vsize" aria-pressed="false">Sizes</button><button class="btn ghost" id="vxray" aria-pressed="false">X-ray</button><button class="btn ghost" id="vrival" aria-pressed="false">Rival</button><button class="btn ghost" id="vengine" aria-pressed="false">Run engine</button><button class="btn ghost" id="vgear" hidden>Gear up</button><button class="btn ghost" id="vfold" hidden aria-pressed="false">Fold wings</button><button class="btn ghost" id="vbay" hidden aria-pressed="false">Open bomb bay</button><button class="btn ghost" id="vgrav" aria-pressed="false">Gravity</button><button class="btn" id="vclose">Close</button></span></div>
   <div class="vstage"><canvas id="v3"></canvas><div class="vkey mono" id="vkey" hidden></div></div>
   <span class="mono vhint" id="vhint">Drag to turn it · scroll or pinch to zoom · Esc to close</span>
 </div>
@@ -774,22 +774,22 @@ Object.assign(PARTS2,{
     {id:'none',name:'No bomb or torpedo',note:'A fighter carries only its guns.',from:1935.0,roles:['fighter'],mass:0,drag:0,kind:''},
     {id:'b113',name:'Bomb, 113 kg',note:'A 250 lb bomb. Light, so the aircraft flies further, but against a warship it only wrecks guns and starts fires.',from:1935.0,roles:['dive','torpedo'],mass:113,drag:.014,kind:'bomb',len:1.2,dia:.28},
     {id:'b250',name:'Bomb, 250 kg',note:'A 500 lb or 250 kg bomb. Enough to wreck a flight deck.',from:1935.0,roles:['dive','torpedo'],mass:250,drag:.02,kind:'bomb',len:1.6,dia:.36},
-    {id:'b500',name:'Bomb, 450 kg',note:'A 1,000 lb bomb. Can go through a lightly armoured deck before it bursts.',from:1936.5,roles:['dive','torpedo'],mass:454,drag:.028,kind:'bomb',len:1.9,dia:.47},
     {id:'b250s',name:'Semi-armour-piercing bomb, 250 kg',note:'A 250 kg bomb with a thicker case and a delay fuse, so it goes deeper before it bursts. Type 99 No. 25-style.',from:1939.0,roles:['dive','torpedo'],mass:250,drag:.02,kind:'bomb',len:1.6,dia:.34},
+    {id:'b500',name:'Bomb, 450 kg',note:'A 1,000 lb bomb. Can go through a lightly armoured deck before it bursts.',from:1936.5,roles:['dive','torpedo'],mass:454,drag:.028,kind:'bomb',len:1.9,dia:.47},
     {id:'b500s',name:'Semi-armour-piercing bomb, 450 kg',note:'A 1,000 lb bomb with a hardened case, to burst deep inside a ship rather than on her deck. AN-M59-style.',from:1941.0,roles:['dive','torpedo'],mass:454,drag:.028,kind:'bomb',len:1.9,dia:.43},
     {id:'b726',name:'Armour-piercing bomb, 726 kg',note:'A 1,600 lb bomb with a hardened nose, made to go through battleship decks.',from:1942.0,roles:['dive','torpedo'],mass:726,drag:.03,kind:'bomb',len:2.1,dia:.36},
     {id:'b800',name:'Armour-piercing bomb, 800 kg',note:'A battleship shell turned into a bomb, dropped from level flight. Torpedo bombers only.',from:1941.5,roles:['torpedo'],mass:800,drag:.032,kind:'bomb',len:2.4,dia:.45},
     {id:'b900',name:'Bomb, 900 kg',note:'A 2,000 lb general-purpose bomb, dropped from level flight. Only a big torpedo bomber can lift it.',from:1942.0,roles:['torpedo'],mass:907,drag:.036,kind:'bomb',len:2.3,dia:.59},
-    {id:'t18',name:'Torpedo, 18-inch',note:'A light 450 mm torpedo, 702 kg. Must be dropped slow and low.',from:1935.0,roles:['torpedo'],mass:702,drag:.04,kind:'torp',len:5.0,dia:.45},
-    {id:'t91',name:'Torpedo, 450 mm, Type 91-style',note:'838 kg, with a heavy warhead and fins that let it be dropped faster.',from:1936.0,roles:['torpedo'],mass:838,drag:.04,kind:'torp',len:5.3,dia:.45},
-    {id:'t91m3',name:'Torpedo, Type 91 Mod 3-style',note:'A 240 kg warhead and a stronger tail, so it can be dropped faster and higher than the first Type 91s. 935 kg.',from:1942.0,roles:['torpedo'],mass:935,drag:.042,kind:'torp',len:5.5,dia:.45},
-    {id:'t91m7',name:'Torpedo, Type 91 Mod 7-style',note:'The last of the line, with a 420 kg warhead that can break a battleship\'s back. 1,060 kg, so only the biggest torpedo bombers carry it.',from:1944.0,roles:['torpedo'],mass:1060,drag:.045,kind:'torp',len:5.7,dia:.45},
-    {id:'t13t',name:'Torpedo, Mk 13 with Torpex',note:'The improved Mk 13: a Torpex warhead as strong as 360 kg of TNT, and a drag ring and shroud for high, fast drops. Reliable. 1,000 kg.',from:1944.5,roles:['torpedo'],mass:1000,drag:.045,kind:'torp',len:4.1,dia:.57},
-    {id:'t13',name:'Torpedo, 22.4-inch, Mk 13-style',note:'980 kg and short and fat. Early ones ran deep or failed to explode until late 1943.',from:1938.0,roles:['torpedo'],mass:980,drag:.045,kind:'torp',len:4.1,dia:.57},
+    {id:'t18',name:'Torpedo, 18-inch',note:'A light 450 mm torpedo, 702 kg, with a 176 kg warhead. Must be dropped slow and low.',from:1935.0,roles:['torpedo'],mass:702,drag:.04,kind:'torp',len:5.0,dia:.45},
+    {id:'t91',name:'Torpedo, 450 mm, Type 91-style',note:'A 450 mm torpedo, 838 kg, with a 225 kg warhead and fins that let it be dropped faster.',from:1936.0,roles:['torpedo'],mass:838,drag:.04,kind:'torp',len:5.3,dia:.45},
+    {id:'t91m3',name:'Torpedo, Type 91 Mod 3-style',note:'935 kg, with a 240 kg warhead and a stronger tail, so it can be dropped faster and higher than the first Type 91s.',from:1942.0,roles:['torpedo'],mass:935,drag:.042,kind:'torp',len:5.5,dia:.45},
+    {id:'t13',name:'Torpedo, 22.4-inch, Mk 13-style',note:'980 kg, with a 300 kg warhead. Short and fat. It often runs deep or fails to go off, and must be dropped slow and low.',from:1938.0,roles:['torpedo'],mass:980,drag:.045,kind:'torp',len:4.1,dia:.57},
+    {id:'t13t',name:'Torpedo, Mk 13 with Torpex',note:'1,000 kg, with a Torpex warhead as strong as 360 kg. A drag ring and shroud let it be dropped high and fast, and it runs true and goes off. Reliable.',from:1944.0,roles:['torpedo'],mass:1000,drag:.045,kind:'torp',len:4.1,dia:.57},
+    {id:'t91m7',name:'Torpedo, Type 91 Mod 7-style',note:'1,060 kg, with a 420 kg warhead that can break a battleship’s back. The last of the line; only the biggest torpedo bombers carry it.',from:1944.0,roles:['torpedo'],mass:1060,drag:.045,kind:'torp',len:5.7,dia:.45},
   ],
   stow:[
     {id:'ext',name:'Under the fuselage',note:'Slung on a rack or a swing-out crutch. Simple, but it drags.',from:1935.0,mass:0,drag:0,cost:0},
-    {id:'bay',name:'Internal bomb bay',note:'Closed doors keep it clean. Heavier, and needs a deep, long fuselage. +80 kg',from:1941.5,mass:80,drag:.008,cost:400},
+    {id:'bay',name:'Internal bomb bay',note:'Closed doors keep it clean, but the load fills the lower fuselage where fuel would go, so the fuselage holds less fuel, and a torpedo needs a bulged belly. It has to fit between the engine and the tail, so long torpedoes rarely do. Needs a fuselage of 9.5 m or more. +80 kg',from:1941.5,mass:80,drag:.008,cost:400},
   ],
   flaps:[
     {id:'none',name:'No flaps',note:'Lands and takes off fast.',from:1935.0,cl:0,mass:0,cost:0},
@@ -829,7 +829,7 @@ function roleKit(d){
   const ok=id=>available(part('load',id))&&part('load',id).roles.includes(d.role);
   if(d.role==='fighter'){ d.crew='c1'; d.rear='none'; d.load='none'; d.brakes='none'; d.stow='ext'; }
   if(d.role==='dive'){ d.crew='c2'; d.rear='r1'; d.brakes='dive'; d.load=ok('b500')?'b500':'b250'; }
-  if(d.role==='torpedo'){ d.crew='c3'; d.rear='r1'; d.brakes='none'; d.load=ok('t13')?'t13':ok('t91')?'t91':'t18'; }
+  if(d.role==='torpedo'){ d.crew='c3'; d.rear='r1'; d.brakes='none'; d.load=ok('t13t')?'t13t':ok('t13')?'t13':ok('t91')?'t91':'t18'; }
   d.roleWas=d.role;
 }
 const ARMOUR2=[
@@ -852,11 +852,12 @@ const FUS2=[
 // Room for fuel inside the airframe: about 26 litres for each square metre of wing (one wing on a biplane, since the lower wing
 // rarely held tanks) and 40 for each metre of fuselage beyond the engine and cockpit. Checked against the Wildcat, Hellcat, Corsair,
 // Avenger, Dauntless and Zero, whose internal tanks held between 530 and 1,270 litres.
-const fuelCap=d=>Math.max(250,Math.floor((26*d.span*d.chord+40*(d.fusLen-5)+(d.fuelPos==='rear'?120:0))/10)*10);
+// A bomb bay takes the lower fuselage over its length, so the fuselage holds less fuel.
+const fuelCap=d=>{ const b=d.stow==='bay'?bayOf(d):null; return Math.max(250,Math.floor((26*d.span*d.chord+40*Math.max(0,d.fusLen-5-(b?b.len:0))+(d.fuelPos==='rear'?120:0))/10)*10); };
 const SL2={
   ammo:{k:'ammo',label:'Rounds per machine gun',unit:'',min:200,max:1000,step:25,hint:'From 28 g a round (.303) to 120 g (.50).'},
   ammoC:{k:'ammoC',label:'Rounds per cannon',unit:'',min:50,max:250,step:10,hint:'Shells weigh 0.2–0.5 kg each with their links.'},
-  fuelL:{k:'fuelL',label:'Fuel load',unit:'L',min:250,max:2800,step:10,maxOf:d=>fuelCap(d),hint:'0.72 kg a litre. The tanks can only be as big as the wing and fuselage have room for: a bigger wing or a longer fuselage holds more.'},
+  fuelL:{k:'fuelL',label:'Fuel load',unit:'L',min:250,max:2800,step:10,maxOf:d=>fuelCap(d),hint:'0.72 kg a litre. The tanks can only be as big as the wing and fuselage have room for: a bigger wing or a longer fuselage holds more, and a bomb bay takes some of the fuselage\'s room.'},
 };
 // One stream of tracer per bank of guns; each stream carries several rounds, so busy batteries don't flood the sky.
 function banks2(d){
@@ -890,7 +891,7 @@ function compute2(d){
   add('radio and equipment',60,cockpit+1.2);
   if(Cr.mass) add(Cr.n>2?'observer and gunner':'radio-gunner',Cr.mass,cockpit+.45*Cr.n+.2);
   if(Rg.mass) add('rear gun',Rg.mass,cockpit+.9*Cr.n);
-  const loadX=d.wingPos+d.chord*.28, loadDrag=Ld.mass?(Sw.id==='bay'?Sw.drag:Ld.drag):0;
+  const loadX=d.wingPos+d.chord*.28, bayB=Ld.mass&&Sw.id==='bay'?bayOf(d):null, loadDrag=Ld.mass?(bayB?Sw.drag+bayB.belly*.03:Ld.drag):0;   // a bulged belly drags a little
   if(Ld.mass) add(Ld.name.toLowerCase(),Ld.mass,loadX);
   if(Ld.mass&&Sw.mass) add('bomb bay',Sw.mass,loadX);
   if(Fl.mass) add('flaps',Fl.mass,d.wingPos+d.chord*.85);
@@ -1019,11 +1020,11 @@ const RIVALS3=[
   {title:'Admiral Seward',date:1944.5,tons:130000,air:7000000,skill:.8,blurb:'Five fleet carriers and a ring of escorts bristling with anti-aircraft guns.',
    d:FTR({name:'C.4',frame:'rugged',paint:'seablue',engine:'r2800n',arm:'six50',span:12.5,chord:2.1,wingPos:2.0,fusLen:10.2,tailArea:4.2,cockpitPos:4.8,fuelL:890,ammo:400,armour:ALL3,fold:'uph',foldIn:5.2}),
    dive:DIVE({name:'SB.2C3',frame:'rugged',paint:'seablue',engine:'r2600w',arm:'hisp2',rear:'r2',span:15.2,chord:2.59,wingPos:2.3,fusLen:11.2,tailArea:5.0,cockpitPos:4.2,fuelL:1110,load:'b500',stow:'bay',fold:'uph',foldIn:7.0,armour:PF}),
-   torp:TORP({name:'TB.M3',frame:'rugged',paint:'seablue',engine:'r2600w',arm:'b50x2',rear:'t50',span:16.5,chord:2.76,wingPos:2.6,fusLen:12.2,tailArea:5.5,cockpitPos:4.2,fuelL:1270,load:'t13',stow:'bay',fold:'sto',foldIn:5.2,armour:PF})},
+   torp:TORP({name:'TB.M3',frame:'rugged',paint:'seablue',engine:'r2600w',arm:'b50x2',rear:'t50',span:16.5,chord:2.76,wingPos:2.6,fusLen:12.2,tailArea:5.5,cockpitPos:4.2,fuelL:1270,load:'t13t',stow:'bay',fold:'sto',foldIn:5.2,armour:PF})},
   {title:'Fleet Admiral Kessler',date:1945.4,tons:165000,air:11000000,skill:.85,blurb:'The largest carrier force of the war, with the best aircraft and the most experienced aircrews.',
    d:FTR({name:'B.8',frame:'rugged',paint:'seablue',engine:'r2800w',arm:'hisp4',canopy:'bubble',span:10.9,chord:2.0,wingPos:1.65,fusLen:8.6,tailArea:3.6,cockpitPos:3.9,fuelL:700,ammo:400,ammoC:200,armour:ALL3,fold:'tips'}),
    dive:DIVE({name:'D4.Y',frame:'lite',paint:'silver',engine:'db605',arm:'mg2',span:11.5,chord:2.05,wingPos:2.2,fusLen:10.2,tailArea:3.8,cockpitPos:4.0,fuelL:800,drop:'d330',load:'b500',stow:'bay',armour:PF}),
-   torp:TORP({name:'B7.A',frame:'lite',paint:'silver',engine:'homare',arm:'hisp2',crew:'c2',span:14.4,chord:2.46,wingPos:2.3,fusLen:11.5,tailArea:4.6,cockpitPos:4.2,fuelL:1180,load:'t91',stow:'bay',fold:'up',foldIn:7.9,armour:PF})}];
+   torp:TORP({name:'B7.A',frame:'lite',paint:'silver',engine:'homare',arm:'hisp2',crew:'c2',span:14.4,chord:2.46,wingPos:2.3,fusLen:11.5,tailArea:4.6,cockpitPos:4.2,fuelL:1180,load:'t91',stow:'ext',fold:'up',foldIn:7.9,armour:PF})}];
 RIVALS3.forEach((r,i)=>{r.id=i;});
 const rivalD=(r,role)=>role==='dive'?r.dive:role==='torpedo'?r.torp:r.d;
 const VJDAY=1945.62;
@@ -1044,7 +1045,7 @@ function fixDesign2(d){
   navalise(d); if(d.role!==d.roleWas) roleKit(d);
   const ld=part('load',d.load); if(!ld.roles.includes(d.role)||!available(ld)) d.load=PARTS.load.find(p=>p.roles.includes(d.role)&&available(p)).id;
   if(d.crew==='c1') d.rear='none';
-  if(d.stow==='bay'&&(d.load==='none'||d.fusLen<9.5)) d.stow='ext';
+  if(d.stow==='bay'&&(d.load==='none'||d.fusLen<9.5||!bayFits(d))) d.stow='ext';
   if(part('fold',d.fold).mono&&part('layout',d.layout).wings>1) d.fold='none';
   d.foldIn=Math.min(d.foldIn,Math.max(2.4,Math.floor((d.span-1)*10)/10));
   d.cockpitPos=Math.min(d.cockpitPos,d.fusLen-3.5-(part('crew',d.crew).n-1)*.9);
@@ -1057,6 +1058,8 @@ function blocked2(cat,p,d){
   if(p.needsSkin&&!/skin|lite|rugged/.test(d.frame)) return 'Needs a stressed-skin wing';
   if(cat==='rear'&&p.id!=='none'&&d.crew==='c1') return 'Needs a second seat';
   if(cat==='stow'&&p.id==='bay'&&d.fusLen<9.5) return 'Needs a fuselage of 9.5 m or more';
+  if(cat==='stow'&&p.id==='bay'&&!bayFits(d)) return 'Too long to fit inside: move the wing back or carry something shorter';
+  if(cat==='load'&&d.stow==='bay'&&p.mass&&!bayFits(d,p.id)) return 'Too long for the bomb bay';
   if(cat==='fold'&&p.mono&&part('layout',d.layout).wings>1) return 'Monoplanes only';
   return '';
 }
@@ -1439,7 +1442,7 @@ function paintGA2(c,d,opt){
   const T=tokens(), st=compute(d), L=part('layout',d.layout), A=part('airfoil',d.airfoil), E=part('engine',d.engine), G=part('arm',d.arm); const jetE=E.type==='jet';
   const s=opt.plan?ERA.ga.plan:ERA.ga.side, len=d.fusLen, body=opt.body, ink=T.ink, radial=E.type==='radial', bi=L.wings===2, ck=st.cockpit, el=st.engLen;
   const hatch=(x,y,w,h)=>hatchRect(c,T,x,y,w,h);
-  const nC=(part('crew',d.crew)||{n:1}).n, Ld=part('load',d.load)||{mass:0}, bay=d.stow==='bay';
+  const nC=(part('crew',d.crew)||{n:1}).n, Ld=part('load',d.load)||{mass:0}, G2=gaShape(d,st);
   c.lineJoin='round'; c.lineCap='round';
 
   /* Side elevation, nose to the right */
@@ -1463,16 +1466,15 @@ function paintGA2(c,d,opt){
   if(jetE){ c.fillStyle=body; c.strokeStyle=ink; c.lineWidth=1.4; c.beginPath(); c.ellipse(X(d.wingPos+d.chord*.3),Y(-.95),1.7*s,.38*s,0,0,TAU); c.fill(); c.stroke(); c.fillStyle=ink; c.beginPath(); c.ellipse(X(d.wingPos+d.chord*.3-1.65),Y(-.95),2,.26*s,0,0,TAU); c.fill(); }
   else   if(!radial){ c.fillStyle=T.muted; c.strokeStyle=ink; c.lineWidth=1.2; c.beginPath(); c.rect(X(d.wingPos+d.chord*.95),Y(-.8),d.chord*.5*s,.24*s); c.fill(); c.stroke(); }
   // bomb or torpedo slung under the fuselage
-  const loadShape=yy=>{ const ln=Ld.len, r=Ld.kind==='torp'?.27:.18+Ld.mass/4000, lx=st.loadX; c.beginPath(); c.ellipse(X(lx),Y(yy),ln/2*s,r*s,0,0,TAU);
+  const loadShape=yy=>{ const ln=Ld.len, r=(Ld.dia||.4)/2, lx=st.loadX; c.beginPath(); c.ellipse(X(lx),Y(yy),ln/2*s,r*s,0,0,TAU);
     if(Ld.kind==='bomb'){ c.moveTo(X(lx+ln/2-.15),Y(yy)); c.lineTo(X(lx+ln/2+.2),Y(yy+r*1.4)); c.lineTo(X(lx+ln/2+.2),Y(yy-r*1.4)); c.closePath(); }
     else { c.moveTo(X(lx+ln/2),Y(yy)); c.lineTo(X(lx+ln/2+.25),Y(yy+r)); c.lineTo(X(lx+ln/2+.25),Y(yy-r)); c.closePath(); } };
-  if(Ld.mass&&!bay){ c.strokeStyle=ink; c.lineWidth=1.4; c.fillStyle=T.muted; loadShape(Ld.kind==='torp'?-1.15:-1.1); c.fill(); c.stroke();
+  if(Ld.mass&&!G2.bay){ c.strokeStyle=ink; c.lineWidth=1.4; c.fillStyle=T.muted; loadShape(Ld.kind==='torp'?-1.15:-1.1); c.fill(); c.stroke();
     c.lineWidth=1.2; c.beginPath(); c.moveTo(X(st.loadX-.3),Y(-.82)); c.lineTo(X(st.loadX-.3),Y(-.95)); c.moveTo(X(st.loadX+.3),Y(-.82)); c.lineTo(X(st.loadX+.3),Y(-.95)); c.stroke(); }
   // fuselage
   const top=radial?.76:.55, nose=radial?.74:.36;
   const outline=()=>{ c.beginPath(); c.moveTo(X(0),Y(nose)); c.lineTo(X(el),Y(top)); c.lineTo(X(ck-.8),Y(.62)); c.lineTo(X(ck+.9+(nC-1)*.95),Y(d.canopy==='bubble'?.5:.62)); c.lineTo(X(len-.4),Y(.28)); c.lineTo(X(len),Y(.22));
-    c.lineTo(X(len),Y(-.1)); c.lineTo(X(len*.62),Y(-.5)); c.lineTo(X(d.wingPos+d.chord),Y(-.76)); c.lineTo(X(d.wingPos),Y(radial?-.86:-.8)); c.lineTo(X(el),Y(-(radial?.76:.6)));
-    c.lineTo(X(0),Y(-nose)); if(radial) c.quadraticCurveTo(X(-.08),Y(0),X(0),Y(nose)); c.closePath(); };
+    for(const [x,y] of G2.botL.slice().reverse()) c.lineTo(X(x),Y(y)); if(radial) c.quadraticCurveTo(X(-.08),Y(0),X(0),Y(nose)); c.closePath(); };
   outline(); c.fillStyle=body; c.fill(); c.strokeStyle=ink; c.lineWidth=1.8; c.stroke();
   c.save(); outline(); c.clip();
   if(opt.nose){ c.fillStyle=opt.nose; c.fillRect(X(el*.7),Y(.8),(el*.7+.2)*s,1.6*s); }
@@ -1493,7 +1495,6 @@ function paintGA2(c,d,opt){
   const fx=st.fuelX, tw=.4+d.fuelL/1400;
   const tank=d.fuelPos==='wing'?[fx-tw/2,-.66,tw,.14]:[fx-tw/2,.4,tw,.8];
   c.setLineDash([4,3]); c.strokeStyle=T.accent; c.lineWidth=1.4; c.strokeRect(X(tank[0]+tank[2]),Y(tank[1]),tank[2]*s,tank[3]*s); c.setLineDash([]);
-  if(Ld.mass&&bay){ c.setLineDash([4,3]); c.strokeStyle=ink; c.lineWidth=1.2; loadShape(-.4); c.stroke(); c.setLineDash([]); }
   // armour
   const am=d.armour||{};
   if(am.engine) hatch(X(el),Y(-.4),(el-.15)*s,.18*s);
@@ -1508,12 +1509,15 @@ function paintGA2(c,d,opt){
   c.closePath(); c.fill(); c.globalAlpha=1; c.stroke();
   if(d.canopy==='hood'&&nC===1){ c.fillStyle=body; c.beginPath(); c.moveTo(X(ck+.85),Y(.72)); c.lineTo(X(ck+2.4),Y(.56)); c.lineTo(X(ck+.9),Y(.62)); c.closePath(); c.fill(); c.stroke(); }
   // the other crew sit behind the pilot, under a longer glasshouse or in open cockpits
-  for(let k=1;k<nC;k++){ const a=ck+.9+(k-1)*.95, b=a+.95; c.fillStyle=T.water; c.globalAlpha=.55; c.beginPath();
+  for(let k=1;k<nC;k++){ const a=ck+.9+(k-1)*.95, b=a+.95;
+    if(G2.seats[k].turret){ const t=G2.tur; c.fillStyle=T.water; c.globalAlpha=.55; c.beginPath(); c.arc(X(t.x),Y(t.y+.06),t.r*s,Math.PI,0); c.closePath(); c.fill(); c.globalAlpha=1; c.strokeStyle=ink; c.lineWidth=1.4; c.stroke();
+      c.lineWidth=2; c.beginPath(); c.moveTo(X(t.x-t.r-.04),Y(t.y)); c.lineTo(X(t.x+t.r+.04),Y(t.y)); c.stroke(); c.fillStyle=ink; c.beginPath(); c.arc(X(t.x),Y(.85),.13*s,0,TAU); c.fill(); continue; }
+    c.fillStyle=T.water; c.globalAlpha=.55; c.beginPath();
     if(d.canopy==='open'){ c.moveTo(X(a+.15),Y(.62)); c.lineTo(X(a+.3),Y(.86)); c.lineTo(X(a+.4),Y(.86)); c.lineTo(X(a+.35),Y(.62)); }
     else { c.moveTo(X(a-.05),Y(.62)); c.lineTo(X(a-.05),Y(1.02)); c.lineTo(X(b),Y(.98)); c.lineTo(X(b+.25),Y(.62)); }
     c.closePath(); c.fill(); c.globalAlpha=1; c.strokeStyle=ink; c.lineWidth=1.4; c.stroke();
     c.fillStyle=ink; c.beginPath(); c.arc(X(a+.5),Y(.84),.13*s,0,TAU); c.fill(); }
-  const Rg=part('rear',d.rear); if(Rg&&Rg.n&&nC>1){ const gx2=ck+.9+(nC-1)*.95-.1; c.strokeStyle=ink; c.lineWidth=Rg.g==='b50'?2.6:1.8; c.beginPath(); c.moveTo(X(gx2),Y(.95)); c.lineTo(X(gx2+.85),Y(1.1)); c.stroke(); }
+  if(G2.gun){ const g=G2.gun; c.strokeStyle=ink; c.lineWidth=g.heavy?2.6:1.8; c.beginPath(); c.moveTo(X(g.a[0]),Y(g.a[1])); c.lineTo(X(g.b[0]),Y(g.b[1])); c.stroke(); }
   // guns
   for(const b of G.banks){ const cannon=GUN[b.g].k==='cannon'; c.strokeStyle=ink; c.lineWidth=cannon?3:1.8; c.beginPath();
     if(b.at==='cowl'){ c.moveTo(X(el-.2),Y(top-.06)); c.lineTo(X(.25),Y(nose+.02)); }
@@ -1531,6 +1535,8 @@ function paintGA2(c,d,opt){
   for(const w of wings){ const dep=A.depth*w.ch, xl=X(w.le), xt=X(w.le+w.ch), yy=Y(w.y);
     c.beginPath(); c.moveTo(xl,yy); c.quadraticCurveTo(xl-w.ch*s*.1,yy-dep*s,xl-w.ch*s*.35,yy-dep*s*.9); c.lineTo(xt,yy-1); c.lineTo(xt,yy+1);
     c.quadraticCurveTo(xl-w.ch*s*.35,yy+dep*s*.35,xl,yy+2); c.closePath(); c.fillStyle=opt.dark||body; c.globalAlpha=.85; c.fill(); c.globalAlpha=1; c.strokeStyle=ink; c.lineWidth=1.6; c.stroke(); }
+  // the load in its bay (hidden detail, dashed), in the lower fuselage under the main tank
+  if(Ld.mass&&G2.bay){ c.setLineDash([4,3]); c.strokeStyle=ink; c.lineWidth=1.2; loadShape(G2.bay.cy); c.stroke(); c.setLineDash([]); }
 
   if(opt.annotate){
     const cgx=X(st.cg), cgy=Y(.02), rr=7;
@@ -1573,7 +1579,7 @@ function paintGA2(c,d,opt){
   const nw=radial?.62:.34, fw=radial?.62:.5;
   const fus=()=>{ c.beginPath(); c.moveTo(PX(-nw),PY(0)); c.lineTo(PX(nw),PY(0)); c.lineTo(PX(fw),PY(el)); c.lineTo(PX(.5),PY(ck+.6)); c.lineTo(PX(.12),PY(len)); c.lineTo(PX(-.12),PY(len)); c.lineTo(PX(-.5),PY(ck+.6)); c.lineTo(PX(-fw),PY(el)); c.closePath(); };
   fus(); c.fillStyle=body; c.fill(); c.strokeStyle=ink; c.lineWidth=1.6; c.stroke();
-  if(Ld.mass){ const r=Ld.kind==='torp'?.27:.18+Ld.mass/4000; c.setLineDash([3,3]); c.strokeStyle=ink; c.lineWidth=1.2; c.beginPath(); c.ellipse(PX(0),PY(st.loadX),r*s,Ld.len/2*s,0,0,TAU); c.stroke(); c.setLineDash([]); }
+  if(Ld.mass){ const r=(Ld.dia||.4)/2; c.setLineDash([3,3]); c.strokeStyle=ink; c.lineWidth=1.2; c.beginPath(); c.ellipse(PX(0),PY(st.loadX),r*s,Ld.len/2*s,0,0,TAU); c.stroke(); c.setLineDash([]); }
   if(opt.nose){ c.save(); fus(); c.clip(); c.fillStyle=opt.nose; c.fillRect(PX(-.7),PY(0),1.4*s,el*.7*s); c.restore(); fus(); c.stroke(); }
   if(jetE){ c.fillStyle=body; c.strokeStyle=ink; c.lineWidth=1.4; for(const sg of [-1,1]){ c.beginPath(); c.ellipse(PX(sg*d.span*.22),PY(d.wingPos+d.chord*.3),.4*s,1.7*s,0,0,TAU); c.fill(); c.stroke(); } }
     c.fillStyle=opt.nose||T.muted; c.beginPath(); c.moveTo(PX(-(radial?.3:.28)),PY(0)); c.quadraticCurveTo(PX(0),PY(-.55),PX(radial?.3:.28),PY(0)); c.closePath(); c.fill(); c.stroke();
@@ -1609,7 +1615,7 @@ function chipHTML(cat,p,sel,extra=''){
 }
 function chips(cat,legend,keep){
   return `<fieldset><legend class="label">${legend}</legend><div class="chips">${PARTS[cat].filter(keep||(()=>true)).map(p=>chipHTML(cat,p,S.design[cat]===p.id,
-    cat==='engine'?`<span class="s">${p.kn?`${p.kn} kN${p.ab?' with reheat':''}`:`${p.hp} hp`}${RATED[p.id]?` · full power to ${RATED[p.id].toLocaleString()} m`:''} · ${p.mass} kg · ${{counter:'counter-rotary',cent:'centrifugal',jet:'jet'}[p.type]||p.type} · ${dateText(p.from)} · £${p.price.toLocaleString()}</span>`:cat==='paint'?`<span class="sw" style="background:${swatchCSS(p)}"></span>`:'')).join('')}</div></fieldset>`;
+    cat==='engine'?`<span class="s">${p.kn?`${p.kn} kN${p.ab?' with reheat':''}`:`${p.hp} hp`}${RATED[p.id]?` · full power to ${RATED[p.id].toLocaleString()} m`:''} · ${p.mass} kg · ${{counter:'counter-rotary',cent:'centrifugal',jet:'jet'}[p.type]||p.type} · ${dateText(p.from)} · £${p.price.toLocaleString()}</span>`:cat==='paint'?`<span class="sw" style="background:${swatchCSS(p)}"></span>`:cat==='load'&&p.mass?`<span class="s">${p.mass.toLocaleString()} kg · from ${Math.floor(p.from)}</span>`:'')).join('')}</div></fieldset>`;
 }
 function slider(dm){
   const v=S.design[dm.k], mx=dm.maxOf?dm.maxOf(S.design):dm.max;
@@ -1669,8 +1675,8 @@ function renderSheet(){
       <div class="bar"><i style="width:${pc(row.k,v)}%"></i>${pst?`<u style="left:${pc(row.k,pv)}%"></u>`:''}<b style="left:${pc(row.k,rv)}%"></b></div>
       <span class="v">${row.fmt(v)} <em>/ ${row.fmt(rv)}</em> ${row.unit}${delta}</span>${whyOpen.has(row.k)?`<p class="why">${row.why(st,d)}</p>`:''}`;
   }).join('');
-  const each=fieldCost(d,r.date), af=ageFactor(d,r.date);
-  $('#summary').textContent=`Wing loading ${f1(st.mass/st.area)} kg/m² · aspect ratio ${f1(st.AR)} · £${Math.round(each).toLocaleString()} to field in ${dateText(r.date)}, so that year's aircraft budget of £${r.air.toLocaleString()} buys ${Math.floor(r.air/each)} of these${af>1?` · its ${part('engine',d.engine).name} is out of production by then, so it costs ×${f1(af)} to field`:''}`;
+  const each=fieldCost(d,r.date);
+  $('#summary').textContent=`Wing loading ${f1(st.mass/st.area)} kg/m² · aspect ratio ${f1(st.AR)} · £${Math.round(each).toLocaleString()} to field in ${dateText(r.date)}, so that year's aircraft budget of £${r.air.toLocaleString()} buys ${Math.floor(r.air/each)} of these`;
   let v=verdictText(st);
   $('#verdict').textContent=v.t; $('#verdict').className='warn'+(v.bad?'':' ok');
   drawGA($('#ga'),d,{annotate:true,plan:true,ghost:S.ghost?rd:null});
@@ -2626,116 +2632,153 @@ function panelTexture(pd,src){
 }
 const naca=(x,t)=>5*t*(.2969*Math.sqrt(Math.max(0,x))-.126*x-.3516*x*x+.2843*x*x*x-.1015*x*x*x*x);
 // A wing with a real section: thickness from a NACA-style profile, a rounded leading edge, dihedral and closed tips.
-function wingGeo(s,X,tc,dih,P,only){
+function wingGeo(s,X,tc,dih,P,only,cam=0){
   const secs=only||[...s.slice(1).reverse().map(q=>[-q[0],q[1],q[2]]),...s], tn=Math.tan(dih), half=s[s.length-1][0]||1, pos=[], uv=[], idx=[];
   const ring=[]; for(let k=0;k<P;k++){ const th=k/P*TAU, x=(1+Math.cos(th))/2; ring.push([x,(Math.sin(th)>=0?1:-1)*naca(x,tc)]); }
-  secs.forEach(([z,le,te])=>{ const c=Math.max(.05,te-le), dy=Math.abs(z)*tn; ring.forEach(([x,y],k)=>{ pos.push(X(le+x*c),y*c+dy,z); uv.push((z/half+1)*.5,k/P); }); });
+  secs.forEach(([z,le,te])=>{ const c=Math.max(.05,te-le), dy=Math.abs(z)*tn; ring.forEach(([x,y],k)=>{ pos.push(X(le+x*c),y*c+cam*c*4*x*(1-x)+dy,z); uv.push((z/half+1)*.5,k/P); }); });
   for(let j=0;j<secs.length-1;j++) for(let k=0;k<P;k++){ const a=j*P+k, b=j*P+(k+1)%P, c=a+P, e=b+P; idx.push(a,c,b,b,c,e); }
-  for(const j of [0,secs.length-1]){ const [z,le,te]=secs[j], ci=pos.length/3; pos.push(X((le+te)/2),Math.abs(z)*tn,z); uv.push(j?1:0,.5); for(let k=0;k<P;k++) idx.push(ci,j*P+k,j*P+(k+1)%P); }
+  for(const j of [0,secs.length-1]){ const [z,le,te]=secs[j], ci=pos.length/3; pos.push(X((le+te)/2),Math.abs(z)*tn+cam*(te-le),z); uv.push(j?1:0,.5); for(let k=0;k<P;k++) idx.push(ci,j*P+k,j*P+(k+1)%P); }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx); g.computeVertexNormals(); return g;
 }
-// q is the detail level. opt.gear adds retractable gear (for the 3D viewer).
+// The general arrangement as numbers: the outlines the drawing office draws, in metres back from the spinner (x) and up from the
+// thrust line (y). The 3D model is built from the same numbers, so the drawing and the model always agree.
+const sortPts=a=>a.slice().sort((p,q)=>p[0]-q[0]);
+function lerpPts(a,x){ if(x<=a[0][0]) return a[0][1]; for(let i=1;i<a.length;i++) if(x<=a[i][0]){ const p=a[i-1], q=a[i]; return q[0]>p[0]?p[1]+(q[1]-p[1])*(x-p[0])/(q[0]-p[0]):q[1]; } return a[a.length-1][1]; }
+// A bomb bay: the load sits in the lower fuselage under the main tank, where fuel would otherwise go, between the engine and the
+// thinning rear fuselage. A deep load (a torpedo) needs the belly bulged to take it.
+function bayOf(d,load){ const Ld=part('load',load||d.load); if(!Ld||!Ld.mass) return null;
+  const E=part('engine',d.engine), radial=E.type==='radial', el=E.type==='jet'?.8:radial?1.3:2.0, belly0=radial?-.86:-.8, ln=Ld.len||1.6;
+  const r=(Ld.dia||.4)/2, x=d.wingPos+d.chord*.28, x0=x-ln/2-.15, x1=x+ln/2+.15, cy=-.42-r, bot=Math.min(belly0,cy-r-.1);
+  return {x,x0,x1,len:x1-x0,r,cy,bot,belly:belly0-bot,fits:x0>=el*.75&&x1<=d.fusLen-3}; }
+const bayFits=(d,load)=>{ const b=bayOf(d,load); return !b||b.fits; };
+function gaShape(d,st){
+  const E=part('engine',d.engine), L=part('layout',d.layout), jet=E.type==='jet', radial=E.type==='radial', bi=L.wings===2;
+  const len=d.fusLen, ck=st.cockpit, el=st.engLen, nC=(part('crew',d.crew)||{n:1}).n, Rg=part('rear',d.rear)||{n:0}, turret=Rg.id==='t50'&&nC>1;
+  const top=radial?.76:.55, nose=radial?.74:.36, nw=radial?.62:.34, fw=radial?.62:.5;
+  const topL=[[0,nose],[el,top],[ck-.8,.62],[ck+.9+(nC-1)*.95,d.canopy==='bubble'?.5:.62],[len-.4,.28],[len,.22]];
+  let botL=[[0,-nose],[el,-(radial?.76:.6)],[d.wingPos,radial?-.86:-.8],[d.wingPos+d.chord,-.76],[len*.62,-.5],[len,-.1]];
+  const bay=d.stow==='bay'?bayOf(d):null;
+  if(bay&&bay.belly>.01){ const base=sortPts(botL), bz=x=>x<bay.x0-.5||x>bay.x1+1.2?0:x<bay.x0?(x-bay.x0+.5)/.5:x>bay.x1?1-(x-bay.x1)/1.2:1;
+    const xs=[...new Set([...base.map(p=>p[0]),bay.x0-.5,bay.x0,bay.x1,bay.x1+1.2])].filter(x=>x>=0&&x<=len).sort((a,b)=>a-b);
+    botL=xs.map(x=>{ const y=lerpPts(base,x); return [x,Math.min(y,y+(bay.bot-y)*bz(x))]; }); }
+  const rootC=chordAt(d.planform,d.chord,0).cr;
+  const wings=bi?[{y:1.3,le:d.wingPos-.25,ch:d.chord,form:'rect',side:d.chord},{y:-.68,le:d.wingPos,ch:d.chord*.9,form:'rect',side:d.chord*.9}]:[{y:-.78,le:d.wingPos,ch:d.chord,form:d.planform,side:rootC}];
+  const seats=[{x:ck,y:.85,r:.15}]; for(let k=1;k<nC;k++){ const a=ck+.9+(k-1)*.95; seats.push({x:a+.5,y:.84,r:.13,a,b:a+.95,turret:turret&&k===nC-1}); }
+  const tur=turret?{x:seats[nC-1].x,y:.62,r:.44}:null;
+  const gun=Rg.n&&nC>1?(tur?{a:[tur.x+.2,.95],b:[tur.x+1.0,1.08],n:1,heavy:true}:{a:[ck+.9+(nC-1)*.95-.1,.95],b:[ck+.9+(nC-1)*.95+.75,1.1],n:Rg.n,heavy:Rg.g==='b50'}):null;
+  const sq=Math.sqrt(d.tailArea), ts=sq*1.9, tc=d.tailArea*.6/ts*1.2;
+  return {len,ck,el,nC,radial,jet,bi,top,nose,nw,fw,topL,botL,planL:[[0,nw],[el,fw],[ck+.6,.5],[len,.12]],bay,wings,rootC,seats,tur,gun,
+    gx:d.wingPos+.25,ground:-1.75,fh:.55*sq,tl:.6*sq,ts,tc,tailX:len-tc*.55,tailY:.06};
+}
+// A surface swept along x: f(x,u) gives the point at x and u (0 to 1 across the section). Caps close either end.
+function loftGeo(xs,f,n,closed,caps,us=1){ const pos=[],uv=[],idx=[],R=n+1;
+  xs.forEach(x=>{ for(let k=0;k<=n;k++){ const p=f(x,k/n); pos.push(p[0],p[1],p[2]); uv.push(x*us,k/n); } });
+  for(let i=0;i<xs.length-1;i++) for(let k=0;k<n;k++){ const a=i*R+k,b=a+1,c=a+R,e=c+1; idx.push(a,c,b,b,c,e); }
+  const capAt=i=>{ const s=pos.length/3; let cx=0,cy=0,cz=0; for(let k=0;k<=n;k++){ const j=(i*R+k)*3; pos.push(pos[j],pos[j+1],pos[j+2]); uv.push(.5,k/n); cx+=pos[j]; cy+=pos[j+1]; cz+=pos[j+2]; }
+    const ci=pos.length/3; pos.push(cx/R,cy/R,cz/R); uv.push(.5,.5); for(let k=0;k<n;k++) idx.push(ci,s+k,s+k+1); };
+  if(caps&&caps[0]) capAt(0); if(caps&&caps[1]) capAt(xs.length-1);
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx); g.computeVertexNormals();
+  if(closed){ const nm=g.attributes.normal.array; for(let i=0;i<xs.length;i++){ const a=i*R*3, b=(i*R+n)*3; for(let j=0;j<3;j++){ const v=(nm[a+j]+nm[b+j])/2; nm[a+j]=nm[b+j]=v; } } }
+  return g; }
+const spanXs=(a,b,step,keys=[])=>{ const n=Math.max(1,Math.ceil((b-a)/step)), s=[]; for(let i=0;i<=n;i++) s.push(a+(b-a)*i/n); for(const k of keys) if(k>a+.01&&k<b-.01) s.push(k); return [...new Set(s)].sort((p,q)=>p-q); };
+// q is the detail level: it sets how finely the shapes are cut, never the shapes, so a machine looks the same in battle as in the
+// drawing office. opt.gear adds the undercarriage of a retractable-gear aircraft (wheels down).
 function meshFor(p,q=1,opt={}){
   if(S.gfxSafe) q=Math.min(q,1);
-  const d=p.design, st=p.st, E=part('engine',d.engine), Lf=d.fusLen, X=m=>Lf*.5-m, era=ERA.id, jet=!!ERA.jet;
+  const d=p.design, st=p.st, E=part('engine',d.engine), Lf=d.fusLen, X=m=>Lf*.5-m, G=gaShape(d,st), A0=part('airfoil',d.airfoil);
   const pd=part('paint',d.paint)||PARTS.paint[0], src=paintCanvas(pd), metal=/metal|silver|bare|alumin/i.test(pd.name+' '+pd.id);
   const M=(o,kind)=>q<2?new THREE.MeshLambertMaterial(Object.assign({side:THREE.DoubleSide},o))
     :new THREE.MeshStandardMaterial(Object.assign({side:THREE.DoubleSide,metalness:kind==='metal'?.72:kind==='matte'?0:.08,roughness:kind==='metal'?.34:kind==='matte'?.9:.62,envMapIntensity:kind==='metal'?1:.55},o));
-  const skin=era==='ww1'?'matte':metal?'metal':'paint', tex=q>=2?panelTexture(pd,src):src?paintTexture(pd):null;
+  const skin=metal?'metal':'paint', tex=q>=2?panelTexture(pd,src):src?paintTexture(pd):null;
   const body=tex?M({map:tex},skin):M({color:pd.body},skin), dark=M({color:pd.dark},'paint'), mark=M({color:pd.mark},'paint'), nose=pd.nose?M({color:pd.nose},'paint'):body;
-  const glass=q<2?new THREE.MeshLambertMaterial({color:0x9fb8c8,transparent:true,opacity:.55}):new THREE.MeshStandardMaterial({color:0x9fb8c8,transparent:true,opacity:.45,metalness:.1,roughness:.05}), black=M({color:0x222222},'paint');
+  const glass=q<2?new THREE.MeshLambertMaterial({color:0x9fb8c8,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false}):new THREE.MeshStandardMaterial({color:0x9fb8c8,transparent:true,opacity:.48,metalness:.1,roughness:.05,side:THREE.DoubleSide,depthWrite:false}), black=M({color:0x222222},'paint');
+  const inner=M({color:0x3b4038},'matte'), steel=M({color:0x6a7074},'metal'), helmet=M({color:0x5a4430},'matte'), suit=M({color:0x6b6448},'matte');
   const grp=new THREE.Group(), add=(geo,mat,x,y,z,to)=>{const m=new THREE.Mesh(geo,mat); m.position.set(x||0,y||0,z||0); (to||grp).add(m); return m;};
   const hinge=(name,x,y,z,ax)=>{ const h=new THREE.Group(); h.name=name; h.position.set(x,y,z); h.userData.axis=ax; grp.add(h); return h; };
-  const seg=q===0?10:q===1?18:28;
-  const pjet=E.type==='jet', twin=(jet&&d.install==='nacelles')||pjet, radial=!jet&&!pjet&&E.type!=='inline', sideIntakes=PARTS.intake&&d.intake==='ramps';
-  const rf=jet?(twin?.5:E.type==='cent'?.78:.66):era==='ww1'?.48:radial?.72:.56, rear=jet&&!twin?rf*.62:rf*.16;
-  const inl=!jet&&!pjet&&!radial&&era!=='ww1', NOSE=1.9, noseK=m=>inl&&m<NOSE?.5+.5*Math.sin(Math.min(1,m/NOSE)*Math.PI/2):1;
-  // fuselage: parallel to just behind the cockpit, then tapering to the tail; an area-ruled body is waisted at the wing
-  const l1=Math.min(Lf*.55,st.cockpit+.9), l2=Lf-l1, wave=PARTS.body?part('body',d.body).wave:1, xw=d.wingPos+d.chord*.6;
-  const rAt=m=>m<l1?rf:rf*.94+(rear-rf*.94)*(m-l1)/l2;
-  if(q===0){
-    const g1=new THREE.CylinderGeometry(inl?rf*.6:rf,rf*.94,l1,seg); g1.rotateZ(-Math.PI/2); add(g1,body,X(l1/2)).scale.set(1,1.12,1);
-    const g2=new THREE.CylinderGeometry(rf*.94,rear,l2,seg); g2.rotateZ(-Math.PI/2); add(g2,body,X(l1+l2/2)).scale.set(1,1.12,1);
-  } else {
-    const prof=[], N=q===2?48:24, ms=[];
-    for(let i=0;i<=N;i++) ms.push(Lf*i/N); if(inl) for(let k=1;k<8;k++) ms.push(NOSE*k/8); ms.sort((a,b)=>a-b);
-    for(const m of ms){ let r=m<l1?rf*(.93+.07*Math.min(1,m/Math.max(.5,l1*.4))):rf*.94+(rear-rf*.94)*Math.pow((m-l1)/l2,1.35);
-      if(wave<1) r*=1-.17*Math.exp(-(((m-xw)/(d.chord*.75))**2));
-      r*=noseK(m);
-      prof.push(new THREE.Vector2(Math.max(.03,r),X(m))); }
-    const lg=new THREE.LatheGeometry(prof,seg); lg.rotateZ(-Math.PI/2); add(lg,body).scale.set(1,1.12,1);
-  }
-  const disc=(r,mat,x,face)=>{const g=new THREE.CircleGeometry(r,18); g.rotateY(face*Math.PI/2); return add(g,mat,x);};
+  // a round rod between two points (x in metres from the nose)
+  const rod=(a,b,r,mat,to)=>{ const A=new THREE.Vector3(X(a[0]),a[1],a[2]||0), B=new THREE.Vector3(X(b[0]),b[1],b[2]||0), L=A.distanceTo(B), g=new THREE.CylinderGeometry(r,r,L,q?8:5);
+    const m=add(g,mat,(A.x+B.x)/2,(A.y+B.y)/2,(A.z+B.z)/2,to); m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),B.clone().sub(A).normalize()); return m; };
+  const P=q===0?12:q===1?20:32, step=q===0?.5:q===1?.28:.14, pjet=E.type==='jet', radial=G.radial, bay=G.bay;
+  // fuselage: the side elevation gives the top and bottom lines, the plan its width; between them a full, slightly square section
+  const TS=sortPts(G.topL), BS=sortPts(G.botL), PS=sortPts(G.planL), sm=(a,x)=>x<.4||x>Lf-.4?lerpPts(a,x):.25*lerpPts(a,x-.3)+.5*lerpPts(a,x)+.25*lerpPts(a,x+.3);
+  const yT=x=>sm(TS,x), yB=x=>sm(BS,x), wF=x=>Math.max(.05,sm(PS,x)), EX=.8, sp=v=>Math.sign(v)*Math.pow(Math.abs(v),EX);
+  const sec=(x,t)=>{ const a=yT(x), b=yB(x); return [(a+b)/2+(a-b)/2*sp(Math.sin(t)),wF(x)*sp(Math.cos(t))]; };
+  const zAt=(x,y)=>{ const a=yT(x), b=yB(x), s=clamp((y-(a+b)/2)/((a-b)/2),-1,1), sn=Math.sign(s)*Math.pow(Math.abs(s),1/EX); return wF(x)*Math.pow(Math.max(0,1-sn*sn),EX/2); };
+  const fusF=(u0,u1)=>(x,u)=>{ const t=1.5*Math.PI+(u0+(u1-u0)*u)*TAU, [y,z]=sec(x,t); return [X(x),y,z]; };
+  const xn=pd.nose&&!pjet?G.el*.7:0, keys=[G.el,G.ck-.8,G.ck+.6,G.ck+.9,d.wingPos,d.wingPos+d.chord,Lf*.62,Lf-.4];
+  const breaks=[...new Set([0,xn,...(bay?[bay.x0,bay.x1]:[]),Lf])].filter(x=>x>=0&&x<=Lf).sort((a,b)=>a-b);
+  const gB=x=>{ const z=bay.r+.05, w=wF(x); return Math.asin(Math.min(.999,Math.pow(Math.min(1,z/w),1/EX))); };
+  for(let i=0;i<breaks.length-1;i++){ const a=breaks[i], b=breaks[i+1], xs=spanXs(a,b,step,keys), cap=[a===0&&!radial,b===Lf], mat=b<=xn+1e-6?nose:body;
+    if(bay&&a===bay.x0&&b===bay.x1){ const n=P;
+      add(loftGeo(xs,(x,u)=>{ const g=gB(x)/TAU, t=1.5*Math.PI+(g+(1-2*g)*u)*TAU, [y,z]=sec(x,t); return [X(x),y,z]; },n,false,null,1/Lf),body);
+      // the doors are the rest of the belly, each hung on its outer edge
+      for(const sg of [1,-1]){ const eg=x=>{ const t=1.5*Math.PI+sg*gB(x); const [y,z]=sec(x,t); return new THREE.Vector3(X(x),y,z); };
+        const e0=eg(bay.x0), e1=eg(bay.x1), h=hinge('bay',e0.x,e0.y,e0.z,e1.clone().sub(e0).normalize().toArray()); h.userData.fold=sg*1.85;
+        const geo=loftGeo(xs,(x,u)=>{ const t=1.5*Math.PI+sg*gB(x)*u, [y,z]=sec(x,t); return [X(x),y,z]; },Math.max(3,P/6|0),false,null,1/Lf); geo.translate(-e0.x,-e0.y,-e0.z); add(geo,body,0,0,0,h); }
+      continue; }
+    add(loftGeo(xs,fusF(0,1),P,true,cap,1/Lf),mat); }
+  // inside the bay: a dark lining, the load on its crutch
+  if(bay){ const zE=bay.r+.05, xm=(bay.x0+bay.x1)/2, ye=sec(xm,1.5*Math.PI+gB(xm))[0], roof=bay.cy+bay.r+.05;
+    const lin=new THREE.Mesh(new THREE.BoxGeometry(bay.x1-bay.x0,roof-ye+.02,zE*2),new THREE.MeshLambertMaterial({color:0x1c1f1a,side:THREE.BackSide})); lin.position.set(X(xm),(roof+ye)/2-.01,0); grp.add(lin); }
+  const disc=(r,mat,x,y,z,sx)=>{ const g=new THREE.CircleGeometry(r,q?24:12); g.rotateY(Math.PI/2); const m=add(g,mat,x,y||0,z||0); if(sx) m.scale.set(1,1,sx); return m; };
   const glowM=ab=>new THREE.MeshBasicMaterial({color:ab?0xff5a10:0xff9a40,transparent:true,opacity:ab?.5:.22,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
   const glow=(x,y,z,r,ab)=>{ if(q===0) return; const h=ab?3.2:1.1, g=new THREE.ConeGeometry(r,h,14,1,true); g.rotateZ(Math.PI/2); g.translate(-h/2,0,0);
     const m=add(g,glowM(ab),x,y,z); m.name='glow'; m.userData.ab=!!ab; };
   const flash=(x,y,z)=>{ if(q===0) return; const f=new THREE.Group(); f.name='flash'; f.visible=false; f.position.set(x,y,z); grp.add(f);
     const fm=new THREE.MeshBasicMaterial({color:0xffe08a,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
     for(let k=0;k<2;k++){ const g=new THREE.PlaneGeometry(1.1,.5); g.translate(.55,0,0); const m=new THREE.Mesh(g,fm); m.rotation.x=k*Math.PI/2; f.add(m); } };
-  if(jet||pjet){
-    if(pjet){ const cn=new THREE.ConeGeometry(rf,1.6,seg); cn.rotateZ(-Math.PI/2); add(cn,pd.nose?nose:body,X(-.8)); }
-    else if(sideIntakes||(PARTS.intake&&d.intake==='pitot'&&part('install',d.install).count>1)){ const cn=new THREE.ConeGeometry(rf*.9,2.4,seg); cn.rotateZ(-Math.PI/2); add(cn,dark,X(-1.2));
-      for(const z of [-1,1]) disc(rf*.45,black,X(st.cockpit+.6),1).position.set(X(st.cockpit+.6),0,z*rf*1.1); }
-    else if(!twin){ disc(rf*.72,black,X(0)+.02,1); if(PARTS.intake&&d.intake==='cone'){ const cn=new THREE.ConeGeometry(rf*.42,1.4,12); cn.rotateZ(-Math.PI/2); add(cn,dark,X(-.5)); } }
-    disc(rear*.85,black,X(Lf)-.02,-1);
-    if(!twin) glow(X(Lf),0,0,rear*.8,E.ab);
-    flash(X(-.1),-rf*.35,0);
-  } else {
-    // the cowling is oval like the fuselage behind it and a little larger, so the body's paint never shows through it
-    if(!inl){ const cl=era==='ww1'?.6:radial?1.1:1.4, cg=new THREE.CylinderGeometry(rf*1.05,rf*1.05,cl,seg+2); cg.rotateZ(-Math.PI/2); add(cg,radial||pd.nose?nose:body,X(cl/2)).scale.set(1,1.12,1);
-      if(radial) disc(rf*.7,black,X(0)+.02,1);
-      if(radial&&q) for(let k=0;k<14;k++){ const a=k/14*TAU, cy=new THREE.CylinderGeometry(.07,.08,.16,6); add(cy,dark,X(0)+.05,Math.sin(a)*rf*.84,Math.cos(a)*rf*.84).rotation.z=Math.PI/2; }
-      const sp=new THREE.ConeGeometry(radial?.22:.3,.6,12); sp.rotateZ(-Math.PI/2); add(sp,pd.nose?nose:dark,X(-.3)); }
-    else { const sp=new THREE.ConeGeometry(.29,.85,14); sp.rotateZ(-Math.PI/2); add(sp,pd.nose?nose:dark,X(-.42));
-      // six exhaust stubs down each side of a V12, and the radiator in a scoop under the wing
-      if(q) for(const sg of [-1,1]) for(let k=0;k<6;k++){ const m=.5+k*.21, r=rf*noseK(m)*.97; add(new THREE.BoxGeometry(.13,.07,.09),black,X(m),r*.42,sg*r*.93); }
-      const rx=d.wingPos+d.chord*.5, rr=rAt(rx); add(new THREE.BoxGeometry(1.0,.24,.58),body,X(rx),-rr*1.12-.08); add(new THREE.BoxGeometry(.03,.18,.5),black,X(rx-.5),-rr*1.12-.08); }
-    const pr=era==='ww1'?1.3:1.6, dg=new THREE.CircleGeometry(pr,28); dg.rotateY(Math.PI/2);
-    let dm;
+  // a body of revolution along x: r(x) the radius, centred at (y,z)
+  const revolve=(xs,r,mat,y,z,caps,to)=>{ const m=add(loftGeo(xs,(x,u)=>{ const t=u*TAU, rr=r(x); return [X(x),y+rr*Math.sin(t),z+rr*Math.cos(t)]; },q?18:10,true,caps,1),mat,0,0,0,to); return m; };
+  // engine and propeller
+  if(pjet){ disc(wF(0)*.8,black,X(0)+.03,(yT(0)+yB(0))/2,0); flash(X(-.1),0,0);
+    const cx=d.wingPos+d.chord*.3, nr=x=>{ const u=(x-cx)/1.7; return .4*Math.sqrt(Math.max(.3,1-u*u*u*u)); };
+    for(const sg of [-1,1]){ const z=sg*d.span*.22; revolve(spanXs(cx-1.7,cx+1.7,.2),nr,body,-.95,z); disc(nr(cx-1.7)*.9,black,X(cx-1.7)+.02,-.95,z); glow(X(cx+1.7),-.95,z,.3,E.ab); } }
+  else {
+    if(radial){ const x=.12, a=yT(x), b=yB(x), yc=(a+b)/2, hh=(a-b)/2*.84, w=wF(x)*.84; disc(hh,black,X(x),yc,0,w/hh);
+      if(q) for(let k=0;k<14;k++){ const t=k/14*TAU; add(new THREE.CylinderGeometry(.07,.08,.16,6),dark,X(x)+.06,yc+Math.sin(t)*hh*.78,Math.cos(t)*w*.78).rotation.z=Math.PI/2; }
+      const gap=spanXs(G.el-.015,G.el+.015,.03); if(q) add(loftGeo(gap,(x,u)=>{ const t=1.5*Math.PI+u*TAU, [y,z]=sec(x,t), c=(yT(x)+yB(x))/2; return [X(x),c+(y-c)*1.008,z*1.008]; },P,true,null),black); }
+    else if(q) for(const sg of [-1,1]) for(let k=0;k<6;k++){ const x=.55+k*.22; add(new THREE.BoxGeometry(.13,.07,.1),black,X(x),.22,sg*(zAt(x,.22)+.02)); }
+    if(!radial){ const x0=d.wingPos+d.chord*.45, x1=d.wingPos+d.chord*.95; add(new THREE.BoxGeometry(x1-x0,.24,.6),body,X((x0+x1)/2),-.92); add(new THREE.BoxGeometry(.03,.2,.52),black,X(x1)+.02,-.92); }
+    // spinner, after the drawing's curve
+    const rs=radial?.25:.28, sx=spanXs(-.4,0,q?.05:.1); revolve(sx,x=>{ const u=Math.max(0,(x+.4)/.4); return rs*Math.sqrt(Math.min(1,u*(2-u)))*(1-.06*(1-u)); },pd.nose?nose:dark,0,0,[false,true]);
+    const pr=1.5, dg=new THREE.CircleGeometry(pr,28); dg.rotateY(Math.PI/2); let dm;
     if(q===0) dm=new THREE.MeshBasicMaterial({color:0x222222,transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false});
     else { const o=document.createElement('canvas'); o.width=o.height=64; const g=o.getContext('2d'), gr=g.createRadialGradient(32,32,2,32,32,32);
       gr.addColorStop(0,'rgba(30,30,30,0)'); gr.addColorStop(.25,'rgba(30,30,30,.05)'); gr.addColorStop(.8,'rgba(30,30,30,.22)'); gr.addColorStop(.95,'rgba(220,200,60,.35)'); gr.addColorStop(1,'rgba(30,30,30,0)'); g.fillStyle=gr; g.fillRect(0,0,64,64);
       dm=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(o),transparent:true,side:THREE.DoubleSide,depthWrite:false}); }
     add(dg,dm,X(-.12)).name='pdisc';
     const pg=new THREE.Group(); pg.name='prop'; pg.position.set(X(-.12),0,0); grp.add(pg);
-    const nb=q===0?2:era==='ww1'?2:E.hp>1600?4:3;
-    for(let k=0;k<nb;k++){ const bl=new THREE.Mesh(new THREE.BoxGeometry(.05,pr,.17),black); bl.position.y=pr/2; bl.rotation.y=q?.25:0; const h=new THREE.Group(); h.rotation.x=k*TAU/nb; h.add(bl); pg.add(h); }
-    flash(X(-.05),rf*.9,0);
-  }
-  // wings
-  let wings;
-  if(jet){ const L=part('layout',d.layout); wings=[{y:-rf*.3,le:d.wingPos,ch:d.chord,span:d.span,sweep:L.delta?null:L.sweep,delta:L.delta}]; }
-  else if(era==='ww1'){ const L=part('layout',d.layout), low=-rf*.95;
-    wings=L.id==='mono'?[{y:.15,le:d.wingPos,ch:d.chord,span:d.span}]:L.id==='parasol'?[{y:1.05,le:d.wingPos,ch:d.chord,span:d.span}]
-      :L.wings===2?[{y:low+d.gap,le:d.wingPos,ch:d.chord,span:d.span},{y:low,le:d.wingPos+d.stagger,ch:st.lowerChord,span:st.lowerSpan}]
-      :[{y:low+2*d.gap,le:d.wingPos,ch:d.chord,span:d.span},{y:low+d.gap,le:d.wingPos+d.stagger/2,ch:d.chord,span:d.span},{y:low,le:d.wingPos+d.stagger,ch:d.chord,span:d.span}]; }
-  else wings=part('layout',d.layout).wings===2?[{y:1.3,le:d.wingPos-.25,ch:d.chord,span:d.span,form:'rect'},{y:-rf*.8,le:d.wingPos,ch:d.chord*.9,span:d.span,form:'rect'}]
-    :[{y:-rf*.75,le:d.wingPos,ch:d.chord,span:d.span,form:d.planform}];
-  const L0=part('layout',d.layout), A0=PARTS.airfoil?part('airfoil',d.airfoil):null;
-  const tcW=era==='ww1'?.07:!jet?.14:L0.thin?.05:A0&&A0.id==='thick'?.12:.09, dih=(wings.length===1?d.dihedral||0:0)*DEG, tn=Math.tan(dih), P=q===0?6:q===1?12:18;
-  // folding wings: the centre section is fixed and each outer panel hangs on a hinge group named 'fold', holding the turn it makes
-  // when folded (opt.fold sets how far folded it is drawn). Up-folds swing the panels up over the cockpit about a fore-and-aft hinge;
-  // rearward folds and the Sto-Wing twist each panel leading edge down and swing it back alongside the fuselage.
-  const Fk=PARTS.fold&&!jet?d.fold:'none', fold0=wingStations(wings[0]), half0=fold0[fold0.length-1][0];
+    const nb=q===0?2:E.hp>1600?4:3, bg=new THREE.BoxGeometry(.05,pr-.12,.17); bg.translate(0,(pr-.12)/2+.12,0);
+    for(let k=0;k<nb;k++){ const bl=new THREE.Mesh(bg,black); bl.rotation.y=q?.25:0; const h=new THREE.Group(); h.rotation.x=k*TAU/nb; h.add(bl); pg.add(h); }
+    flash(X(-.05),yT(.3)*.9,0); }
+  // guns: cowling guns along the top of the engine, a hub gun through the spinner, wing guns out of the leading edge
+  const Ga=part('arm',d.arm), gr=k=>GUN[k].k==='cannon'?.045:.026;
+  for(const b of Ga.banks){
+    if(b.at==='cowl') for(let k=0;k<b.n;k++){ const z=(k-(b.n-1)/2)*.22||0, y=Math.max(yT(.4),yT(G.el-.3))-.02; rod([.15,y-.01,z],[G.el-.2,y+.02,z],gr(b.g),black); }
+    else if(b.at==='hub') rod([.3,0],[-.55,0],gr(b.g)+.008,black); }
+  // wings, with a real cambered section
+  const tcW=A0?A0.depth:.13, cam=.3*tcW, dih=(G.wings.length===1?d.dihedral||0:0)*DEG, tn=Math.tan(dih), PW=q===0?8:q===1?12:18;
+  const W=G.wings.map(w=>({y:w.y,le:w.le,ch:w.ch,span:d.span,form:w.form}));
+  const Fk=PARTS.fold?d.fold:'none', fold0=wingStations(W[0]), half0=fold0[fold0.length-1][0];
   const zh=Fk==='tips'?Math.max(1.2,half0-.55):FOLD_HINGE({fold:Fk})?clamp((d.foldIn||4.6)/2,1.2,half0-.4):0, folds={};
-  if(zh){ const bi=wings.length>1, w0=wings[0], st0=stationAt(fold0,zh/half0), c0=st0[2]-st0[1], back=Fk==='back'||Fk==='sto';
-    for(const sg of [-1,1]){ const px=back?(bi?st0[2]-c0*.3:st0[1]+c0*.25):(st0[1]+st0[2])/2, py=w0.y+zh*tn, g=hinge('fold',X(px),py,sg*zh,[1,0,0]);
-      const q=new THREE.Quaternion(), up=new THREE.Vector3(0,1,0), ax=new THREE.Vector3(1,0,0), ez=new THREE.Vector3(0,0,1);
-      if(!back) q.setFromAxisAngle(ax,-sg*(Fk==='tips'?90:122)*DEG);
-      else if(bi) q.setFromAxisAngle(up,-sg*Math.PI/2);
-      else q.setFromAxisAngle(up,-sg*Math.PI/2).multiply(new THREE.Quaternion().setFromAxisAngle(ez,-Math.PI/2));
-      g.userData.fq=q.toArray(); folds[sg]=g; } }
-  wings.forEach((w,wi)=>{
-    const s=wingStations(w);
-    if(!zh) add(wingGeo(s,X,tcW,dih,P),body,0,w.y);
-    else { const half=s[s.length-1][0], cut=stationAt(s,zh/half), inner=[...s.filter(q=>q[0]<zh-1e-3),cut], outer=[cut,...s.filter(q=>q[0]>zh+1e-3)];
-      add(wingGeo(inner,X,tcW,dih,P),body,0,w.y);
-      for(const sg of [-1,1]){ const g=folds[sg], sec=(sg>0?outer:outer.slice().reverse()).map(q=>[sg*q[0],q[1],q[2]]), geo=wingGeo(s,X,tcW,dih,P,sec);
-        geo.translate(-g.position.x,w.y-g.position.y,-g.position.z); add(geo,body,0,0,0,g); } }
+  if(zh){ const bi=W.length>1, w0=W[0], st0=stationAt(fold0,zh/half0), c0=st0[2]-st0[1], back=Fk==='back'||Fk==='sto';
+    for(const sg of [-1,1]){ const px=back?(bi?st0[2]-c0*.3:st0[1]+c0*.25):(st0[1]+st0[2])/2, py=w0.y+zh*tn+cam*c0*.8, g=hinge('fold',X(px),py,sg*zh,[1,0,0]);
+      const qq=new THREE.Quaternion(), up=new THREE.Vector3(0,1,0), ax=new THREE.Vector3(1,0,0), ez=new THREE.Vector3(0,0,1);
+      if(!back) qq.setFromAxisAngle(ax,-sg*(Fk==='tips'?90:122)*DEG);
+      else if(bi) qq.setFromAxisAngle(up,-sg*Math.PI/2);
+      else qq.setFromAxisAngle(up,-sg*Math.PI/2).multiply(new THREE.Quaternion().setFromAxisAngle(ez,-Math.PI/2));
+      g.userData.fq=qq.toArray(); folds[sg]=g; } }
+  // the wing between |z|=a and |z|=b, one side (sg) or both (sg 0, through the centre)
+  const part2=(s,a,b,sg)=>{ const half=s[s.length-1][0], pts=[]; pts.push(a>0?stationAt(s,a/half):s[0]); for(const v of s) if(v[0]>a+1e-3&&v[0]<b-1e-3) pts.push(v); if(b<half-1e-3) pts.push(stationAt(s,b/half)); else pts.push(s[s.length-1]);
+    return sg?(sg>0?pts:pts.slice().reverse()).map(v=>[sg*v[0],v[1],v[2]]):[...pts.slice(1).reverse().map(v=>[-v[0],v[1],v[2]]),...pts]; };
+  W.forEach((w,wi)=>{ const s=wingStations(w), half=s[s.length-1][0], low=wi===W.length-1, zW=bay&&low?bay.r+.05:0, zc=zh||half+1;
+    // the fixed part: through the centre, or from the bomb bay's sides out
+    if(zW) for(const sg of [-1,1]) add(wingGeo(s,X,tcW,dih,PW,part2(s,zW,zc,sg),cam),body,0,w.y); else add(wingGeo(s,X,tcW,dih,PW,part2(s,0,zc,0),cam),body,0,w.y);
+    if(zh) for(const sg of [-1,1]){ const g=folds[sg], geo=wingGeo(s,X,tcW,dih,PW,part2(s,zh,half+1,sg),cam); geo.translate(-g.position.x,w.y-g.position.y,-g.position.z); add(geo,body,0,0,0,g); }
     if(wi===0){ const qq=stationAt(s,.7), c=qq[2]-qq[1], rg=new THREE.CircleGeometry(Math.min(c*.32,.5),16); rg.rotateX(-Math.PI/2);
-      for(const sg of [-1,1]){ const m=add(rg,mark,X((qq[1]+qq[2])/2),w.y+naca(.5,tcW)*c+qq[0]*tn+.012,sg*qq[0]); m.rotation.x=-sg*dih; } }
+      for(const sg of [-1,1]){ const m=add(rg,mark,X((qq[1]+qq[2])/2),w.y+(naca(.5,tcW)+cam)*c+qq[0]*tn+.03,sg*qq[0]); m.rotation.x=-sg*dih; } }
     // ailerons on the outer trailing edge, hinged so they can move (High)
-    if(q===2&&wi===0&&(era!=='ww1'||d.control!=='warp')) for(const sg of [-1,1]){
+    if(q===2&&wi===0) for(const sg of [-1,1]){
       const a=stationAt(s,.55), b=stationAt(s,.93), ca=a[2]-a[1], cb=b[2]-b[1];
       const pa=new THREE.Vector3(X(a[2]-ca*.24),w.y+a[0]*tn,sg*a[0]), pb=new THREE.Vector3(X(b[2]-cb*.24),w.y+b[0]*tn,sg*b[0]);
       const ta=new THREE.Vector3(X(a[2]),pa.y,pa.z), tb=new THREE.Vector3(X(b[2]),pb.y,pb.z), h=hinge('ail',pa.x,pa.y,pa.z,pb.clone().sub(pa).normalize().toArray()); h.userData.side=sg;
@@ -2743,72 +2786,90 @@ function meshFor(p,q=1,opt={}){
       for(const v of pts) pos.push(...v.clone().add(up).toArray()); for(const v of pts) pos.push(...v.clone().sub(up).toArray());
       const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
       g.setIndex([0,1,2,0,2,3,4,6,5,4,7,6,0,4,5,0,5,1,1,5,6,1,6,2,2,6,7,2,7,3,3,7,4,3,4,0]); g.computeVertexNormals(); add(g,body,0,0,0,h); }
+    // dive brakes: perforated plates along the inner trailing edge, above and below
+    if(q&&low&&d.brakes==='dive') for(const sg of [-1,1]){ const a=stationAt(s,.16), b=stationAt(s,.48), x=((a[1]+(a[2]-a[1])*.82)+(b[1]+(b[2]-b[1])*.82))/2, c=(a[2]-a[1]+b[2]-b[1])/2;
+      for(const v of [1,-1]) add(new THREE.BoxGeometry(c*.14,.025,b[0]-a[0]),dark,X(x+c*.06),w.y+(a[0]+b[0])/2*tn+(v>0?(naca(.82,tcW)+cam*.6)*c+.015:-(naca(.82,tcW)-cam*.6)*c-.015),sg*(a[0]+b[0])/2); }
   });
-  // engine nacelles and missiles hang from the main wing where it really is, swept or not
-  const mw=wings[wings.length-1], ms=wingStations(mw), under=f=>{ const [z,le,te]=stationAt(ms,f), c=te-le; return [z,le,te,mw.y-naca(.3,tcW)*c+z*tn]; };
-  if(twin&&(jet||pjet)) for(const sg of [-1,1]){ const [z,le,te,wy]=under(.4), cx=le+(te-le)*.4, g=new THREE.CylinderGeometry(.55,.5,3.6,seg); g.rotateZ(-Math.PI/2);
-    add(g,body,X(cx),wy-.2,sg*z); disc(.42,black,X(cx-1.8)+.02,1).position.set(X(cx-1.8)+.02,wy-.2,sg*z); glow(X(cx+1.8),wy-.2,sg*z,.4,E.ab); }
-  if(PARTS.missiles){ const n=Math.min(8,part('missiles',d.missiles).loads.reduce((t,l)=>t+l.n,0)), per=Math.ceil(n/2), mg=new THREE.CylinderGeometry(.1,.1,3,8), wm=M({color:0xeeeeee},'paint'); mg.rotateZ(-Math.PI/2);
-    const ng=new THREE.ConeGeometry(.1,.35,8); ng.rotateZ(-Math.PI/2);
-    for(let k=0;k<n;k++){ const sg=k%2?1:-1, j=Math.floor(k/2), f=per>1?.32+.5*j/(per-1):.55, [z,le,te,wy]=under(twin?Math.min(.9,f+.15):f), c=te-le, cx=le+c*.45;
-      add(new THREE.BoxGeometry(Math.min(1.4,c*.55),.18,.05),dark,X(cx),wy-.09,sg*z); add(mg,wm,X(cx+.2),wy-.28,sg*z); if(q) add(ng,dark,X(cx+.2-1.67),wy-.28,sg*z); } }
-  if(!jet&&PARTS.load){ const Ld=part('load',d.load), Sw=part('stow',d.stow), Dp=PARTS.drop?part('drop',d.drop):null, belly=x=>-rAt(x)*1.12;
-    // a lathe along the body axis: t runs from the tail (0) to the nose (1), k is the fraction of the full diameter
+  const mw=W[W.length-1], ms=wingStations(mw), under=f=>{ const [z,le,te]=stationAt(ms,f), c=te-le; return [z,le,te,mw.y-(naca(.3,tcW)-cam*.84)*c+z*tn]; };
+  // wing guns, in pairs outward from 1.25 m
+  { let gi=0; for(const b of Ga.banks) if(b.at==='wing') for(let k=0;k<b.n/2;k++,gi++){ const z=1.25+gi*.32, hf=ms[ms.length-1][0], [,le,te]=stationAt(ms,z/hf), c=te-le, cn=GUN[b.g].k==='cannon', y=mw.y+z*tn+cam*c*.3;
+    for(const sg of [-1,1]){ rod([le+.25,y,sg*z],[le-(cn?.5:.2),y,sg*z],gr(b.g),black); if(cn&&q) rod([le+.05,y,sg*z],[le-.12,y,sg*z],.07,dark); if(k===0&&gi===0) flash(X(le-.2),y,sg*z); } } }
+  if(W.length>1){ const t=W[0], b=W[1];
+    for(const sg of [-1,1]){ for(const fr of [.25,.75]) rod([t.le+t.ch*fr,t.y,sg*d.span*.32],[b.le+b.ch*fr,b.y,sg*d.span*.32],.035,dark);
+      rod([t.le+.3,t.y,sg*.32],[t.le+.45,yT(t.le+.45)-.05,sg*.25],.03,dark); rod([t.le+t.ch-.3,t.y,sg*.32],[t.le+t.ch-.4,yT(t.le+t.ch-.4)-.05,sg*.25],.03,dark); } }
+  // engine nacelles' and stores' places under the wing
+  if(PARTS.load){ const Ld=part('load',d.load), Dp=PARTS.drop?part('drop',d.drop):null;
     const store=(prof,len,dia,mat,cx,cy,cz,name)=>{ const pts=prof.map(([tt,k])=>new THREE.Vector2(Math.max(.004,k*dia/2),(tt-.5)*len)), g=new THREE.LatheGeometry(pts,q?16:8); g.rotateZ(-Math.PI/2);
       const s=new THREE.Group(); s.name=name; s.position.set(X(cx),cy,cz); grp.add(s); add(g,mat,0,0,0,s); return s; };
-    if(Ld&&Ld.mass&&Sw.id!=='bay'){ const len=Ld.len||1.6, dia=Ld.dia||.4, cx=st.loadX, by=belly(cx), cy=by-dia/2-.09;
-      add(new THREE.BoxGeometry(Math.min(1.2,len*.35),.1,.08),dark,X(cx),by-.04);
+    const make=(cx,cy)=>{ const len=Ld.len||1.6, dia=Ld.dia||.4;
       if(Ld.kind==='torp'){ const s=store([[0,.08],[.03,.45],[.12,.8],[.22,1],[.9,1],[.95,.9],[.985,.62],[1,.2]],len,dia,M({color:0x8b9196},'metal'),cx,cy,0,'load');
-        for(const r of [0,Math.PI/2]){ const fg=new THREE.BoxGeometry(len*.06,dia*1.45,.02); const m=add(fg,dark,-len*.47,0,0,s); m.rotation.x=r; } }
+        for(const r of [0,Math.PI/2]){ const m=add(new THREE.BoxGeometry(len*.06,dia*1.45,.02),dark,-len*.47,0,0,s); m.rotation.x=r; } }
       else { const s=store([[0,.42],[.16,.62],[.32,1],[.68,1],[.82,.9],[.93,.62],[.985,.25],[1,0]],len,dia,M({color:0x4d5543},'paint'),cx,cy,0,'load');
-        for(const r of [0,Math.PI/2]){ const fg=new THREE.BoxGeometry(len*.2,dia*1.3,.02); const m=add(fg,dark,-len*.42,0,0,s); m.rotation.x=r; } } }
-    if(Dp&&Dp.L){ const len=1.3+Dp.L/420, dia=.36+Dp.L/1600, ext=Ld&&Ld.mass&&Sw.id!=='bay', [z,le,te,wy]=under(.22), cx=ext?le+(te-le)*.35:d.wingPos+d.chord*.3;
-      store([[0,.05],[.15,.55],[.45,1],[.7,1],[.9,.7],[1,.1]],len,dia,M({color:0xb8bcb4},'metal'),cx,ext?wy-dia/2-.12:belly(cx)-dia/2-.08,ext?-z:0,'droptank'); } }
-  if(wings.length>1){ const top=wings[0], bot=wings[wings.length-1];
-    for(const sg of [-1,1]) for(const fr of [.25,.75]){ add(new THREE.BoxGeometry(.06,top.y-bot.y,.06),dark,X(top.le+top.ch*fr),(top.y+bot.y)/2,sg*Math.min(top.span,bot.span)*.32); } }
-  // wing guns flash from the wings
-  if(q&&!jet&&PARTS.arm){ const G=part('arm',d.arm); if(G&&G.banks&&G.banks.some(b=>b.at==='wing')) for(const sg of [-1,1]){ const [z,le,,wy]=under(.42); flash(X(le),wy+.1,sg*z); } }
-  // tail: a tapered tailplane, swept on jets, on a hinge so it can move; fin and rudder
-  const ts=Math.sqrt(d.tailArea)*(jet?1.6:1.9), tc=d.tailArea*.6/ts*1.1, fh=(jet?.75:.6)*Math.sqrt(d.tailArea), tl=.75*Math.sqrt(d.tailArea);
-  const tsw=(jet?(L0.delta?45:L0.sweep||0)*.8:6)*DEG, tcR=tc*1.25, tcT=tc*.6, tle=Lf-.3-tcR-ts/2*Math.tan(tsw)*.45, piv=tle+tcR*.3, ty=rf*.15;
-  const th=hinge('elev',X(piv),ty,0,[0,0,1]), tg=wingGeo([[0,tle,tle+tcR],[ts/2,tle+ts/2*Math.tan(tsw),tle+ts/2*Math.tan(tsw)+tcT]],X,.08,0,q===0?4:P);
-  tg.translate(-X(piv),0,0); add(tg,body,0,0,0,th);
-  const fin=new THREE.Shape(), sw=jet?.6:0, rud=q===2?Math.min(tl*.35,.9):0;
-  fin.moveTo(X(Lf-tl-.3),rAt(Lf-tl)*.9); fin.lineTo(X(Lf-.35+sw*.6),rAt(Lf-.3)+fh); fin.lineTo(X(Lf+.05+sw*.4)+rud,rAt(Lf-.3)+fh*.92); fin.lineTo(X(Lf+.05)+rud,0); fin.lineTo(X(Lf-tl-.3),0);
-  const fg=new THREE.ExtrudeGeometry(fin,{depth:.08,bevelEnabled:false}); fg.translate(0,0,-.04); add(fg,body);
-  if(rud){ const hx=X(Lf+.05)+rud, rh=hinge('rud',hx,0,0,[0,1,0]), r=new THREE.Shape(); r.moveTo(0,0); r.lineTo(X(Lf+.05+sw*.4)+rud-hx,rAt(Lf-.3)+fh*.92); r.lineTo(X(Lf+.05+sw*.4)-hx,rAt(Lf-.3)+fh*.9); r.lineTo(X(Lf+.05)-hx,0); r.closePath();
-    const rg=new THREE.ExtrudeGeometry(r,{depth:.09,bevelEnabled:false}); rg.translate(0,0,-.045); add(rg,body,0,0,0,rh); }
-  // fuselage markings, cockpit, canopy, undercarriage
-  const mr=rAt(Lf*.62)*1.12+.01, mg=new THREE.CircleGeometry(Math.min(.32,rAt(Lf*.62)*.6),16);
-  for(const sg of [-1,1]){ const m=add(mg,mark,X(Lf*.62),0,sg*mr); m.rotation.y=sg>0?0:Math.PI; }
-  const open=d.canopy==='open'||era==='ww1', nc=jet?1:(st.crewN||1), ext=.45*(nc-1), ccx=st.cockpit+ext, csx=jet?1.9:(.74+ext)/.46, hl=.46*csx;
-  for(let i=0;i<nc;i++) add(new THREE.SphereGeometry(.16,10,8),black,X(st.cockpit+.9*i),rf*1.12+.08);
-  if(!open){ const cg=new THREE.SphereGeometry(.46,q?20:14,q?10:8,0,TAU,0,Math.PI/2); add(cg,glass,X(ccx),rf*1.05).scale.set(csx,1.15,1);
-    if(q&&d.canopy!=='bubble'){ const nf=Math.max(3,Math.round(hl*2/.5)); for(let k=1;k<nf;k++){ const fx=-hl+2*hl*k/nf, rr=.46*Math.sqrt(Math.max(.05,1-(fx/hl)**2)), g2=new THREE.TorusGeometry(rr,.022,4,14,Math.PI); g2.rotateY(Math.PI/2);
-      add(g2,dark,X(ccx)+fx,rf*1.05).scale.set(1,1.15,1); } } }
-  if(!jet&&PARTS.rear){ const Rg=part('rear',d.rear);
-    if(Rg&&Rg.id==='t50'){ const tx=st.cockpit+.9*nc+.1, ty=rAt(tx)*1.05; add(new THREE.CylinderGeometry(.46,.5,.14,q?18:10),dark,X(tx),ty);
-      add(new THREE.SphereGeometry(.44,q?18:10,q?9:5,0,TAU,0,Math.PI/2),glass,X(tx),ty+.06);
-      const bg=new THREE.CylinderGeometry(.035,.035,1.1,6); bg.rotateZ(-Math.PI/2-.2); add(bg,black,X(tx+.75),ty+.36); }
-    else if(Rg&&Rg.n){ const gx=st.cockpit+.9*(nc-1)+.3, gy=rf*1.12+.28;
-      for(let k=0;k<Rg.n;k++){ const bg=new THREE.CylinderGeometry(.028,.028,1.0,6); bg.rotateZ(-Math.PI/2-.35); add(bg,black,X(gx+.47),gy+.17,Rg.n>1?(k?.07:-.07):0); }
-      if(q) add(new THREE.TorusGeometry(.32,.025,4,16),dark,X(gx),gy-.1).rotation.x=Math.PI/2; } }
-  const fixed=!jet&&(era==='ww1'||d.gear==='fixed');
-  if(fixed){ const wr=era==='ww1'?.33:.36, wg=new THREE.CylinderGeometry(wr,wr,.14,14); wg.rotateX(Math.PI/2);
-    for(const sg of [-1,1]){ add(wg,black,X(d.wingPos+.15),-rf-.85,sg*.8); add(new THREE.BoxGeometry(.06,.9,.06),dark,X(d.wingPos+.15),-rf-.4,sg*.6).rotation.x=sg*.35; } }
+        for(const r of [0,Math.PI/2]){ const m=add(new THREE.BoxGeometry(len*.2,dia*1.3,.02),dark,-len*.42,0,0,s); m.rotation.x=r; } } };
+    if(Ld&&Ld.mass){ const cx=st.loadX, dia=Ld.dia||.4;
+      if(bay){ make(bay.x,bay.cy); add(new THREE.BoxGeometry(Math.min(1.2,(Ld.len||1.6)*.35),.06,.1),dark,X(bay.x),bay.cy+bay.r+.03); }
+      else { const cy=Ld.kind==='torp'?-1.15:-1.1; make(cx,cy); const top=yB(cx)+.04, bot=cy+dia/2; add(new THREE.BoxGeometry(.6,Math.max(.06,top-bot),.08),dark,X(cx),(top+bot)/2);
+        for(const v of [-.3,.3]) rod([cx+v,top-.02],[cx+v,bot+.02],.025,dark); } }
+    if(Dp&&Dp.L){ const len=1.3+Dp.L/420, dia=.36+Dp.L/1600, ext=Ld&&Ld.mass&&!bay, [z,le,te,wy]=under(.22), cx=ext?le+(te-le)*.35:d.wingPos+d.chord*.3;
+      store([[0,.05],[.15,.55],[.45,1],[.7,1],[.9,.7],[1,.1]],len,dia,M({color:0xb8bcb4},'metal'),cx,ext?wy-dia/2-.12:yB(cx)-dia/2-.08,ext?-z:0,'droptank'); } }
+  // tail: the fin and rudder are the drawing's outline, the tailplane its plan; both move on hinges
+  { const tl=G.tl, fh=G.fh, pts=[]; for(let i=0;i<=12;i++){ const u=i/12, a=[Lf-tl-.2,.26], c=[Lf-.5,.28+fh], b=[Lf-.05,.22+fh]; pts.push([(1-u)**2*a[0]+2*u*(1-u)*c[0]+u*u*b[0],(1-u)**2*a[1]+2*u*(1-u)*c[1]+u*u*b[1]]); }
+    pts.push([Lf+.08,-.12],[Lf,-.04]);
+    const hx=Lf-.32, clip=(poly,keep)=>{ const o=[]; for(let i=0;i<poly.length;i++){ const A=poly[i], B=poly[(i+1)%poly.length], ia=keep(A[0]), ib=keep(B[0]);
+      if(ia) o.push(A); if(ia!==ib){ const u=(hx-A[0])/(B[0]-A[0]); o.push([hx,A[1]+(B[1]-A[1])*u]); } } return o; };
+    const shape=(poly,x0)=>{ const s=new THREE.Shape(); poly.forEach(([x,y],i)=>i?s.lineTo(X(x)-x0,y):s.moveTo(X(x)-x0,y)); return s; };
+    const fin=clip(pts,x=>x<=hx), rud=clip(pts,x=>x>=hx);
+    const fg=new THREE.ExtrudeGeometry(shape(fin,0),{depth:.1,bevelEnabled:false}); fg.translate(0,0,-.05); add(fg,body);
+    const rh=hinge('rud',X(hx),0,0,[0,1,0]), rg=new THREE.ExtrudeGeometry(shape(rud,X(hx)),{depth:.09,bevelEnabled:false}); rg.translate(0,0,-.045); add(rg,body,0,0,0,rh);
+    const cx=G.tailX, hc=G.tc/2, hs=G.ts/2, xh=cx+G.tc*.12, n=q===0?5:9, el=[], tp=[];
+    for(let i=0;i<=n;i++){ const f=Math.sin(i/n*Math.PI/2), c=hc*Math.sqrt(Math.max(.02,1-f*f)); el.push([f*hs,cx-c,cx+c]); }
+    for(const v of el) tp.push([v[0],v[1],Math.min(v[2],xh)]);
+    add(wingGeo(tp,X,.1,0,PW,null,0),body,0,G.tailY);
+    const ev=el.filter(v=>v[2]>xh+.04).map(v=>[v[0],xh,v[2]]);
+    if(ev.length>1){ const h=hinge('elev',X(xh),G.tailY,0,[0,0,1]), g=wingGeo(ev,X,.12,0,PW,null,0); g.translate(-X(xh),0,0); add(g,body,0,0,0,h); } }
+  // markings
+  { const x=Lf*.62, z=Math.max(zAt(x,.05),zAt(x,.31),zAt(x,-.21))+.015, mg=new THREE.CircleGeometry(.28,16); for(const sg of [-1,1]){ const m=add(mg,mark,X(x),.05,sg*z); m.rotation.y=sg>0?0:Math.PI; } }
+  // cockpit: canopy shapes from the side elevation, crew sitting under them, turret and rear gun where the drawing puts them
+  const quad=(a,c,b,n)=>{ const o=[]; for(let i=0;i<=n;i++){ const u=i/n; o.push([(1-u)**2*a[0]+2*u*(1-u)*c[0]+u*u*b[0],(1-u)**2*a[1]+2*u*(1-u)*c[1]+u*u*b[1]]); } return o; };
+  const ck=G.ck, closed=d.canopy!=='open', base=.5, wc=.3;
+  const glassOver=(prof,mat,width,frames)=>{ const pr=sortPts(prof), x0=pr[0][0], x1=pr[pr.length-1][0], xs=spanXs(x0,x1,q===0?.15:.06,pr.map(v=>v[0]));
+    add(loftGeo(xs,(x,u)=>{ const t=u*Math.PI, h=Math.max(lerpPts(pr,x),base+.005), w=(typeof width==='function'?width(x):width); return [X(x),base+(h-base)*Math.pow(Math.sin(t),.85),w*Math.sign(Math.cos(t))*Math.pow(Math.abs(Math.cos(t)),.85)]; },q?16:8,false,[true,true]),mat);
+    if(frames&&q) for(const fx of frames){ const h=lerpPts(pr,fx); add(loftGeo([fx-.018,fx+.018],(x,u)=>{ const t=u*Math.PI; return [X(x),base+(h-base)*1.025*Math.pow(Math.sin(t),.85),wc*1.025*Math.sign(Math.cos(t))*Math.pow(Math.abs(Math.cos(t)),.85)]; },q?14:8,false,null),dark); } };
+  const ribs=(a,b,n)=>{ const o=[]; for(let i=1;i<n;i++) o.push(a+(b-a)*i/n); return o; };
+  const Z=new THREE.Vector3(0,0,1);
+  if(!closed){ const ws=new THREE.PlaneGeometry(.46,.34), m=add(ws,glass,X(ck-.47),.77,0); m.rotation.set(0,Math.PI/2,0); m.rotateOnWorldAxis(Z,.5);
+    const op=new THREE.CircleGeometry(.5,16); op.rotateX(-Math.PI/2); add(op,black,X(ck+.05),yT(ck)+.005,0).scale.set(1,1,.6); }
+  else if(d.canopy==='bubble') glassOver([...quad([ck-.8,.62],[ck-.4,1.1],[ck+.2,1.1],8),...quad([ck+.2,1.1],[ck+.85,1.06],[ck+1,.55],8).slice(1)],glass,wc,null);
+  else { glassOver([[ck-.8,.62],[ck-.45,1.02],[ck+.45,1.05],[ck+.85,.72],[ck+.9,.62]],glass,wc,[ck-.45,ck+.45]);
+    if(G.nC===1) glassOver([[ck+.85,.72],[ck+2.4,.56]],body,x=>wc*(1-.5*clamp((x-ck-.85)/1.55,0,1)),null); }
+  for(const s of G.seats.slice(1)){ if(s.turret) continue;
+    if(closed) glassOver([[s.a-.05,.62],[s.a-.04,1.02],[s.b,.98],[s.b+.25,.62]],glass,wc,ribs(s.a-.05,s.b+.25,3));
+    else { const ws=new THREE.PlaneGeometry(.4,.26), m=add(ws,glass,X(s.a+.27),.74,0); m.rotation.set(0,Math.PI/2,0); m.rotateOnWorldAxis(Z,.5);
+      const op=new THREE.CircleGeometry(.45,16); op.rotateX(-Math.PI/2); add(op,black,X(s.x),yT(s.x)+.005,0).scale.set(1,1,.6); } }
+  for(const s of G.seats){ add(new THREE.SphereGeometry(s.r,q?12:8,q?9:6),helmet,X(s.x),s.y); add(new THREE.CylinderGeometry(.15,.19,.4,q?10:6),suit,X(s.x+.04),s.y-.36); }
+  if(G.tur){ const t=G.tur; add(new THREE.CylinderGeometry(t.r+.03,t.r+.06,.14,q?20:10),dark,X(t.x),t.y+.02);
+    add(new THREE.SphereGeometry(t.r,q?20:10,q?10:5,0,TAU,0,Math.PI/2),glass,X(t.x),t.y+.08);
+    if(q) for(const r of [0,Math.PI/2]){ const g=new THREE.TorusGeometry(t.r+.01,.02,4,20,Math.PI); const m=add(g,dark,X(t.x),t.y+.08,0); m.rotation.y=r; } }
+  if(G.gun){ const g=G.gun; for(let k=0;k<g.n;k++){ const z=g.n>1?(k?.07:-.07):0; rod([g.a[0],g.a[1],z],[g.b[0],g.b[1],z],g.heavy?.035:.025,black); }
+    if(!G.tur) rod([g.a[0]+.05,g.a[1]-.02],[g.a[0]+.1,.6],.03,dark); }
+  // undercarriage, tail wheel and arrester hook, where the side elevation draws them
+  const gx=G.gx, fixed=d.gear==='fixed';
+  rod([Lf-1.5,-.35],[Lf-.55,-.62],.03,dark);
+  const tailWheel=to=>{ rod([Lf-.6,-.1],[Lf-.65,-.42],.03,steel,to); const w=new THREE.CylinderGeometry(.1,.1,.06,14); w.rotateX(Math.PI/2); add(w,black,X(Lf-.65),-.5,0,to); };
+  if(fixed){ const wg=new THREE.CylinderGeometry(.35,.35,.12,18); wg.rotateX(Math.PI/2);
+    for(const sg of [-1,1]){ const z=sg*1.05; rod([gx+.15,-.75,z],[gx,-1.3,z],.06,dark); add(wg,black,X(gx),-1.4,z); add(new THREE.SphereGeometry(1,q?18:10,q?10:6),body,X(gx),-1.38,z).scale.set(.6,.37,.17); }
+    tailWheel(); }
   else if(opt.gear){
-    // retractable gear: main legs fold inward into the wing, the nose leg forward, the tail wheel back
-    const strut=M({color:0x6a7074},'metal');
-    const leg=(x,y,z,len,wr,axis,fold)=>{ const h=hinge('gear',x,y,z,axis); h.userData.fold=fold; add(new THREE.CylinderGeometry(.06,.06,len,8),strut,0,-len/2,0,h);
-      const w=new THREE.CylinderGeometry(wr,wr,.18,18); w.rotateX(Math.PI/2); add(w,black,0,-len,0,h); };
-    const [z,le,te,wy]=under(jet?.26:.3), c=te-le, gl=jet?1.5:1.45;
-    for(const sg of [-1,1]) leg(X(le+c*(jet?.55:.25)),wy,sg*z,gl,jet?.34:.36,[1,0,0],sg*Math.PI/2);
-    if(jet) leg(X(Math.max(1.2,st.cockpit-.4)),-rf*.8,0,gl-.1,.24,[0,0,1],Math.PI/2);
-    else leg(X(Lf-.7),-rear-.05,0,.45,.14,[0,0,1],-Math.PI/2);
-  }
+    // retractable gear: main legs fold inward into the wing, the tail wheel back into the fuselage
+    const gz=clamp(zh?zh-.3:1.5,.8,1.5), wg=new THREE.CylinderGeometry(.35,.35,.18,18); wg.rotateX(Math.PI/2);
+    for(const sg of [-1,1]){ const h=hinge('gear',X(gx),-.72,sg*gz,[1,0,0]); h.userData.fold=sg*Math.PI/2; add(new THREE.CylinderGeometry(.06,.06,.68,8),steel,0,-.34,0,h); add(wg,black,0,-.68,0,h);
+      add(new THREE.BoxGeometry(.5,.62,.02),body,-.05,-.36,sg*.14,h); }
+    const th=hinge('gear',X(Lf-.6),-.1,0,[0,0,1]); th.userData.fold=-Math.PI/2; const tw=new THREE.Group(); tw.position.set(-X(Lf-.6),.1,0); th.add(tw); tailWheel(tw); }
+  // parked: the tail settles until the tail wheel touches the ground the main wheels stand on
+  grp.userData.park={x:X(gx),y:G.ground,ang:Math.atan2(-.6-G.ground,(Lf-.65)-gx)};
   if(zh){ grp.updateMatrixWorld(true); for(const c of grp.children.slice()) if(c.name!=='fold'&&Math.abs(c.position.z)>zh-.05) folds[Math.sign(c.position.z)].attach(c);
     if(opt.fold) setFold([folds[-1],folds[1]],opt.fold); }
-  if(q===2) grp.traverse(o=>{ if(o.isMesh&&!o.material.transparent){ o.castShadow=true; o.receiveShadow=true; } });
+  if(q===2) grp.traverse(o=>{ if(o.isMesh&&!o.material.transparent&&o.material.side!==THREE.BackSide){ o.castShadow=true; o.receiveShadow=true; } });
   // a zero-length or broken normal (a pointed tip, a squashed panel) turns into NaN in the shader and paints the whole part black
   grp.traverse(o=>{ const n=o.geometry&&o.geometry.attributes.normal; if(!n||o.geometry.userData.nOK) return; o.geometry.userData.nOK=true; const a=n.array;
     for(let i=0;i<a.length;i+=3){ const l=Math.hypot(a[i],a[i+1],a[i+2]); if(!(l>1e-6)){ a[i]=0; a[i+1]=1; a[i+2]=0; } else if(Math.abs(l-1)>1e-3){ a[i]/=l; a[i+1]/=l; a[i+2]/=l; } } n.needsUpdate=true; });
@@ -2820,9 +2881,9 @@ function glOK(R){ try{ const gl=R.getContext(); return R.info.programs.every(p=>
 function glCheck(R,rebuild){ if(S.gfxSafe||glOK(R)) return; S.gfxSafe=true; save(); toast('This graphics chip could not draw the full 3D shading, so simpler shading is now on.'); rebuild(); }
 // The moving parts of a built aircraft, found by name, so clones can be animated.
 function animParts(root){
-  const a={props:[],discs:[],glows:[],flash:[],ail:[],elev:[],rud:[],gear:[],fold:[]};
-  root.traverse(o=>{ const k={prop:'props',pdisc:'discs',glow:'glows',flash:'flash',ail:'ail',elev:'elev',rud:'rud',gear:'gear',fold:'fold'}[o.name]; if(k) a[k].push(o); });
-  for(const o of [...a.ail,...a.elev,...a.rud,...a.gear]) o.userData.ax=new THREE.Vector3().fromArray(o.userData.axis);
+  const a={props:[],discs:[],glows:[],flash:[],ail:[],elev:[],rud:[],gear:[],fold:[],bay:[]};
+  root.traverse(o=>{ const k={prop:'props',pdisc:'discs',glow:'glows',flash:'flash',ail:'ail',elev:'elev',rud:'rud',gear:'gear',fold:'fold',bay:'bay'}[o.name]; if(k) a[k].push(o); });
+  for(const o of [...a.ail,...a.elev,...a.rud,...a.gear,...a.bay]) o.userData.ax=new THREE.Vector3().fromArray(o.userData.axis);
   return a;
 }
 // Fold or spread the wings: t runs from 0 (spread) to 1 (folded).
@@ -3008,10 +3069,7 @@ function setSquad(){ [RIVAL_N,MAX_N]=SQUADS[S.squad]||SQUADS.m; }
 // Machines that are no match one for one come in greater numbers.
 const rivalN=r=>Math.round(RIVAL_N*(r.n||1));
 setSquad();
-// Once an engine is a few years old, spares and new airframes get scarce, and each further year adds to the cost of fielding the type.
-const OBSOLETE={ww1:[1,.6],ww2:[2.5,.5],super:[4,.7]};   // years before an engine counts as old, and the cost added for each year after
-const ageFactor=(d,when)=>{ const E=part('engine',d.engine), [grace,rate]=OBSOLETE[ERA.id], yrs=when-E.from-grace; return yrs>0?Math.min(5,1+rate*yrs):1; };
-const fieldCost=(d,when)=>compute(d).cost*ageFactor(d,when);
+const fieldCost=(d,when)=>compute(d).cost;
 // Numbers count for more than their price (a bigger squadron wins by more than its share), so size follows cost less than one for one.
 const squadSize=(d,r)=>clamp(Math.floor(RIVAL_N*Math.pow(fieldCost(r.d,r.date)/fieldCost(d,r.date),.8)+1e-9),1,MAX_N);
 function startSortie(i,custom){
@@ -3346,6 +3404,14 @@ const DROPS=[
     'A ship consumed by fire no longer turns black all at once: the black spreads out from her worst fire and reaches the whole ship over about five minutes. Both use the same blackening.',
     'Fixed: a carrier whose magazine blew up broke the 3D view (and could throw you back to the chart), because her flight deck could not be cut in two.',
   ]},
+  {at:'2026-11-22T19:42:00+13:00',items:[
+    'Aircraft in 3D are now built from the drawing office’s own blueprint: the same side outline, the same plan width, wings, tail, canopy, gear and guns, so a design looks the same in 3D as on paper, and in the carrier’s 3D view as in the drawing office.',
+    'Every crew member has a seat you can see. A power turret is the gunner’s seat, with the gunner in it, instead of an extra cockpit in front of it.',
+    'A bomb bay now takes up room. Its load fills the lower fuselage where fuel would go, so the fuselage holds less fuel; a torpedo needs a bulged belly; and the load has to fit between the engine and the tail, so long torpedoes rarely go inside.',
+    'In 3D, aircraft with a bomb bay have a button to open its doors and see what they carry. Gravity lets the tail settle onto its wheel, as she would sit parked. Sizes start off, and the camera and dock buttons are gone.',
+    'Every torpedo’s description gives its weight and its warhead, every bomb and torpedo shows the year it came in, and they are listed lightest first. The early Mk 13 comes in 1938 and the Torpex Mk 13 in 1944; neither changes as the war goes on.',
+    'An aircraft no longer costs more to field once its engine is a few years old.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -3357,8 +3423,7 @@ $('#logclose').addEventListener('click',logShut);
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('#logd').hidden) logShut(); });
 
 /* ---------- 3D viewer: the current design on its own, painted, at High detail ---------- */
-const VW3={r:null,open:false,yaw:-.7,pitch:.35,dist:1,drag:null,pinch:null,spin:true,sizes:true,xray:false,rival:false,gearUp:false,gearT:0,dock:false,key:'',to:null,last:0};
-const VCAM={q:[-.7,.35],f:[0,.06],s:[Math.PI/2,.04],t:[Math.PI/2,1.45]};
+const VW3={r:null,open:false,yaw:-.7,pitch:.35,dist:1,drag:null,pinch:null,spin:true,sizes:false,grav:false,gravA:0,gravV:0,bayOpen:false,bayT:0,xray:false,rival:false,gearUp:false,gearT:0,dock:false,key:'',to:null,last:0};
 function textSprite(txt,h,bg){
   const c=document.createElement('canvas'), g=c.getContext('2d'), font='600 40px "IBM Plex Mono", monospace'; g.font=font; const w=Math.ceil(g.measureText(txt).width)+28;
   c.width=w; c.height=60; g.font=font; g.fillStyle=bg||'rgba(16,35,63,.88)'; g.fillRect(0,0,w,60); g.fillStyle='#EEF2F5'; g.textBaseline='middle'; g.fillText(txt,14,32);
@@ -4183,12 +4248,11 @@ function shipCollide(dt){ const R=TR, B=shipBodies(), t=R.t; R.contacts=R.contac
 // they failed: sank on entry, ran off course, ran too deep, or hit and did not go off. The Mk 13 was notorious until late 1943.
 const TORPS={t18:{wh:176,kn:40,dropKn:120,dropH:20,rd:900,fail:{sank:.05,erratic:.04,dud:.03}},
   t91:{wh:225,kn:42,dropKn:180,dropH:100,rd:1000,fail:{sank:.03,erratic:.03,dud:.02}},
-  t13:{wh:300,kn:33.5,dropKn:110,dropH:15,rd:800,fail:{sank:.08,erratic:.06,deep:.16,dud:.14},
-    late:{dropKn:260,dropH:240,fail:{sank:.03,erratic:.02,deep:.02,dud:.02}}},
+  t13:{wh:300,kn:33.5,dropKn:110,dropH:15,rd:800,fail:{sank:.08,erratic:.06,deep:.16,dud:.14}},
+  t13t:{wh:360,kn:33.5,dropKn:280,dropH:240,rd:900,fail:{sank:.02,erratic:.02,deep:.02,dud:.02}},
   t91m3:{wh:240,kn:42,dropKn:260,dropH:150,rd:1000,fail:{sank:.02,erratic:.03,dud:.02}},
-  t91m7:{wh:420,kn:41,dropKn:260,dropH:150,rd:1000,fail:{sank:.02,erratic:.03,dud:.02}},
-  t13t:{wh:360,kn:33.5,dropKn:280,dropH:240,rd:900,fail:{sank:.02,erratic:.02,deep:.02,dud:.02}}};
-const torpOf=d=>{ const k=part('load',d.load).id, b=TORPS[k]; if(!b) return null; return b.late&&techDate()>=1943.9?Object.assign({},b,b.late):b; };
+  t91m7:{wh:420,kn:41,dropKn:260,dropH:150,rd:1000,fail:{sank:.02,erratic:.03,dud:.02}}};
+const torpOf=d=>{ const k=part('load',d.load).id, b=TORPS[k]; if(!b) return null; return b; };
 const loadKind=p=>(part('load',p.d.load)||{}).kind||'';
 // How far through deck armour a bomb goes, in mm, from its weight, how hard-nosed it is, and how fast it is falling when it arrives.
 const BOMBK={b113:.75,b250:.8,b500:.85,b250s:1.15,b500s:1.2,b726:1.7,b800:1.8,b900:.9};
@@ -5022,7 +5086,7 @@ function tr3Build(){
   // funnel smoke: puffs that drift away on the true wind as she steams on
   const stx=smokeTexture(), puffs=[]; for(let i=0;i<70;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0x5d6266,transparent:true,depthWrite:false,opacity:0,fog:true})); s.visible=false; sc.add(s); puffs.push({s,t0:-1e9}); }
   // aircraft: one model per design, cloned for each aircraft, gear down, and the height that puts its wheels on the deck
-  const tpl=new Map(); TR3.planeTpl=d=>{ const k=d.name; if(!tpl.has(k)){ const g=meshFor({design:d,st:compute(d)},0,{gear:true}); g.traverse(o=>{ if(o.name==='glow'||o.name==='flash') o.visible=false; });
+  const tpl=new Map(); TR3.planeTpl=d=>{ const k=d.name; if(!tpl.has(k)){ const g=meshFor({design:d,st:compute(d)},1,{gear:true}); g.traverse(o=>{ if(o.name==='glow'||o.name==='flash') o.visible=false; });
       g.updateMatrixWorld(true); const b=new THREE.Box3().setFromObject(g); tpl.set(k,{g,h:-b.min.y+.05}); }
     const T=tpl.get(k), o=T.g.clone(); o.rotation.order='YZX'; return {o,h:T.h,an:animParts(o),fold:-1,gear:0,vis:false}; };
   const th0=(90-R.ship.hdg)*DEG;
@@ -5758,7 +5822,7 @@ function viewerBuild(){
   // centre the model, with the floor just under the wheels
   setHinges(an.gear,0); model.updateMatrixWorld(true);
   const box=new THREE.Box3().setFromObject(model), size=box.getSize(new THREE.Vector3()), ctr=box.getCenter(new THREE.Vector3()), off=ctr.clone().negate();
-  model.position.copy(off); scene.add(model);
+  const pk=model.userData.park, pose=new THREE.Group(); pose.position.set(off.x+pk.x,off.y+pk.y,off.z); model.position.set(-pk.x,-pk.y,0); pose.add(model); scene.add(pose); pose.rotation.z=VW3.gravA;
   const fy=-size.y/2-.02, span=Math.max(size.x,size.z), Xm=m=>d.fusLen*.5-m+off.x;
   // studio floor: a soft pool of light and the aircraft's shadow
   const fl=document.createElement('canvas'); fl.width=fl.height=256; { const g=fl.getContext('2d'), gr=g.createRadialGradient(128,128,8,128,128,128);
@@ -5790,7 +5854,7 @@ function viewerBuild(){
     ghost.traverse(o=>{ if(o.isMesh) o.material=gm; if(o.name==='glow'||o.name==='flash') o.visible=false; });
     ghost.position.copy(off).add(new THREE.Vector3((d.fusLen-r.d.fusLen)*.5,0,0)); ghost.visible=VW3.rival; scene.add(ghost); }
   VW3.rivalName=r?(r.d.name||r.title):'';
-  VW3.scene=scene; VW3.model=model; VW3.an=an; VW3.sizesG=sizes; VW3.xr=xr; VW3.ghost=ghost; VW3.span=span; VW3.retract=retract;
+  VW3.scene=scene; VW3.model=model; VW3.pose=pose; VW3.parkA=pk.ang; VW3.an=an; VW3.sizesG=sizes; VW3.xr=xr; VW3.ghost=ghost; VW3.span=span; VW3.retract=retract;
   if(!VW3.camera||VW3.dist<=0||!VW3.built){ VW3.dist=span*1.25; }
   VW3.built=true;
   VW3.camera=VW3.camera||new THREE.PerspectiveCamera(40,1,.1,span*20); VW3.camera.far=span*20; VW3.camera.updateProjectionMatrix();
@@ -5798,6 +5862,7 @@ function viewerBuild(){
   $('#vgear').hidden=!retract; $('#vgear').textContent=VW3.gearUp?'Gear down':'Gear up';
   VW3.canFold=an.fold.length>0; $('#vfold').hidden=!VW3.canFold; $('#vfold').setAttribute('aria-pressed',String(!!VW3.folded)); setFold(an.fold,VW3.foldT||0);
   $('#vrival').hidden=!r;
+  $('#vbay').hidden=!an.bay.length; if(!an.bay.length){ VW3.bayOpen=false; VW3.bayT=0; } $('#vbay').textContent=VW3.bayOpen?'Close bomb bay':'Open bomb bay'; $('#vbay').setAttribute('aria-pressed',String(VW3.bayOpen));
   $('#vtitle').textContent=`${d.name||'Untitled'} · span ${f1(d.span)} m · length ${f1(d.fusLen)} m · ${f0(st.mass)} kg`;
   viewerKey();
 }
@@ -5828,25 +5893,26 @@ function viewerFrame(){
   setHinges(an.ail,Math.sin(now*1.3)*.3); setHinges(an.elev,Math.sin(now*.9)*.2); setHinges(an.rud,Math.sin(now*.7)*.25);
   VW3.gearT=clamp(VW3.gearT+(VW3.gearUp?1:-1)*dt/1.6,0,1); const e=VW3.gearT*VW3.gearT*(3-2*VW3.gearT);
   setHinges(an.gear,o=>o.userData.fold*e);
+  VW3.bayT=clamp(VW3.bayT+(VW3.bayOpen?1:-1)*dt/1.1,0,1); { const b=VW3.bayT*VW3.bayT*(3-2*VW3.bayT); setHinges(an.bay,o=>o.userData.fold*b); }
+  // Gravity: with the wheels down the tail falls onto its wheel, a little faster as it goes, and bumps to rest; off, it is lifted level
+  { const down=VW3.grav&&!VW3.gearUp&&VW3.gearT<.02, tgt=down?VW3.parkA:0;
+    if(down&&VW3.gravA<tgt){ VW3.gravV+=1.3*dt; VW3.gravA+=VW3.gravV*dt; if(VW3.gravA>=tgt){ VW3.gravA=tgt; VW3.gravV=VW3.gravV>.06?-VW3.gravV*.22:0; } }
+    else if(down&&VW3.gravV<0){ VW3.gravA+=VW3.gravV*dt; VW3.gravV+=1.3*dt; if(VW3.gravA>=tgt){ VW3.gravA=tgt; VW3.gravV=0; } }
+    else { VW3.gravV=0; VW3.gravA+=(tgt-VW3.gravA)*Math.min(1,dt*2.5); }
+    if(VW3.pose) VW3.pose.rotation.z=VW3.gravA; }
   if(an.fold.length){ const ft=Math.max(1.5,Math.min(5,(part('fold',S.design.fold).time||12)/6)); VW3.foldT=clamp((VW3.foldT||0)+(VW3.folded?1:-1)*dt/ft,0,1); setFold(an.fold,VW3.foldT*VW3.foldT*(3-2*VW3.foldT)); }
   const c=VW3.camera, D=VW3.dist;
   c.position.set(D*Math.cos(VW3.pitch)*Math.cos(VW3.yaw),D*Math.sin(VW3.pitch),D*Math.cos(VW3.pitch)*Math.sin(VW3.yaw)); c.lookAt(0,0,0);
   try{ R.render(VW3.scene,c); if(!VW3.glChecked){ VW3.glChecked=true; glCheck(R,()=>{ VW3.key=''; }); } }catch(e){ console.error(e); } requestAnimationFrame(viewerFrame);
 }
-function setDock(on){
-  VW3.dock=on; const v=$('#viewer'); v.classList.toggle('docked',on); v.setAttribute('aria-modal',on?'false':'true');
-  $('#vdock').setAttribute('aria-pressed',on); $('#vdock').textContent=on?'Full screen':'Dock';
-  $('#vhint').textContent=on?'Change the design and the model updates · drag to turn it':'Drag to turn it · scroll or pinch to zoom · Esc to close';
-}
 function openViewer(){
   if(!window.THREE) return;
   if(!VW3.r){ try{ VW3.r=new THREE.WebGLRenderer({canvas:$('#v3'),antialias:true}); VW3.r.setPixelRatio(Math.min(2,window.devicePixelRatio||1)); VW3.r.shadowMap.enabled=true; VW3.r.shadowMap.type=THREE.PCFSoftShadowMap; guardGL($('#v3'),()=>{ VW3.key=''; }); }catch(e){ toast('3D is not available in this browser.'); return; } }
-  $('#viewer').hidden=false; VW3.open=true; VW3.built=false; VW3.last=0; VW3.gearT=VW3.gearUp?1:0; setDock(VW3.dock); viewerBuild(); requestAnimationFrame(viewerFrame); $('#vclose').focus();
+  $('#viewer').hidden=false; VW3.open=true; VW3.built=false; VW3.last=0; VW3.gearT=VW3.gearUp?1:0; viewerBuild(); requestAnimationFrame(viewerFrame); $('#vclose').focus();
 }
 function closeViewer(){ VW3.open=false; $('#viewer').hidden=true; $('#view3d').focus(); }
 $('#view3d').addEventListener('click',openViewer);
 $('#vclose').addEventListener('click',closeViewer);
-document.querySelectorAll('[data-vcam]').forEach(b=>b.addEventListener('click',()=>{ VW3.to=VCAM[b.dataset.vcam].slice(); VW3.spin=false; $('#vspin').setAttribute('aria-pressed',false); }));
 $('#vspin').addEventListener('click',()=>{ VW3.spin=!VW3.spin; VW3.to=null; $('#vspin').setAttribute('aria-pressed',VW3.spin); });
 $('#vsize').addEventListener('click',()=>{ VW3.sizes=!VW3.sizes; if(VW3.sizesG) VW3.sizesG.visible=VW3.sizes; $('#vsize').setAttribute('aria-pressed',VW3.sizes); });
 $('#vxray').addEventListener('click',()=>{ setXray(!VW3.xray); viewerKey(); });
@@ -5854,7 +5920,8 @@ $('#vrival').addEventListener('click',()=>{ VW3.rival=!VW3.rival; if(VW3.ghost) 
 $('#vengine').addEventListener('click',()=>{ VW3.engine=!VW3.engine; $('#vengine').setAttribute('aria-pressed',String(VW3.engine)); });
 $('#vgear').addEventListener('click',()=>{ VW3.gearUp=!VW3.gearUp; $('#vgear').textContent=VW3.gearUp?'Gear down':'Gear up'; });
 $('#vfold').addEventListener('click',()=>{ VW3.folded=!VW3.folded; $('#vfold').setAttribute('aria-pressed',String(VW3.folded)); });
-$('#vdock').addEventListener('click',()=>setDock(!VW3.dock));
+$('#vgrav').addEventListener('click',()=>{ VW3.grav=!VW3.grav; $('#vgrav').setAttribute('aria-pressed',String(VW3.grav)); });
+$('#vbay').addEventListener('click',()=>{ VW3.bayOpen=!VW3.bayOpen; $('#vbay').setAttribute('aria-pressed',String(VW3.bayOpen)); $('#vbay').textContent=VW3.bayOpen?'Close bomb bay':'Open bomb bay'; });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&VW3.open) closeViewer(); });
 { const cv=$('#v3'), pts=new Map();
   cv.addEventListener('pointerdown',e=>{ VW3.to=null; cv.setPointerCapture(e.pointerId); pts.set(e.pointerId,[e.clientX,e.clientY]); VW3.drag=pts.size===1?[e.clientX,e.clientY]:null; cv.style.cursor='grabbing'; });
