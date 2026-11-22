@@ -641,6 +641,7 @@ const PARTS2={
     {id:'rect',name:'Constant chord',note:'Cheap and simple to build. Wasteful tips.',from:1935.0,e:.9,roll:1,labour:1,drag:.01},
     {id:'taper',name:'Straight taper',note:'Narrows towards the tips. Good all round and easy to build.',from:1935.0,e:.95,roll:1.05,labour:1.1,drag:0},
     {id:'ellip',name:'Elliptical',note:'Least induced drag and a gentle stall. Slow to build and heavy to roll.',from:1936.2,e:1,roll:.85,labour:1.35,drag:0},
+    {id:'gull',name:'Inverted gull wing',note:'Bent down from the root to a knee, then up, as on the Corsair. The wheels hang from the knee on short, light legs: the deeper the knee, the lighter they are. Heavy and slow to build. Monoplanes only.',from:1940.0,e:.95,roll:1,labour:1.3,drag:0,mono:true},
   ],
   airfoil:[
     {id:'std',name:'Conventional section',note:'NACA-type section. Forgiving at the stall.',from:1935.0,cl:1.45,cd:.006,depth:.13},
@@ -804,9 +805,9 @@ Object.assign(PARTS2,{
   fold:[
     {id:'none',name:'Fixed wings',note:'Lightest and cheapest, but takes the most hangar space.',from:1935.0,cost:0,kg:0,mf:0,time:0},
     {id:'tips',name:'Folding wingtips',note:'Only the outer half-metre on each side folds up, just enough to fit the lifts.',from:1935.0,cost:80,kg:10,mf:.01,time:15,mono:true},
-    {id:'up',name:'Upward fold, by hand',note:'The outer wings swing up over the cockpit. Deck crews fold them, which takes about a minute. Makes it taller.',from:1935.0,cost:250,kg:15,mf:.05,time:60},
+    {id:'up',name:'Upward fold, by hand',note:'The outer wings swing up over the cockpit. Deck crews fold them, which takes about a minute. Makes it taller. Monoplanes only.',from:1935.0,cost:250,kg:15,mf:.05,time:60,mono:true},
     {id:'back',name:'Rearward fold, by hand',note:'The wings swing back along the fuselage. No taller, but a minute of work for the deck crew.',from:1935.0,cost:300,kg:20,mf:.06,time:60},
-    {id:'uph',name:'Upward fold, hydraulic',note:'The pilot folds the wings from the cockpit in seconds. Heavier. Makes it taller.',from:1937.0,cost:500,kg:35,mf:.07,time:12},
+    {id:'uph',name:'Upward fold, hydraulic',note:'The pilot folds the wings from the cockpit in seconds. Heavier. Makes it taller. Monoplanes only.',from:1937.0,cost:500,kg:35,mf:.07,time:12,mono:true},
     {id:'sto',name:'Sto-Wing, hydraulic',note:'A skewed hinge twists each wing back flat alongside the fuselage. Very compact. Monoplanes only.',from:1941.5,cost:700,kg:45,mf:.08,time:15,mono:true},
   ],
   drop:[
@@ -816,11 +817,17 @@ Object.assign(PARTS2,{
     {id:'d570',name:'Drop tank, 570 L',note:'A 150-gallon tank. A long take-off run when full.',from:1942.5,L:570,mass:45,cost:120},
   ],
 });
+// The deepest knee an inverted gull wing can have: the bend no steeper than 22 degrees, the knee's underside above the wheel it
+// carries, and its trailing edge clear of the deck when she is parked tail-down. A deeper chord or a steeper sit allows less.
+function kneeMax(d){ const zb=d.span/2*.36, A=part('airfoil',d.airfoil), tc=A?A.depth:.13, w=chordAt('taper',d.chord,.36), low=.24*tc*w.c, gx=d.wingPos+.25,
+    ang=Math.min(15*DEG,Math.atan2(1.15,Math.max(.5,d.fusLen-.65-gx))), dx=Math.max(0,d.wingPos+w.le+w.c-gx);
+  return Math.max(.1,Math.floor(Math.min(.6,zb*Math.tan(22*DEG),.5-low,1.25-low-(.07+dx*Math.sin(ang))/Math.cos(ang))*100)/100); }
+const kneeOf=d=>d.planform==='gull'?Math.min(d.knee??.4,kneeMax(d)):0;
 const FOLD_HINGE=d=>['up','back','uph','sto'].includes(d.fold);
 // Fill in the carrier fields on a design from before they existed, or a rival written without them.
 function navalise(d){
-  const def={role:'fighter',crew:'c1',rear:'none',load:'none',stow:'ext',brakes:'none',flaps:'split',fold:'none',foldIn:4.6,drop:'none'};
-  for(const k in def) if(d[k]==null||!(k==='foldIn'||part(k,d[k]))) d[k]=def[k];
+  const def={role:'fighter',crew:'c1',rear:'none',load:'none',stow:'ext',brakes:'none',flaps:'split',fold:'none',foldIn:4.6,knee:.4,drop:'none'};
+  for(const k in def) if(d[k]==null||!(k==='foldIn'||k==='knee'||part(k,d[k]))) d[k]=def[k];
   if(d.roleWas==null) d.roleWas=d.role;
   return d;
 }
@@ -841,6 +848,7 @@ const DIMS2=[
   {k:'span',label:'Wingspan',unit:'m',min:8.5,max:17,step:.1,hint:'Tip to tip. Clipped wings roll faster.'},
   {k:'chord',label:'Mean chord',unit:'m',min:1.3,max:3.0,step:.05,hint:'Average width of the wing, front to back.'},
   {k:'gap',label:'Wing gap',unit:'m',min:.9,max:1.6,step:.05,multi:true,hint:'Height between the wings.'},
+  {k:'knee',label:'Knee depth',unit:'m',min:.1,max:.6,step:.01,gull:true,maxOf:d=>kneeMax(d),hint:'How far an inverted gull wing drops to its knee, where the wheels hang. Deeper gives shorter, lighter legs. It cannot go so deep that the knee would touch the deck: a deeper chord, or a fuselage that sits more steeply tail-down, allows less.'},
   {k:'wingPos',label:'Wing position',unit:'m',min:1.6,max:3.6,step:.05,hint:'Wing-root leading edge, measured back from the spinner.'},
   {k:'foldIn',label:'Distance between the fold hinges',unit:'m',min:2.4,max:16,step:.1,fold:true,maxOf:d=>Math.max(2.4,Math.floor((d.span-1)*10)/10),hint:'The folded aircraft is a little wider than this. Hinges further out keep the undercarriage and guns in the fixed centre section.'},
 ];
@@ -884,7 +892,7 @@ function compute2(d){
   add('wings',area*F.wkg*(bi?.65:1),d.wingPos+d.chord*.4);
   add('fuselage',d.fusLen*F.kgm,d.fusLen*.45);
   add('tail',d.tailArea*12,d.fusLen-.5);
-  const gearM=U.mass*(jet?1:Math.pow(prop/3.2,1.5)), wingM=area*F.wkg*(bi?.65:1);
+  const gearM=U.mass*(jet?1:Math.pow(prop/3.2,1.5))*(P.id==='gull'?1-.5*kneeOf(d):1), wingM=area*F.wkg*(bi?.65:1);
   add('undercarriage',gearM,d.wingPos+.3);
   add('canopy',C.mass,cockpit);
   add('pilot',95,cockpit);
@@ -1047,6 +1055,8 @@ function fixDesign2(d){
   if(d.crew==='c1') d.rear='none';
   if(d.stow==='bay'&&(d.load==='none'||d.fusLen<9.5||!bayFits(d))) d.stow='ext';
   if(part('fold',d.fold).mono&&part('layout',d.layout).wings>1) d.fold='none';
+  if(part('planform',d.planform).mono&&part('layout',d.layout).wings>1) d.planform='taper';
+  d.knee=Math.min(d.knee??.4,kneeMax(d));
   d.foldIn=Math.min(d.foldIn,Math.max(2.4,Math.floor((d.span-1)*10)/10));
   d.cockpitPos=Math.min(d.cockpitPos,d.fusLen-3.5-(part('crew',d.crew).n-1)*.9);
   d.fuelL=Math.min(d.fuelL,fuelCap(d));
@@ -1061,6 +1071,7 @@ function blocked2(cat,p,d){
   if(cat==='stow'&&p.id==='bay'&&!bayFits(d)) return 'Too long to fit inside: move the wing back or carry something shorter';
   if(cat==='load'&&d.stow==='bay'&&p.mass&&!bayFits(d,p.id)) return 'Too long for the bomb bay';
   if(cat==='fold'&&p.mono&&part('layout',d.layout).wings>1) return 'Monoplanes only';
+  if(cat==='planform'&&p.mono&&part('layout',d.layout).wings>1) return 'Monoplanes only';
   return '';
 }
 function controls2(){
@@ -1068,7 +1079,7 @@ function controls2(){
   return [
     `<section class="group"><h3>Role and crew</h3>${chips('role','Role')}${chips('crew','Crew')}${d.crew!=='c1'?chips('rear','Rear gun'):''}</section>`,
     `<section class="group"><h3>Wings</h3>${chips('layout','Layout')}${chips('planform','Planform')}${chips('airfoil','Wing section')}
-      <div class="dims">${DIMS.filter(x=>(!x.multi||bi)&&!x.fold).map(slider).join('')}</div></section>`,
+      <div class="dims">${DIMS.filter(x=>(!x.multi||bi)&&!x.fold&&(!x.gull||d.planform==='gull')).map(slider).join('')}</div></section>`,
     `<section class="group"><h3>Fuselage</h3>${chips('frame','Structure')}${chips('canopy','Cockpit')}${chips('gear','Undercarriage')}<div class="dims">${FUS.map(slider).join('')}</div></section>`,
     `<section class="group"><h3>Engine</h3>${chips('engine','Engine')}</section>`,
     `<section class="group"><h3>Weapons</h3>${chips('arm','Forward guns')}<div class="dims">${kinds.has('mg')?slider(SL2.ammo):''}${kinds.has('cannon')?slider(SL2.ammoC):''}</div>
@@ -1437,7 +1448,7 @@ function ghostGA(c,d,opt){
 function hatchRect(c,T,x,y,w,h){c.save(); c.beginPath(); c.rect(x,y,w,h); c.clip(); c.strokeStyle=T.bad; c.globalAlpha=.75; c.lineWidth=1.2;
   c.beginPath(); for(let i=-h;i<w;i+=5){c.moveTo(x+i,y+h); c.lineTo(x+i+h,y);} c.stroke(); c.restore(); c.strokeStyle=T.bad; c.lineWidth=1.2; c.strokeRect(x,y,w,h);}
 // Chord at a fraction f of the half-span, and how far its leading edge sits behind the root's (straight quarter-chord line).
-function chordAt(pf,ch,f){ const cr=pf==='rect'?ch:pf==='taper'?ch*1.3:ch*1.273, c=pf==='rect'?ch:pf==='taper'?ch*(1.3-.6*f):ch*1.273*Math.sqrt(Math.max(0,1-f*f)); return {c,le:(cr-c)*.25,cr}; }
+function chordAt(pf,ch,f){ const tp=pf==='taper'||pf==='gull', cr=pf==='rect'?ch:tp?ch*1.3:ch*1.273, c=pf==='rect'?ch:tp?ch*(1.3-.6*f):ch*1.273*Math.sqrt(Math.max(0,1-f*f)); return {c,le:(cr-c)*.25,cr}; }
 function paintGA2(c,d,opt){
   const T=tokens(), st=compute(d), L=part('layout',d.layout), A=part('airfoil',d.airfoil), E=part('engine',d.engine), G=part('arm',d.arm); const jetE=E.type==='jet';
   const s=opt.plan?ERA.ga.plan:ERA.ga.side, len=d.fusLen, body=opt.body, ink=T.ink, radial=E.type==='radial', bi=L.wings===2, ck=st.cockpit, el=st.engLen;
@@ -1455,9 +1466,9 @@ function paintGA2(c,d,opt){
   const gx=d.wingPos+.25;
   if(d.gear==='fixed'){ c.strokeStyle=ink; c.lineWidth=2.4; c.beginPath(); c.moveTo(X(gx+.15),Y(-.75)); c.lineTo(X(gx),Y(-1.3)); c.stroke();
     c.fillStyle=T.paper; c.lineWidth=2.2; c.beginPath(); c.arc(X(gx),Y(-1.4),.35*s,0,TAU); c.fill(); c.stroke();
-    c.fillStyle=body; c.lineWidth=1.4; c.beginPath(); c.ellipse(X(gx),Y(-1.38),.6*s,.4*s,0,0,TAU); c.fill(); c.stroke(); }
+    c.fillStyle=body; c.lineWidth=1.4; c.beginPath(); c.ellipse(X(gx),Y(-1.34),.58*s,.3*s,0,0,TAU); c.fill(); c.stroke(); }
   else { c.setLineDash([3,3]); c.strokeStyle=T.muted; c.lineWidth=1.2; c.beginPath(); c.arc(X(gx+.2),Y(-.45),.3*s,0,TAU); c.stroke(); c.setLineDash([]); }
-  c.strokeStyle=ink; c.lineWidth=1.6; c.beginPath(); c.moveTo(X(len-.6),Y(-.1)); c.lineTo(X(len-.65),Y(-.42)); c.stroke(); c.beginPath(); c.arc(X(len-.65),Y(-.5),.1*s,0,TAU); c.stroke();
+  c.strokeStyle=ink; c.lineWidth=1.6; c.beginPath(); c.moveTo(X(len-.6),Y(-.1)); c.lineTo(X(len-.65),Y(G2.park.tw+.18)); c.stroke(); c.beginPath(); c.arc(X(len-.65),Y(G2.park.tw+.1),.1*s,0,TAU); c.stroke();
   // biplane struts
   if(bi){ c.lineWidth=1.8; c.strokeStyle=ink;
     for(const fr of [.25,.75]){ c.beginPath(); c.moveTo(X(wings[0].le+wings[0].ch*fr),Y(wings[0].y)); c.lineTo(X(low.le+low.ch*fr),Y(low.y)); c.stroke(); }
@@ -1513,7 +1524,7 @@ function paintGA2(c,d,opt){
   if(G2.gun){ const g=G2.gun; c.strokeStyle=ink; c.lineWidth=g.heavy?2.6:1.8; c.beginPath(); c.moveTo(X(g.a[0]),Y(g.a[1])); c.lineTo(X(g.b[0]),Y(g.b[1])); c.stroke(); }
   // guns
   for(const b of G.banks){ const cannon=GUN[b.g].k==='cannon'; c.strokeStyle=ink; c.lineWidth=cannon?3:1.8; c.beginPath();
-    if(b.at==='cowl'){ c.moveTo(X(el-.2),Y(top-.06)); c.lineTo(X(.25),Y(nose+.02)); }
+    if(b.at==='cowl'){ c.moveTo(X(el-.2),Y(G2.cowlY)); c.lineTo(X(.25),Y(G2.cowlY)); }
     else if(b.at==='hub'){ c.moveTo(X(.3),Y(0)); c.lineTo(X(-.55),Y(0)); }
     else { c.moveTo(X(low.le+.3),Y(low.y-.04)); c.lineTo(X(low.le-(cannon?.55:.25)),Y(low.y-.04)); }
     c.stroke(); }
@@ -1522,7 +1533,7 @@ function paintGA2(c,d,opt){
   c.fillStyle=body; c.strokeStyle=ink; c.lineWidth=1.8;
   c.beginPath(); c.moveTo(X(len-tl-.2),Y(.26)); c.quadraticCurveTo(X(len-.5),Y(.28+fh),X(len-.05),Y(.22+fh)); c.lineTo(X(len+.08),Y(-.12)); c.lineTo(X(len),Y(-.04)); c.closePath(); c.fill(); c.stroke();
   c.beginPath(); c.moveTo(X(len-tl),Y(.06)); c.lineTo(X(len+.05),Y(.06)); c.stroke();
-  c.lineWidth=1.6; c.beginPath(); c.moveTo(X(len-1.5),Y(-.35)); c.lineTo(X(len-.55),Y(-.62)); c.stroke();   // arrester hook
+  c.lineWidth=1.6; c.beginPath(); c.moveTo(X(G2.hook.a[0]),Y(G2.hook.a[1])); c.lineTo(X(G2.hook.b[0]),Y(G2.hook.b[1])); c.stroke();   // arrester hook, stowed
   c.fillStyle=opt.mark; c.beginPath(); c.arc(X(len*.62),Y(.05),.28*s,0,TAU); c.fill();
   // wings last
   for(const w of wings){ const dep=A.depth*w.ch, xl=X(w.le), xt=X(w.le+w.ch), yy=Y(w.y);
@@ -1552,8 +1563,8 @@ function paintGA2(c,d,opt){
     for(let i=0;i<=n;i++){ const f=pf==='ellip'?Math.sin(i/n*Math.PI/2):i/n, w=chordAt(pf,ch,f); pts.push([f*d.span/2,le+w.le,le+w.le+Math.max(w.c,.05)]); }
     c.beginPath(); pts.forEach(([x,a],i)=>i?c.lineTo(PX(x),PY(a)):c.moveTo(PX(x),PY(a))); for(let i=pts.length-1;i>=0;i--) c.lineTo(PX(pts[i][0]),PY(pts[i][2]));
     for(let i=0;i<pts.length;i++) c.lineTo(PX(-pts[i][0]),PY(pts[i][2])); for(let i=pts.length-1;i>=0;i--) c.lineTo(PX(-pts[i][0]),PY(pts[i][1])); c.closePath(); };
-  const pf=bi?'rect':d.planform;
-  if(bi){ wingPath(d.wingPos,d.chord*.9,'rect'); c.fillStyle=body; c.globalAlpha=.5; c.fill(); c.globalAlpha=1; c.setLineDash([5,4]); c.strokeStyle=ink; c.lineWidth=1; c.stroke(); c.setLineDash([]); }
+  const pf=d.planform==='gull'&&bi?'taper':d.planform;
+  if(bi){ wingPath(d.wingPos,d.chord*.9,pf); c.fillStyle=body; c.globalAlpha=.5; c.fill(); c.globalAlpha=1; c.setLineDash([5,4]); c.strokeStyle=ink; c.lineWidth=1; c.stroke(); c.setLineDash([]); }
   const wl=bi?d.wingPos-.25:d.wingPos;
   wingPath(wl,d.chord,pf); c.fillStyle=body; c.fill(); c.strokeStyle=ink; c.lineWidth=1.6; c.stroke();
   // ailerons and roundels
@@ -2626,11 +2637,11 @@ function panelTexture(pd,src){
 const naca=(x,t)=>5*t*(.2969*Math.sqrt(Math.max(0,x))-.126*x-.3516*x*x+.2843*x*x*x-.1015*x*x*x*x);
 // A wing with a real section: thickness from a NACA-style profile, a rounded leading edge, dihedral and closed tips.
 function wingGeo(s,X,tc,dih,P,only,cam=0){
-  const secs=only||[...s.slice(1).reverse().map(q=>[-q[0],q[1],q[2]]),...s], tn=Math.tan(dih), half=s[s.length-1][0]||1, pos=[], uv=[], idx=[];
+  const secs=only||[...s.slice(1).reverse().map(q=>[-q[0],q[1],q[2]]),...s], dyF=typeof dih==='function'?dih:(z=>z*Math.tan(dih)), half=s[s.length-1][0]||1, pos=[], uv=[], idx=[];
   const ring=[]; for(let k=0;k<P;k++){ const th=k/P*TAU, x=(1+Math.cos(th))/2; ring.push([x,(Math.sin(th)>=0?1:-1)*naca(x,tc)]); }
-  secs.forEach(([z,le,te])=>{ const c=Math.max(.05,te-le), dy=Math.abs(z)*tn; ring.forEach(([x,y],k)=>{ pos.push(X(le+x*c),y*c+cam*c*4*x*(1-x)+dy,z); uv.push((z/half+1)*.5,k/P); }); });
+  secs.forEach(([z,le,te])=>{ const c=Math.max(.05,te-le), dy=dyF(Math.abs(z)); ring.forEach(([x,y],k)=>{ pos.push(X(le+x*c),y*c+cam*c*4*x*(1-x)+dy,z); uv.push((z/half+1)*.5,k/P); }); });
   for(let j=0;j<secs.length-1;j++) for(let k=0;k<P;k++){ const a=j*P+k, b=j*P+(k+1)%P, c=a+P, e=b+P; idx.push(a,c,b,b,c,e); }
-  for(const j of [0,secs.length-1]){ const [z,le,te]=secs[j], ci=pos.length/3; pos.push(X((le+te)/2),Math.abs(z)*tn+cam*(te-le),z); uv.push(j?1:0,.5); for(let k=0;k<P;k++) idx.push(ci,j*P+k,j*P+(k+1)%P); }
+  for(const j of [0,secs.length-1]){ const [z,le,te]=secs[j], ci=pos.length/3; pos.push(X((le+te)/2),dyF(Math.abs(z))+cam*(te-le),z); uv.push(j?1:0,.5); for(let k=0;k<P;k++) idx.push(ci,j*P+k,j*P+(k+1)%P); }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx); g.computeVertexNormals(); return g;
 }
 // The general arrangement as numbers: the outlines the drawing office draws, in metres back from the spinner (x) and up from the
@@ -2674,10 +2685,37 @@ function gaShape(d,st){
     const xs=[...new Set([...base.map(p=>p[0]),bay.x0-.5,bay.x0,bay.x1,bay.x1+1.2])].filter(x=>x>=0&&x<=len).sort((a,b)=>a-b);
     botL=xs.map(x=>{ const y=lerpPts(base,x); return [x,Math.min(y,y+(bay.bot-y)*bz(x))]; }); }
   const rootC=chordAt(d.planform,d.chord,0).cr;
-  const wings=bi?[{y:1.3,le:d.wingPos-.25,ch:d.chord,form:'rect',side:d.chord},{y:-.68,le:d.wingPos,ch:d.chord*.9,form:'rect',side:d.chord*.9}]:[{y:-.78,le:d.wingPos,ch:d.chord,form:d.planform,side:rootC}];
+  const pf=d.planform==='gull'&&bi?'taper':d.planform, gull=d.planform==='gull'&&!bi;
+  const wings=bi?[{y:1.3,le:d.wingPos-.25,ch:d.chord,form:pf,side:d.chord},{y:-.68,le:d.wingPos,ch:d.chord*.9,form:pf,side:d.chord*.9}]:[{y:gull?-.5:-.78,le:d.wingPos,ch:d.chord,form:pf,side:rootC,gull}];
   const gun=Rg.n&&nC>1?(tur?{a:[tur.x+.2,tur.y+.33],b:[tur.x+1.0,tur.y+.46],n:1,heavy:true}:{a:[gEnd-.35,.95],b:[gEnd+.5,1.1],n:Rg.n,heavy:Rg.g==='b50'}):null;
   const sq=Math.sqrt(d.tailArea), ts=sq*1.9, tc=d.tailArea*.6/ts*1.2;
-  return {len,ck,el,nC,radial,jet,bi,top,nose,nw,fw,topL,botL,planL,bay,wings,rootC,seats,glass,tur,gun,
+  // the arrester hook, stowed flush under the tail
+  const BSs=sortPts(botL), hook={a:[len-1.45,lerpPts(BSs,len-1.45)-.01],b:[len-.5,lerpPts(BSs,len-.5)-.05]};
+  // parked: the tail settles until its wheel touches the ground. If a store or the belly would touch first, the tail wheel stands taller.
+  // the wing's droop and dihedral out along the span; an inverted gull wing bends down to a knee about a third of the way out
+  const half=d.span/2, zb=half*.36, tIn=kneeOf(d)/zb, tOut=Math.tan(Math.max(6,d.dihedral||0)*DEG), tn=bi?0:Math.tan((d.dihedral||0)*DEG);
+  const dyW=z=>{ z=Math.abs(z); return gull?(z<zb?-z*tIn:-zb*tIn+(z-zb)*tOut):z*tn; };
+  const Fk=PARTS.fold?d.fold:'none', zh=Fk==='tips'?Math.max(1.2,half-.55):FOLD_HINGE({fold:Fk})?clamp((d.foldIn||4.6)/2,1.2,half-.4):0;
+  // the main wheels: at a gull wing's knee, otherwise inboard of any fold
+  const gearZ=gull?Math.min(zb,zh?zh-.3:99):d.gear==='fixed'?1.05:clamp(zh?zh-.3:1.5,.8,1.5);
+  const gx=d.wingPos+.25, G0=-1.75, low=[...botL,hook.b,[len+.08,-.12]], Ld=part('load',d.load), Dp=part('drop',d.drop);
+  // a drop tank: on the centreline, or under the wing when a store is there: outboard of the wheel, or on a gull wing inboard of it
+  // It never hangs lower than 20 cm above the deck: if it would, it moves out along the wing until it clears.
+  let tank=null; if(Dp&&Dp.L){ const tl=1.3+Dp.L/420, td=.36+Dp.L/1600, lw=wings[wings.length-1], floor=-1.55+td/2;
+    const under=z=>{ const w=chordAt(pf,d.chord,Math.min(1,z/half)); return {x:lw.le+w.le+w.c*.35,y:lw.y+dyW(z)-.06-td/2-.12,z,len:tl,dia:td}; };
+    if(!(Ld&&Ld.mass)){ const x=d.wingPos+d.chord*.3; tank={x,y:lerpPts(sortPts(botL),x)-td/2-.08,z:0,len:tl,dia:td}; if(tank.y<floor) tank=null; }
+    if(!tank){ const zi=gearZ-.42-td/2; let z=gull&&zi>=.62+td/2?zi:Math.max(.22*half,gearZ+.45+td/2); tank=under(z);
+      while(tank.y<floor&&z<half-.9){ z+=.2; if(Math.abs(z-gearZ)>=.45+td/2) tank=under(z); } }
+    low.push([tank.x,tank.y-tank.dia/2],[tank.x+tank.len*.3,tank.y-tank.dia/2],[tank.x+tank.len*.45,tank.y-tank.dia*.4]); }
+  if(d.gear==='fixed') low.push([gx+.55,-1.4]);
+  if(jet){ const cx=d.wingPos+d.chord*.3; low.push([cx+1.7,-.95-.22],[cx+1.1,-.95-.36],[cx+.5,-1.35]); }   // jet nacelles under the wing
+  { const lw=wings[wings.length-1]; low.push([lw.le+lw.side,lw.y-.06],[lw.le+lw.side*.7,lw.y-.08]); if(!radial&&!jet) low.push([d.wingPos+d.chord*.95,-1.06],[d.wingPos+d.chord*.95,lw.y+dyW(gearZ)-.24]); }
+  if(Ld&&Ld.mass&&!bay){ const lx=st.loadX, ln=Ld.len||1.6, dia=Ld.dia||.4, cy=Ld.kind==='torp'?-1.15:-1.1; low.push([lx+ln*.25,cy-dia/2],[lx+ln/2-.1,cy-dia*.3],[lx+ln*.47,cy-dia*(Ld.kind==='torp'?.725:.65)]); }
+  let ang=Math.min(15*DEG,Math.atan2(-.6-G0,(len-.65)-gx));   // no steeper than a real tail-dragger sits
+  for(const [x,y] of low) if(x>gx+.05){ const dx=x-gx, h=y-G0, r=Math.hypot(dx,h); ang=Math.min(ang,Math.atan2(h,dx)-Math.asin(Math.min(1,.07/r))); }
+  ang=Math.max(.04,ang); const park={ang,tw:Math.min(-.6,G0+((len-.65)-gx)*Math.tan(ang))};
+  const cowlY=lerpPts(sortPts(topL),.25);
+  return {hook,park,cowlY,gull,dyW,zb,zh,gearZ,tank,len,ck,el,nC,radial,jet,bi,top,nose,nw,fw,topL,botL,planL,bay,wings,rootC,seats,glass,tur,gun,
     gx:d.wingPos+.25,ground:-1.75,fh:.55*sq,tl:.6*sq,ts,tc,tailX:len-tc*.55,tailY:.06};
 }
 // A surface swept along x: f(x,u) gives the point at x and u (0 to 1 across the section). Caps close either end.
@@ -2713,6 +2751,7 @@ function meshFor(p,q=1,opt={}){
   const TS=sortPts(G.topL), BS=sortPts(G.botL), PS=sortPts(G.planL), sm=(a,x)=>x<.4||x>Lf-.4?lerpPts(a,x):.25*lerpPts(a,x-.3)+.5*lerpPts(a,x)+.25*lerpPts(a,x+.3);
   const yT=x=>sm(TS,x), yB=x=>sm(BS,x), wF=x=>Math.max(.05,sm(PS,x)), EX=.8, sp=v=>Math.sign(v)*Math.pow(Math.abs(v),EX);
   const sec=(x,t)=>{ const a=yT(x), b=yB(x); return [(a+b)/2+(a-b)/2*sp(Math.sin(t)),wF(x)*sp(Math.cos(t))]; };
+  const topAt=(x,z)=>{ const a=yT(x), c=yB(x), cs=Math.pow(Math.min(1,Math.abs(z)/wF(x)),1/EX); return (a+c)/2+(a-c)/2*Math.pow(Math.sqrt(Math.max(0,1-cs*cs)),EX); };
   const zAt=(x,y)=>{ const a=yT(x), b=yB(x), s=clamp((y-(a+b)/2)/((a-b)/2),-1,1), sn=Math.sign(s)*Math.pow(Math.abs(s),1/EX); return wF(x)*Math.pow(Math.max(0,1-sn*sn),EX/2); };
   const fusF=(u0,u1)=>(x,u)=>{ const t=1.5*Math.PI+(u0+(u1-u0)*u)*TAU, [y,z]=sec(x,t); return [X(x),y,z]; };
   const xn=pd.nose&&!pjet?G.el*.7:0, keys=[G.el,G.ck-.8,G.ck+.6,G.ck+.9,d.wingPos,d.wingPos+d.chord,Lf*.62,Lf-.4];
@@ -2748,7 +2787,6 @@ function meshFor(p,q=1,opt={}){
       if(q) for(let k=0;k<14;k++){ const t=k/14*TAU; add(new THREE.CylinderGeometry(.07,.08,.16,6),dark,X(x)+.06,yc+Math.sin(t)*hh*.78,Math.cos(t)*w*.78).rotation.z=Math.PI/2; }
       const gap=spanXs(G.el-.015,G.el+.015,.03); if(q) add(loftGeo(gap,(x,u)=>{ const t=1.5*Math.PI+u*TAU, [y,z]=sec(x,t), c=(yT(x)+yB(x))/2; return [X(x),c+(y-c)*1.008,z*1.008]; },P,true,null),black); }
     else if(q) for(const sg of [-1,1]) for(let k=0;k<6;k++){ const x=.55+k*.22; add(new THREE.BoxGeometry(.13,.07,.1),black,X(x),.22,sg*(zAt(x,.22)+.02)); }
-    if(!radial){ const x0=d.wingPos+d.chord*.45, x1=d.wingPos+d.chord*.95; add(new THREE.BoxGeometry(x1-x0,.24,.6),body,X((x0+x1)/2),-.92); add(new THREE.BoxGeometry(.03,.2,.52),black,X(x1)+.02,-.92); }
     // spinner, after the drawing's curve
     const rs=radial?.25:.28, sx=spanXs(-.4,0,q?.05:.1); revolve(sx,x=>{ const u=Math.max(0,(x+.4)/.4); return rs*Math.sqrt(Math.min(1,u*(2-u)))*(1-.06*(1-u)); },pd.nose?nose:dark,0,0,[false,true]);
     const pr=1.5, dg=new THREE.CircleGeometry(pr,28); dg.rotateY(Math.PI/2); let dm;
@@ -2764,34 +2802,38 @@ function meshFor(p,q=1,opt={}){
   // guns: cowling guns along the top of the engine, a hub gun through the spinner, wing guns out of the leading edge
   const Ga=part('arm',d.arm), gr=k=>GUN[k].k==='cannon'?.045:.026;
   for(const b of Ga.banks){
-    if(b.at==='cowl') for(let k=0;k<b.n;k++){ const z=(k-(b.n-1)/2)*.22||0, ys=x=>{ const a=yT(x), c=yB(x), cs=Math.pow(Math.min(1,Math.abs(z)/wF(x)),1/EX); return (a+c)/2+(a-c)/2*Math.pow(Math.sqrt(Math.max(0,1-cs*cs)),EX); };
-      rod([.15,ys(.15)+.005,z],[G.el-.2,ys(G.el-.2)+.005,z],gr(b.g),black); }
+    if(b.at==='cowl') for(let k=0;k<b.n;k++){ const z=(k-(b.n-1)/2)*.22||0, y=topAt(.25,z)+.004; rod([.25,y,z],[G.el-.2,y,z],gr(b.g),black); }
     else if(b.at==='hub') rod([.3,0],[-.55,0],gr(b.g)+.008,black); }
   // wings, with a real cambered section
   const tcW=A0?A0.depth:.13, cam=.3*tcW, dih=(G.wings.length===1?d.dihedral||0:0)*DEG, tn=Math.tan(dih), PW=q===0?8:q===1?12:18;
+  // an inverted gull wing slopes down to a bend about a third of the way out, where the undercarriage hangs, then up
+  const gull=G.gull, zb=G.zb, dyW=G.dyW, slope=z=>(dyW(Math.abs(z)+.05)-dyW(Math.max(0,Math.abs(z)-.05)))/.1;
   const W=G.wings.map(w=>({y:w.y,le:w.le,ch:w.ch,span:d.span,form:w.form}));
-  const Fk=PARTS.fold?d.fold:'none', fold0=wingStations(W[0]), half0=fold0[fold0.length-1][0];
+  const stationsOf=w=>{ let s=wingStations(w); if(gull&&w===W[0]){ const h=s[s.length-1][0]; s=[...s,...[.4,.7,.85,.95,1,1.05,1.15,1.35].map(k=>stationAt(s,Math.min(1,zb*k/h)))].sort((a,b)=>a[0]-b[0]).filter((v,i,a)=>!i||v[0]-a[i-1][0]>1e-3); } return s; };
+  const Fk=PARTS.fold?d.fold:'none', fold0=stationsOf(W[0]), half0=fold0[fold0.length-1][0];
   const zh=Fk==='tips'?Math.max(1.2,half0-.55):FOLD_HINGE({fold:Fk})?clamp((d.foldIn||4.6)/2,1.2,half0-.4):0, folds={};
   if(zh){ const bi=W.length>1, w0=W[0], st0=stationAt(fold0,zh/half0), c0=st0[2]-st0[1], back=Fk==='back'||Fk==='sto';
-    for(const sg of [-1,1]){ const px=back?(bi?st0[2]-c0*.3:st0[1]+c0*.25):(st0[1]+st0[2])/2, py=w0.y+zh*tn+cam*c0*.8, g=hinge('fold',X(px),py,sg*zh,[1,0,0]);
+    for(const sg of [-1,1]){ const px=back?(bi?st0[2]-c0*.3:st0[1]+c0*.25):(st0[1]+st0[2])/2, py=w0.y+dyW(zh)+cam*c0*.8, g=hinge('fold',X(px),py,sg*zh,[1,0,0]), Lp=half0-zh, tailLE=G.tailX-G.tc/2, tz=G.ts/2+.2;
       const qq=new THREE.Quaternion(), up=new THREE.Vector3(0,1,0), ax=new THREE.Vector3(1,0,0), ez=new THREE.Vector3(0,0,1);
-      if(!back) qq.setFromAxisAngle(ax,-sg*(Fk==='tips'?90:122)*DEG);
+      // folded up, a panel leans in over the cockpit, but only so far that the two tips never meet, however long the panels
+      if(!back){ const del=Math.atan2(dyW(half0)-dyW(zh)+.15,Lp); qq.setFromAxisAngle(ax,-sg*(Fk==='tips'?90:clamp((Math.acos(clamp((.4-zh)/Math.hypot(Lp,.15),-1,1))-del)/DEG,75,122))*DEG); }
       else if(bi) qq.setFromAxisAngle(up,-sg*Math.PI/2);
-      else qq.setFromAxisAngle(up,-sg*Math.PI/2).multiply(new THREE.Quaternion().setFromAxisAngle(ez,-Math.PI/2));
+      // folded back, a panel long enough to reach the tailplane is splayed out just enough to pass outside it
+      else { const ph=px+Lp>tailLE-.1&&zh<tz?Math.atan2(tz-zh,Math.max(.6,tailLE-.1-px)):0; qq.setFromAxisAngle(up,-sg*(Math.PI/2-ph)).multiply(new THREE.Quaternion().setFromAxisAngle(ez,-Math.PI/2)); }
       g.userData.fq=qq.toArray(); folds[sg]=g; } }
   // the wing between |z|=a and |z|=b, one side (sg) or both (sg 0, through the centre)
   const part2=(s,a,b,sg)=>{ const half=s[s.length-1][0], pts=[]; pts.push(a>0?stationAt(s,a/half):s[0]); for(const v of s) if(v[0]>a+1e-3&&v[0]<b-1e-3) pts.push(v); if(b<half-1e-3) pts.push(stationAt(s,b/half)); else pts.push(s[s.length-1]);
     return sg?(sg>0?pts:pts.slice().reverse()).map(v=>[sg*v[0],v[1],v[2]]):[...pts.slice(1).reverse().map(v=>[-v[0],v[1],v[2]]),...pts]; };
-  W.forEach((w,wi)=>{ const s=wingStations(w), half=s[s.length-1][0], low=wi===W.length-1, zW=bay&&low?bay.r+.05:0, zc=zh||half+1;
+  W.forEach((w,wi)=>{ const s=stationsOf(w), half=s[s.length-1][0], low=wi===W.length-1, zW=bay&&low?bay.r+.05:0, zc=zh||half+1;
     // the fixed part: through the centre, or from the bomb bay's sides out
-    if(zW) for(const sg of [-1,1]) add(wingGeo(s,X,tcW,dih,PW,part2(s,zW,zc,sg),cam),body,0,w.y); else add(wingGeo(s,X,tcW,dih,PW,part2(s,0,zc,0),cam),body,0,w.y);
-    if(zh) for(const sg of [-1,1]){ const g=folds[sg], geo=wingGeo(s,X,tcW,dih,PW,part2(s,zh,half+1,sg),cam); geo.translate(-g.position.x,w.y-g.position.y,-g.position.z); add(geo,body,0,0,0,g); }
+    if(zW) for(const sg of [-1,1]) add(wingGeo(s,X,tcW,dyW,PW,part2(s,zW,zc,sg),cam),body,0,w.y); else add(wingGeo(s,X,tcW,dyW,PW,part2(s,0,zc,0),cam),body,0,w.y);
+    if(zh) for(const sg of [-1,1]){ const g=folds[sg], geo=wingGeo(s,X,tcW,dyW,PW,part2(s,zh,half+1,sg),cam); geo.translate(-g.position.x,w.y-g.position.y,-g.position.z); add(geo,body,0,0,0,g); }
     if(wi===0){ const qq=stationAt(s,.7), c=qq[2]-qq[1], rg=new THREE.CircleGeometry(Math.min(c*.32,.5),16); rg.rotateX(-Math.PI/2);
-      for(const sg of [-1,1]){ const m=add(rg,mark,X((qq[1]+qq[2])/2),w.y+(naca(.5,tcW)+cam)*c+qq[0]*tn+.03,sg*qq[0]); m.rotation.x=-sg*dih; } }
+      for(const sg of [-1,1]){ const m=add(rg,mark,X((qq[1]+qq[2])/2),w.y+(naca(.5,tcW)+cam)*c+dyW(qq[0])+.03,sg*qq[0]); m.rotation.x=-sg*Math.atan(slope(qq[0])); } }
     // ailerons on the outer trailing edge, hinged so they can move (High)
     if(q===2&&wi===0) for(const sg of [-1,1]){
       const a=stationAt(s,.55), b=stationAt(s,.93), ca=a[2]-a[1], cb=b[2]-b[1];
-      const pa=new THREE.Vector3(X(a[2]-ca*.24),w.y+a[0]*tn,sg*a[0]), pb=new THREE.Vector3(X(b[2]-cb*.24),w.y+b[0]*tn,sg*b[0]);
+      const pa=new THREE.Vector3(X(a[2]-ca*.24),w.y+dyW(a[0]),sg*a[0]), pb=new THREE.Vector3(X(b[2]-cb*.24),w.y+dyW(b[0]),sg*b[0]);
       const ta=new THREE.Vector3(X(a[2]),pa.y,pa.z), tb=new THREE.Vector3(X(b[2]),pb.y,pb.z), h=hinge('ail',pa.x,pa.y,pa.z,pb.clone().sub(pa).normalize().toArray()); h.userData.side=sg;
       const tk=Math.max(.035,naca(.8,tcW)*ca*2.4), up=new THREE.Vector3(0,tk/2,0), pts=[pa,pb,tb,ta].map(v=>v.clone().sub(pa)), pos=[];
       for(const v of pts) pos.push(...v.clone().add(up).toArray()); for(const v of pts) pos.push(...v.clone().sub(up).toArray());
@@ -2799,15 +2841,22 @@ function meshFor(p,q=1,opt={}){
       g.setIndex([0,1,2,0,2,3,4,6,5,4,7,6,0,4,5,0,5,1,1,5,6,1,6,2,2,6,7,2,7,3,3,7,4,3,4,0]); g.computeVertexNormals(); add(g,body,0,0,0,h); }
     // dive brakes: perforated plates along the inner trailing edge, above and below
     if(q&&low&&d.brakes==='dive') for(const sg of [-1,1]){ const a=stationAt(s,.16), b=stationAt(s,.48), x=((a[1]+(a[2]-a[1])*.82)+(b[1]+(b[2]-b[1])*.82))/2, c=(a[2]-a[1]+b[2]-b[1])/2;
-      for(const v of [1,-1]) add(new THREE.BoxGeometry(c*.14,.025,b[0]-a[0]),dark,X(x+c*.06),w.y+(a[0]+b[0])/2*tn+(v>0?(naca(.82,tcW)+cam*.6)*c+.015:-(naca(.82,tcW)-cam*.6)*c-.015),sg*(a[0]+b[0])/2); }
+      for(const v of [1,-1]) add(new THREE.BoxGeometry(c*.14,.025,b[0]-a[0]),dark,X(x+c*.06),w.y+dyW((a[0]+b[0])/2)+(v>0?(naca(.82,tcW)+cam*.6)*c+.015:-(naca(.82,tcW)-cam*.6)*c-.015),sg*(a[0]+b[0])/2); }
   });
-  const mw=W[W.length-1], ms=wingStations(mw), under=f=>{ const [z,le,te]=stationAt(ms,f), c=te-le; return [z,le,te,mw.y-(naca(.3,tcW)-cam*.84)*c+z*tn]; };
+  const mw=W[W.length-1], ms=stationsOf(mw), under=f=>{ const [z,le,te]=stationAt(ms,f), c=te-le; return [z,le,te,mw.y-(naca(.3,tcW)-cam*.84)*c+dyW(z)]; }, msH=ms[ms.length-1][0], underZ=z=>under(Math.min(1,z/msH));
+  // where the main wheels hang: at a gull wing's bend, otherwise inboard of any fold
+  const fixed=d.gear==='fixed', gearZ=G.gearZ;
+  // the radiator of an inline engine: under the belly, or split under the wing roots when a store, a drop tank or a bay is there
+  { const LdC=part('load',d.load), DpC=PARTS.drop?part('drop',d.drop):null, centre=(LdC&&LdC.mass)||(DpC&&DpC.L);
+    if(!radial&&!pjet){ const x0=d.wingPos+d.chord*.45, x1=d.wingPos+d.chord*.95, xm=(x0+x1)/2;
+      if(!centre){ add(new THREE.BoxGeometry(x1-x0,.24,.6),body,X(xm),-.92); add(new THREE.BoxGeometry(.03,.2,.52),black,X(x1)+.02,-.92); }
+      else for(const sg of [-1,1]){ const z=Math.min(gearZ-.45,wF(xm)+.4), y=underZ(z)[3]-.1; add(new THREE.BoxGeometry((x1-x0)*.8,.2,.42),body,X(xm),y,sg*z); add(new THREE.BoxGeometry(.03,.16,.36),black,X(x1-(x1-x0)*.1)+.02,y,sg*z); } } }
   // wing guns, in pairs outward from 1.25 m
-  { let gi=0; for(const b of Ga.banks) if(b.at==='wing') for(let k=0;k<b.n/2;k++,gi++){ const z=1.25+gi*.32, hf=ms[ms.length-1][0], [,le,te]=stationAt(ms,z/hf), c=te-le, cn=GUN[b.g].k==='cannon', y=mw.y+z*tn+cam*c*.3;
+  { let gi=0; for(const b of Ga.banks) if(b.at==='wing') for(let k=0;k<b.n/2;k++,gi++){ const z=1.25+gi*.32, hf=ms[ms.length-1][0], [,le,te]=stationAt(ms,z/hf), c=te-le, cn=GUN[b.g].k==='cannon', y=mw.y+dyW(z)+cam*c*.3;
     for(const sg of [-1,1]){ rod([le+.25,y,sg*z],[le-(cn?.5:.2),y,sg*z],gr(b.g),black); if(cn&&q) rod([le+.05,y,sg*z],[le-.12,y,sg*z],.07,dark); if(k===0&&gi===0) flash(X(le-.2),y,sg*z); } } }
   if(W.length>1){ const t=W[0], b=W[1];
     for(const sg of [-1,1]){ for(const fr of [.25,.75]) rod([t.le+t.ch*fr,t.y,sg*d.span*.32],[b.le+b.ch*fr,b.y,sg*d.span*.32],.035,dark);
-      rod([t.le+.3,t.y,sg*.32],[t.le+.45,yT(t.le+.45)-.05,sg*.25],.03,dark); rod([t.le+t.ch-.3,t.y,sg*.32],[t.le+t.ch-.4,yT(t.le+t.ch-.4)-.05,sg*.25],.03,dark); } }
+      for(const [xa,xb] of [[t.le+.3,t.le+.45],[t.le+t.ch-.3,t.le+t.ch-.4]]){ const zf=Math.min(.4,wF(xb)*.85); rod([xa,t.y,sg*(zf+.07)],[xb,topAt(xb,zf)-.03,sg*zf],.03,dark); } } }
   // engine nacelles' and stores' places under the wing
   if(PARTS.load){ const Ld=part('load',d.load), Dp=PARTS.drop?part('drop',d.drop):null;
     const store=(prof,len,dia,mat,cx,cy,cz,name)=>{ const pts=prof.map(([tt,k])=>new THREE.Vector2(Math.max(.004,k*dia/2),(tt-.5)*len)), g=new THREE.LatheGeometry(pts,q?16:8); g.rotateZ(-Math.PI/2);
@@ -2821,8 +2870,8 @@ function meshFor(p,q=1,opt={}){
       if(bay){ make(bay.x,bay.cy); add(new THREE.BoxGeometry(Math.min(1.2,(Ld.len||1.6)*.35),.06,.1),dark,X(bay.x),bay.cy+bay.r+.03); }
       else { const cy=Ld.kind==='torp'?-1.15:-1.1; make(cx,cy); const top=yB(cx)+.04, bot=cy+dia/2; add(new THREE.BoxGeometry(.6,Math.max(.06,top-bot),.08),dark,X(cx),(top+bot)/2);
         for(const v of [-.3,.3]) rod([cx+v,top-.02],[cx+v,bot+.02],.025,dark); } }
-    if(Dp&&Dp.L){ const len=1.3+Dp.L/420, dia=.36+Dp.L/1600, ext=Ld&&Ld.mass&&!bay, [z,le,te,wy]=under(.22), cx=ext?le+(te-le)*.35:d.wingPos+d.chord*.3;
-      store([[0,.05],[.15,.55],[.45,1],[.7,1],[.9,.7],[1,.1]],len,dia,M({color:0xb8bcb4},'metal'),cx,ext?wy-dia/2-.12:yB(cx)-dia/2-.08,ext?-z:0,'droptank'); } }
+    if(G.tank){ const t=G.tank, s2=store([[0,.05],[.15,.55],[.45,1],[.7,1],[.9,.7],[1,.1]],t.len,t.dia,M({color:0xb8bcb4},'metal'),t.x,t.y,-t.z,'droptank');
+      if(t.z) rod([t.x+.35,t.y+t.dia/2-.02,-t.z],[t.x+.35,t.y+t.dia/2+.16,-t.z],.03,dark); } }
   // tail: the fin and rudder are the drawing's outline, the tailplane its plan; both move on hinges
   { const tl=G.tl, fh=G.fh, pts=[]; for(let i=0;i<=12;i++){ const u=i/12, a=[Lf-tl-.2,.26], c=[Lf-.5,.28+fh], b=[Lf-.05,.22+fh]; pts.push([(1-u)**2*a[0]+2*u*(1-u)*c[0]+u*u*b[0],(1-u)**2*a[1]+2*u*(1-u)*c[1]+u*u*b[1]]); }
     pts.push([Lf+.08,-.12],[Lf,-.04]);
@@ -2859,20 +2908,21 @@ function meshFor(p,q=1,opt={}){
   if(G.gun){ const g=G.gun; for(let k=0;k<g.n;k++){ const z=g.n>1?(k?.07:-.07):0; rod([g.a[0],g.a[1],z],[g.b[0],g.b[1],z],g.heavy?.035:.025,black); }
     if(!G.tur) rod([g.a[0]+.05,g.a[1]-.02],[g.a[0]+.1,.6],.03,dark); }
   // undercarriage, tail wheel and arrester hook, where the side elevation draws them
-  const gx=G.gx, fixed=d.gear==='fixed';
-  rod([Lf-1.5,-.35],[Lf-.55,-.62],.03,dark);
-  const tailWheel=to=>{ rod([Lf-.6,-.1],[Lf-.65,-.42],.03,steel,to); const w=new THREE.CylinderGeometry(.1,.1,.06,14); w.rotateX(Math.PI/2); add(w,black,X(Lf-.65),-.5,0,to); };
+  const gx=G.gx, tw=G.park.tw;
+  rod([G.hook.a[0],yB(G.hook.a[0])-.01],[G.hook.b[0],yB(G.hook.b[0])-.05],.03,dark);
+  const tailWheel=to=>{ rod([Lf-.6,-.1],[Lf-.65,tw+.18],.03,steel,to); const w=new THREE.CylinderGeometry(.1,.1,.06,14); w.rotateX(Math.PI/2); add(w,black,X(Lf-.65),tw+.1,0,to); };
+  const legTop=z=>underZ(z)[3]+.04;
   if(fixed){ const wg=new THREE.CylinderGeometry(.35,.35,.12,18); wg.rotateX(Math.PI/2);
-    for(const sg of [-1,1]){ const z=sg*1.05; rod([gx+.15,-.75,z],[gx,-1.3,z],.06,dark); add(wg,black,X(gx),-1.4,z); add(new THREE.SphereGeometry(1,q?18:10,q?10:6),body,X(gx),-1.38,z).scale.set(.6,.37,.17); }
+    for(const sg of [-1,1]){ const z=sg*gearZ; rod([gx+.15,legTop(gearZ),z],[gx,-1.3,z],.06,dark); add(wg,black,X(gx),-1.4,z); add(new THREE.SphereGeometry(1,q?18:10,q?10:6),body,X(gx),-1.34,z).scale.set(.58,.3,.17); }
     tailWheel(); }
   else if(opt.gear){
     // retractable gear: main legs fold inward into the wing, the tail wheel back into the fuselage
-    const gz=clamp(zh?zh-.3:1.5,.8,1.5), wg=new THREE.CylinderGeometry(.35,.35,.18,18); wg.rotateX(Math.PI/2);
-    for(const sg of [-1,1]){ const h=hinge('gear',X(gx),-.72,sg*gz,[1,0,0]); h.userData.fold=sg*Math.PI/2; add(new THREE.CylinderGeometry(.06,.06,.68,8),steel,0,-.34,0,h); add(wg,black,0,-.68,0,h);
-      add(new THREE.BoxGeometry(.5,.62,.02),body,-.05,-.36,sg*.14,h); }
+    const gz=gearZ, hy=Math.min(-.62,legTop(gz)), gl=hy+1.4, wg=new THREE.CylinderGeometry(.35,.35,.18,18); wg.rotateX(Math.PI/2);
+    for(const sg of [-1,1]){ const h=hinge('gear',X(gx),hy,sg*gz,[1,0,0]); h.userData.fold=sg*Math.PI/2; add(new THREE.CylinderGeometry(.06,.06,gl,8),steel,0,-gl/2,0,h); add(wg,black,0,-gl,0,h);
+      add(new THREE.BoxGeometry(.5,gl-.06,.02),body,-.05,-gl/2-.02,sg*.14,h); }
     const th=hinge('gear',X(Lf-.6),-.1,0,[0,0,1]); th.userData.fold=-Math.PI/2; const tw=new THREE.Group(); tw.position.set(-X(Lf-.6),.1,0); th.add(tw); tailWheel(tw); }
   // parked: the tail settles until the tail wheel touches the ground the main wheels stand on
-  grp.userData.park={x:X(gx),y:G.ground,ang:Math.atan2(-.6-G.ground,(Lf-.65)-gx)};
+  grp.userData.park={x:X(gx),y:G.ground,ang:G.park.ang};
   if(zh){ grp.updateMatrixWorld(true); for(const c of grp.children.slice()) if(c.name!=='fold'&&Math.abs(c.position.z)>zh-.05) folds[Math.sign(c.position.z)].attach(c);
     if(opt.fold) setFold([folds[-1],folds[1]],opt.fold); }
   if(q===2) grp.traverse(o=>{ if(o.isMesh&&!o.material.transparent&&o.material.side!==THREE.BackSide){ o.castShadow=true; o.receiveShadow=true; } });
@@ -3423,6 +3473,14 @@ const DROPS=[
     'A power turret sits on the fuselage just behind the glass, no wider than the fuselage there, with its gunner inside.',
     'Cowling guns lie along the top of the engine instead of floating over it.',
     'A long torpedo hangs far enough back that its nose clears the propeller.',
+  ]},
+  {at:'2026-11-22T21:20:00+13:00',items:[
+    'A new wing: the inverted gull, as on the Corsair. It bends down to a knee where the short, light undercarriage hangs, then up. Monoplanes only, from 1940.',
+    'Gull wings have a knee-depth slider: a deeper knee means shorter, lighter legs. It can never go deep enough for the knee to touch the deck; widen the chord or sit her more steeply tail-down and it comes up by itself.',
+    'Biplanes now show the wing shape you pick, straight taper or elliptical, in the drawing and in 3D.',
+    'Folding wings never meet: wings folded up lean in only as far as their length allows, and wings folded back splay out past the tailplane. Upward folds are now for monoplanes only, so a biplane can no longer keep them after a change of layout.',
+    'Cowling guns lie level, as they were fitted, rather than following the slope of the nose. The arrester hook lies flush under the tail instead of hanging below it.',
+    'Parked, nothing touches the deck but the wheels: the tail settles no further than 15 degrees, and a taller tail wheel keeps a long torpedo or low drop tank clear. Drop tanks hang outboard of the wheels (inboard of them on a gull wing), never under a bomb bay, and an inline engine’s radiator moves under the wing roots when something hangs under the belly.',
   ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
