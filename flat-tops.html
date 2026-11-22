@@ -3336,6 +3336,16 @@ const DROPS=[
     'More bombs and torpedoes, each offered only to the aircraft that can carry it. Bombs: 113 kg, semi-armour-piercing 250 kg and 450 kg (they go deeper before bursting), and a 900 kg bomb for torpedo bombers. Torpedoes: Type 91 Mod 3 (240 kg warhead) and Mod 7 (420 kg), and the Mk 13 with a Torpex warhead (as strong as 360 kg). A bigger bomb bursting below decks starts a bigger fire and wrecks more around it.',
     'Wakes look more like water: the crests of the waves spreading from a ship waver and come in lengths instead of ruled lines, the waves across her track die away behind her, and she leaves a smooth, paler slick astern where her passage flattens the small waves.',
   ]},
+  {at:'2026-11-22T14:50:00+13:00',items:[
+    'Magazine explosions, rebuilt. A white-hot fireball swells and roils through orange and dull red into black smoke, a pale shock ring races out across the sea, and the flash lights up the ship, the water and everything near; close by, the view shakes.',
+    'A dark stem climbs hundreds of metres in seconds to a boiling cap that flattens, spreads and drifts downwind. When the magazine is low in the ship a column of spray shoots up beside her.',
+    'Plating, boats and, on a warship, sometimes a whole turret are flung out on smoking arcs and splash down hundreds of metres away, and burning fragments rain back into the sea and fizz out.',
+    'She breaks where the magazine was, the torn edges glowing and burning and cooling to black. A forward magazine blows the bow off and the rest of her settles and goes down by the head; an after one, the reverse; one amidships folds her into a V with bow and stern rising together. The half with the magazine goes in seconds, the other after a minute or more, with steam pouring up where the hot wreck meets the sea.',
+    'Once she has gone, burning oil spreads on the water where she sank, under a column of smoke that drifts off downwind, and burns out over about a quarter of an hour.',
+    'A ship that blows up is scorched black at once around the break, fading out over a quarter of her length either side, and the black creeps along the half that floats longer for as long as she stays up.',
+    'A ship consumed by fire no longer turns black all at once: the black spreads out from her worst fire and reaches the whole ship over about five minutes. Both use the same blackening.',
+    'Fixed: a carrier whose magazine blew up broke the 3D view (and could throw you back to the chart), because her flight deck could not be cut in two.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -3606,6 +3616,7 @@ function cv3Frame(){
   if(!V.d3||el.hidden||!el.getClientRects().length){ CV3.loop=false; return; }
   const c=cvSel(), now=performance.now(); if(c&&JSON.stringify(c.cv)+V.comp+V.water!==CV3.key&&now-(CV3.at||0)>200){ CV3.at=now; try{ cv3Build(); }catch(e){ console.error(e); } }
   const w=el.clientWidth, h=el.clientHeight, R=CV3.r, sz=R.getSize(new THREE.Vector2()); if(w&&h&&(sz.x!==w||sz.y!==h)){ R.setSize(w,h,false); CV3.cam.aspect=w/h; CV3.cam.updateProjectionMatrix(); }
+  if(!CV3.target){ requestAnimationFrame(cv3Frame); return; }   // nothing built yet (no class to show): keep looking
   const cam=CV3.cam, D=CV3.dist, t=CV3.target; cam.position.set(t.x+D*Math.cos(CV3.pitch)*Math.cos(CV3.yaw),t.y+D*Math.sin(CV3.pitch),t.z+D*Math.cos(CV3.pitch)*Math.sin(CV3.yaw)); cam.lookAt(t);
   if(CV3.scene) try{ R.render(CV3.scene,cam); }catch(e){ console.error(e); }
   requestAnimationFrame(cv3Frame);
@@ -4539,11 +4550,12 @@ function tgtDeckHit(T,w){ const C=T.cvC; if(!C) return; const ds=deckStart(C.cv)
   C.lifts.forEach((L,i)=>{ if(!L.edge&&!L.broken&&Math.abs(w.x-(L.x+ds))<L.l/2+2.5){ L.broken=true; tgtNote(T,`A bomb wrecked lift ${i+1}: it cannot be used.`); } });
   if(C.cv.cats>0&&!T.catsOut&&w.x-ds<45&&Math.random()<.6){ T.catsOut=true; tgtNote(T,'A bomb forward wrecked the catapults.'); } }
 // A magazine going up breaks her in two at the magazine, and both halves go down.
-function tgtBlow(T,why,c){ T.status='blown'; T.sinkT=0; T.blowSide=Math.random()<.5?-1:1; T.blowX=c?(c.x0+c.x1)/2:T.L*.3; tgtNote(T,`${why}. She blew up and broke in two.`); const p=c?tgtPt(T,c):T; TR.fx.push({kind:'boom',x:p.x,y:p.y,t:TR.t,size:T.L*.6}); }
+function tgtBlow(T,why,c){ T.status='blown'; T.sinkT=0; T.blowT=TR.t; T.blowSide=Math.random()<.5?-1:1; T.blowX=c?(c.x0+c.x1)/2:T.L*.3; tgtNote(T,`${why}. She blew up and broke in two.`); const p=c?tgtPt(T,c):T, mf=T.blowX/T.L;
+  TR.fx.push({kind:'boom',x:p.x,y:p.y,t:TR.t,size:T.L*.6,tid:T.id,L:T.L,B:T.B,D:T.D,low:!c||c.kind==='mag'||c.kind==='avgas',tur:!T.spec.cv&&(T.spec.tur||[]).some(([f])=>Math.abs(f-mf)<.08)}); }
 // Consumed by fire, ship abandoned: she is left to burn, dead in the water, blackened. Every space in her soon burns, and a fire goes out only
 // when the sea reaches it. Water keeps coming in through her holes, and she settles slowly besides, going down in a few hours; if her
 // holes fill her first, she goes down at the usual speed.
-function tgtBurnt(T,why){ T.status='burnt'; T.burntT=TR.t; T.magGo=Math.random()<.25;   // one abandoned ship in four has a magazine the fire can still set off
+function tgtBurnt(T,why){ T.status='burnt'; T.burntT=TR.t; { const c=T.comps.reduce((a,c)=>Math.max(c.fire,c.ufire)>Math.max(a.fire,a.ufire)?c:a,T.comps[0]); T.charX=T.L/2-(c.x0+c.x1)/2; } T.magGo=Math.random()<.25;   // one abandoned ship in four has a magazine the fire can still set off
   T.dc=false; T.dead=true; T.ordKn=0; T.steerKn=0; tgtNote(T,`${why}.`); }
 // A bomb that bursts above the armour still does harm: splinters and blast sweep the upperworks, kill men at the guns and on deck, and
 // wreck the boiler uptakes and ventilation over the machinery, which cuts the steam the boilers can make.
@@ -4618,7 +4630,7 @@ const CVFIRE={base:1.3,spread0:.2,spreadW:.4};
 const SPREAD={base:.000004,dmg:.00005,open:.05,wash:.35,pocket:.3,dead:.4,deep:.75,cfMax:.75,coam:.5,tpsLeak:250,cfRate:2.5,bm:1,tpsK:45,shaft:1.5,tpsLo:.55,tpsVar:.6};
 function tgtStep(T,dt){ const t=TR.t;
   if(T.status==='sunk') return;
-  if(T.status!=='afloat'&&T.status!=='burnt'){ T.sinkT+=dt; const dur=T.status==='blown'?75:T.status==='capsizing'?200:T.flood>T.reserve*1.6?240:480; T.goneF=Math.min(1,T.sinkT/dur);
+  if(T.status!=='afloat'&&T.status!=='burnt'){ T.sinkT+=dt; const dur=T.status==='blown'?100:T.status==='capsizing'?200:T.flood>T.reserve*1.6?240:480; T.goneF=Math.min(1,T.sinkT/dur);
     if(T.goneF>=1){ T.status='sunk'; T.sunkT=t; tgtNote(T,`${T.spec.name} ${T.name} has gone down, ${mmss(t-T.born)} after ${T.side==='tgt'?'she was anchored':T.side==='blue'?'she put to sea':'she was placed'}.`); } return; }
   const g=9.81; let W=0, Ms=0, Mt=0, fsm=0, burning=0, leaks=0;
   for(const c of T.comps){ for(const [k,hk] of [['fp','hp'],['fs','hs']]){ const cap=c.cap/2, A=c[hk];
@@ -4993,13 +5005,14 @@ function rainFall(wx){ const n=Math.round(2500+4500*wx.heavy), P=new Float32Arra
     fragmentShader:'uniform float uOp; void main(){ gl_FragColor=vec4(.78,.8,.83,uOp); }'});
   const o=new THREE.LineSegments(g,m); o.frustumCulled=false; o.renderOrder=6; return o; }
 function tr3Build(){
-  const R=TR, cv=R.cv, cs=R.cs, L=cv.L; if(TR3.scene) disposeTree(TR3.scene); TR3.tg=null;
+  const R=TR, cv=R.cv, cs=R.cs, L=cv.L; if(TR3.scene) disposeTree(TR3.scene); TR3.tg=null; TR3.bp=null; TR3.booms=[]; for(const f of (TR&&TR.fx)||[]) if(f.st) f.st=null;
   const wx=trWx(), C3=s=>new THREE.Color(s);
   wx.hz=C3('#cddbe4').lerp(C3('#aab2b8'),wx.cloud*.65).lerp(C3('#8b9398'),wx.rain?.4+.3*wx.heavy:0); wx.zen=C3('#2c69b3').lerp(C3('#8e979d'),wx.cloud*.8).lerp(C3('#697177'),wx.rain?.6:0);
   const sc=new THREE.Scene(), sky=wx.hz; sc.background=sky; sc.fog=new THREE.Fog(sky,wx.rain?120:2500,Math.min(16000,wx.vis*1000*.75+1500)); sc.environment=envFor(TR3.r);
   TR3.sky=skyDome(wx); sc.add(TR3.sky); TR3.cloud=wx.cloud>0?cloudLayer(wx):null; if(TR3.cloud) sc.add(TR3.cloud); TR3.rain=wx.rain?rainFall(wx):null; if(TR3.rain) sc.add(TR3.rain);
   sc.add(new THREE.HemisphereLight(0xeef3f7,0x4d5a63,.6+.25*wx.cloud)); const sun=new THREE.DirectionalLight(0xffffff,1.05*(1-.5*wx.cloud)*(wx.rain?.75:1)); sun.position.set(L*.45,L*.9,L*.55); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
   const sca=sun.shadow.camera; sca.left=sca.bottom=-L*.65; sca.right=sca.top=L*.65; sca.far=L*3; sun.shadow.bias=-.0006; sun.shadow.normalBias=.12; sc.add(sun);
+  TR3.flash=new THREE.PointLight(0xffc27a,0,9000,1.4); sc.add(TR3.flash);   // dark until a magazine goes up
   const seaT=seaTexture(), sea=seaMesh(seaT); sc.add(sea); TR3.waves=seaWaves(R.sea,R.wind.from);
   const yawG=new THREE.Group(), ship=new THREE.Group(), mesh=cvMesh(cv,cs,{lifts:true}), foam=foamRibbon(cv,cs); ship.add(mesh.grp); yawG.add(ship); yawG.add(foam); sc.add(yawG);
   // her wake: a ribbon laid along the track her stern has followed, widening and fading astern
@@ -5322,6 +5335,27 @@ function bigShipMesh(T){ const s=T.spec, lk=WARLOOK[T.type], ln=warLines(s,T.typ
   // the crane: a post, and a jib hinged at its head, angled up over the quarterdeck
   if(lk.crane){ const x=X(lk.crane), yy=dY(lk.crane); cyl(.5,.6,6,M.dark,x,yy,0,8); const jg=new THREE.BoxGeometry(13,.5,.5); jg.translate(6.5,0,0); add(jg,M.dark,x,yy+5.8,0,0,.6); }
   const out=mergeByMat(G); out.add(hull); out.add(deck); G.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); return out; }
+// Charring that spreads along her. Every lit surface of the ship is darkened by how far along her it is from a centre (a magazine's
+// break, or her worst fire): fully black within a radius that can grow, fading out over a length beyond it. The darkening is the same
+// as a burnt-out ship's always was. Done in the shader, so it can creep along her a little every frame.
+function charPatch(m){ if(m.userData.charU&&m.userData.charU.uChar&&m.userData.charU.uChar.value.isVector4) return m.userData.charU;
+  const U={uRefInv:{value:new THREE.Matrix4()},uChar:{value:new THREE.Vector4(0,0,1,0)}}; m.userData.charU=U; const prev=m.onBeforeCompile;
+  m.onBeforeCompile=(sh,rd)=>{ if(prev) prev(sh,rd); Object.assign(sh.uniforms,U);
+    sh.vertexShader='uniform mat4 uRefInv;\nvarying float vShipX;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nvShipX=(uRefInv*modelMatrix*vec4(transformed,1.0)).x;');
+    sh.fragmentShader='uniform vec4 uChar;\nvarying float vShipX;\n'+sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n{ float cd=abs(vShipX-uChar.x), ck=uChar.w*(1.0-smoothstep(uChar.y,uChar.y+uChar.z,cd)); diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*vec3(.21,.2,.19),ck); }'); };
+  m.customProgramCacheKey=()=>'char'+(prev?'+':''); m.needsUpdate=true; return U; }
+function charPrep(g){ if(g.userData.charM) return g.userData.charM; const ms=[];
+  g.traverse(o=>{ if(!(o.isMesh&&o.material)||o.userData.dmg) return; for(const m of [].concat(o.material)) if(m.isMeshStandardMaterial&&!ms.includes(m)) ms.push(m); });
+  for(const m of ms) charPatch(m); g.userData.charM=ms; return ms; }
+const CHINV=new THREE.Matrix4();
+function charSet(g,cx,rad,fade,amt){ g.updateMatrixWorld(true); CHINV.copy(g.matrixWorld).invert(); for(const m of charPrep(g)){ const U=m.userData.charU; U.uRefInv.value.copy(CHINV); U.uChar.value.set(cx,rad,fade,amt); } }
+// How black she is now. Consumed by fire: from her worst fire outward, the whole ship over about five minutes. Blown up: heavily at
+// the break at once, fading over a quarter of her length either side, then creeping outward for as long as she floats.
+function charFrame(T,r,t){ let P=null;
+  if(T.burntT!=null){ const b=t-T.burntT; P=[T.charX??0,T.L*1.2*clamp(b/300,0,1),T.L*.18,clamp(b/20,0,1)]; }
+  if(T.blowT!=null){ const ab=t-T.blowT, Q=[T.L/2-(T.blowX??T.L*.3),T.L*.04+T.L*clamp((ab-3)/75,0,1),T.L*.25,clamp(ab/.6,0,1)]; if(!P||P[1]<Q[1]) P=Q; }
+  if(!P) return;
+  if(r.halves) for(const h of r.halves){ const body=h.children[0]; if(body) charSet(body,...P); } else charSet(r.inner,...P); }
 // Burnt out: every surface of her blackened, once.
 const charMat=m=>{ if(!m||!m.color) return m; m=m.clone(); m.color.multiplyScalar(.22); if(m.vertexColors||m.map) m.color.setRGB(.2,.19,.18); return m; };   // a deck texture is darkened as a whole
 function tgt3Char(g){ if(g.userData.charred) return; g.userData.charred=true;
@@ -5331,9 +5365,10 @@ function tgt3Char(g){ if(g.userData.charred) return; g.userData.charred=true;
 function tgt3Break(T,r){ const src=r.inner, kids=src.children.slice(), bx=T.L/2-(T.blowX??T.L*.3); r.bx=bx; r.halves=[];
   for(const sg of [1,-1]){ const h=new THREE.Group(), body=new THREE.Group(), local=new THREE.Plane(new THREE.Vector3(sg,0,0),-sg*bx), plane=local.clone();
     for(const k of kids) body.add(k.clone(true)); body.position.x=-bx; h.add(body); h.position.x=bx; h.userData={local,plane};
-    body.traverse(o=>{ if(o.isMesh&&o.material){ o.material=o.material.clone(); o.material.clippingPlanes=[plane]; o.material.clipShadows=true; o.material.side=THREE.DoubleSide; } });
+    const clip=m=>{ m=m.clone(); delete m.userData.charU; m.clippingPlanes=[plane]; m.clipShadows=true; m.side=THREE.DoubleSide; return m; };   // a part may have several materials (a carrier's flight deck)
+    body.traverse(o=>{ if((o.isMesh||o.isLine||o.isSprite)&&o.material) o.material=Array.isArray(o.material)?o.material.map(clip):clip(o.material); });
     r.halves.push(h); }
-  for(const k of kids) src.remove(k); src.add(...r.halves); }
+  for(const k of kids) src.remove(k); src.add(...r.halves); tgt3Cuts(T,r); }
 function tgt3Make(T){ const outer=new THREE.Group(), inner=new THREE.Group(); outer.add(inner); TR3.scene.add(outer);
   inner.add(T.spec.cv?cvMesh(T.cvm||TR.cv,T.csm||TR.cs).grp:WARLOOK[T.type]?bigShipMesh(T):warshipMesh(T)); inner.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=!o.userData.noRecv; } }); return {outer,inner}; }
 // Damage you can see: a scorched, jagged hole in the deck where a bomb went in, a torn hole at the waterline on the side a torpedo or a
@@ -5358,6 +5393,116 @@ function tgt3Marks(T,grp){ if(!T.marks||!T.marks.length) return; const done=grp.
 function sprPool(n,mk){ const a=[]; for(let i=0;i<n;i++){ const s=mk(); s.visible=false; TR3.scene.add(s); a.push(s); } a.k=0; return a; }
 const sprTake=a=>{ const s=a[a.k++]; if(s) s.visible=true; return s; };
 const sprDone=a=>{ for(let i=a.k;i<a.length;i++) a[i].visible=false; a.k=0; };
+// ---------- Magazine explosions in 3D ----------
+// A magazine going up, as the films of Barham, Arizona and Hood show it: a white-hot fireball that swells and roils through orange and
+// dull red into black smoke; a pale shock ring racing out over the sea; a flash that lights up everything near; a dark stem and a
+// boiling cap rising hundreds of metres; a column of spray beside her when the magazine is low in the ship; plating, boats and
+// sometimes a whole turret flung out on smoking arcs, with burning fragments falling back and fizzing out; then the steam where the
+// hot wreck meets the sea, and, once she has gone, burning oil spreading on the water under a drifting column of smoke.
+// Every part is kept in metres east, north and up, so the sea and the camera can move under it. Time is game time.
+const BOOM={life:900, slick:900};
+function boomPool(){ if(TR3.bp) return TR3.bp; const stx=smokeTexture(); TR3.bp=sprPool(1500,()=>new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0xffffff,transparent:true,depthWrite:false,fog:true}))); return TR3.bp; }
+// Oil on the water: dark and soft-edged, ragged at its rim, with thinner patches in it.
+function slickTexture(seed){ const N=128, o=document.createElement('canvas'); o.width=o.height=N; const g=o.getContext('2d'); let s=seed; const rnd=()=>(s=(s*9301+49297)%233280)/233280;
+  for(let i=0;i<70;i++){ const a=rnd()*2*Math.PI, r=Math.sqrt(rnd())*N*.33, x=N/2+Math.cos(a)*r, y=N/2+Math.sin(a)*r, rr=N*(.08+rnd()*.14), gr=g.createRadialGradient(x,y,0,x,y,rr);
+    gr.addColorStop(0,'rgba(20,14,10,.55)'); gr.addColorStop(1,'rgba(20,14,10,0)'); g.fillStyle=gr; g.fillRect(0,0,N,N); }
+  return new THREE.CanvasTexture(o); }
+const bRand=st=>(st.seed=(st.seed*9301+49297)%233280)/233280;
+function boomMake(fx){ const R=TR, T=R.tgts.find(q=>q.id===fx.tid)||null, L=fx.L||T&&T.L||150, B=fx.B||T&&T.B||18, D=fx.D||T&&T.D||10;
+  const st={fx,T,t0:fx.t,E:fx.x*1000,N:fx.y*1000,L,B,D,hdg:T?T.hdg:0,side:T?T.blowSide||1:1,low:fx.low!==false,seed:Math.floor(fx.t*13)%233280+7,debris:[],embers:[],trails:[],splash:[],steam:[],smoke:[],done:false};
+  const S=30+L*.45; st.S=S; st.Hm=150+L*1.6;
+  // the fireball: overlapping puffs, each starting a little later and a little off the centre, so it roils
+  st.puffs=Array.from({length:12},(_,i)=>({d:i?bRand(st)*.6:0,ox:(bRand(st)-.5)*S*.9,oy:bRand(st)*S*.6,oz:(bRand(st)-.5)*S*.9,g:.7+bRand(st)*.6}));
+  // the shock ring on the water: a pale front with a darker band of flattened ripples behind it
+  const ringM=new THREE.MeshBasicMaterial({color:0xf2f6f8,transparent:true,opacity:.6,depthWrite:false,side:THREE.DoubleSide,fog:true}), darkM=new THREE.MeshBasicMaterial({color:0x0e2a3a,transparent:true,opacity:.35,depthWrite:false,side:THREE.DoubleSide,fog:true});
+  st.ring=new THREE.Mesh(new THREE.RingGeometry(.93,1,96),ringM); st.dark=new THREE.Mesh(new THREE.RingGeometry(.55,.93,96),darkM);
+  for(const m of [st.ring,st.dark]){ m.rotation.x=-Math.PI/2; m.frustumCulled=false; TR3.scene.add(m); }
+  // debris: dark chunks of plating and boats on ballistic arcs; a warship's turret over the magazine is thrown bodily clear
+  if(!TR3.debG){ TR3.debG=new THREE.BoxGeometry(1,1,1); TR3.debM=new THREE.MeshStandardMaterial({color:0x2a2c2e,roughness:.9}); }
+  const n=Math.round(10+L/18);
+  for(let i=0;i<n;i++){ const az=bRand(st)*2*Math.PI, el=(35+bRand(st)*50)*DEG, sp=40+bRand(st)*100, sz=1+bRand(st)*(2+L/80), m=new THREE.Mesh(TR3.debG,TR3.debM);
+    m.scale.set(sz*(1+bRand(st)),sz*.4,sz*(.6+bRand(st))); m.castShadow=true; TR3.scene.add(m);
+    st.debris.push({m,E:st.E,N:st.N,U:D*.6,vE:Math.cos(az)*Math.cos(el)*sp,vN:Math.sin(az)*Math.cos(el)*sp,vU:Math.sin(el)*sp,sx:(bRand(st)-.5)*6,sz:(bRand(st)-.5)*6,big:sz>3,nt:0,alive:true}); }
+  if(fx.tur){ const g=new THREE.Group(), gm=new THREE.MeshStandardMaterial({color:0x6c7479,roughness:.8}), w=B*.42;
+    g.add(new THREE.Mesh(new THREE.CylinderGeometry(w*.45,w*.5,2.4,16),gm)); const hb=new THREE.Mesh(new THREE.BoxGeometry(w*1.2,3,w),gm); hb.position.y=2.4; g.add(hb);
+    for(let k=0;k<3;k++){ const b=new THREE.Mesh(new THREE.CylinderGeometry(.35,.5,w*1.4,8),TR3.debM); b.rotation.z=-Math.PI/2; b.position.set(w*1.3,2.6,(k-1)*w*.28); g.add(b); }
+    g.traverse(o=>{ if(o.isMesh) o.castShadow=true; }); TR3.scene.add(g); const az=(90-st.hdg)*DEG+(bRand(st)-.5)*1.2, sp=45+bRand(st)*20;
+    st.debris.push({m:g,E:st.E,N:st.N,U:D*.6,vE:Math.sin(st.hdg*DEG+st.side*1.2)*sp*.35,vN:Math.cos(st.hdg*DEG+st.side*1.2)*sp*.35,vU:sp,sx:(bRand(st)-.5)*1.5,sz:(bRand(st)-.5)*1.5,big:true,turret:true,nt:0,alive:true}); }
+  for(let i=0;i<60;i++){ const az=bRand(st)*2*Math.PI, el=(25+bRand(st)*60)*DEG, sp=25+bRand(st)*90;
+    st.embers.push({E:st.E,N:st.N,U:D*.5,vE:Math.cos(az)*Math.cos(el)*sp,vN:Math.sin(az)*Math.cos(el)*sp,vU:Math.sin(el)*sp,life:3+bRand(st)*5,alive:true}); }
+  // the burning slick, laid once she has gone
+  st.slickM=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.MeshBasicMaterial({map:slickTexture(st.seed),color:0xffffff,transparent:true,opacity:0,depthWrite:false,fog:true,polygonOffset:true,polygonOffsetFactor:-2}));
+  st.slickM.rotation.x=-Math.PI/2; st.slickM.frustumCulled=false; TR3.scene.add(st.slickM);
+  st.fires=Array.from({length:22},()=>({r:Math.sqrt(bRand(st)),a:bRand(st)*2*Math.PI,ph:bRand(st)*9}));
+  if(R.t-fx.t>3){ for(const d of st.debris){ d.alive=false; d.m.parent&&d.m.parent.remove(d.m); } for(const e of st.embers) e.alive=false; }   // seen only after it went up: what was flung out has already come down
+  return st; }
+function boomDrop(st){ for(const d of st.debris) if(d.m.parent) d.m.parent.remove(d.m); for(const m of [st.ring,st.dark,st.slickM]) if(m){ m.parent&&m.parent.remove(m); m.geometry.dispose(); if(m.material.map) m.material.map.dispose(); m.material.dispose(); } st.done=true; }
+// One frame of every explosion: physics for what is in the air, and sprites for fire, smoke, spray and steam.
+function boomsFrame(FE,FN,t,dt,jump,W){ const R=TR; if(!TR3.booms||!TR3.booms.length) return; const P=boomPool(), cam=TR3.cam, g=9.81;
+  const put=(E,N,U,col,sx,sy,op,add)=>{ if(!(op>.01)) return; const s=sprTake(P); if(!s) return; s.material.color.setRGB(col[0],col[1],col[2]); s.material.blending=add?THREE.AdditiveBlending:THREE.NormalBlending; s.position.set(E-FE,U,-(N-FN)); s.scale.set(sx,sy,1); s.material.opacity=Math.min(1,op); };
+  const lerp3=(a,b,u)=>[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,a[2]+(b[2]-a[2])*u];
+  const WHITE=[1,.97,.88], ORANGE=[1,.55,.16], RED=[.55,.13,.05], SMOKE=[.13,.12,.115], SPRAY=[.95,.97,.98], STEAM=[.86,.88,.9];
+  const [wx,wy]=hdgV(R.wind.from+180), ws=R.wind.kn*KN; let flash=0, fE=0, fN=0, fU=0, shake=0;
+  for(const st of TR3.booms){ if(st.done) continue; const a=t-st.t0; if(a<0) continue; if(a>BOOM.life){ boomDrop(st); continue; }
+    const S=st.S, x=st.E-FE, z=-(st.N-FN), y0=W(x,z), T=st.T, gone=!T||T.status==='sunk'||a>100;
+    // the fireball
+    if(a<4) for(const p of st.puffs){ const q=a-p.d; if(q<0||q>3.5) continue; const sz=S*p.g*(.25+.9*Math.min(1,q/.9)+q*.12);
+      if(q<1.3){ const col=q<.25?WHITE:q<.8?lerp3(WHITE,ORANGE,(q-.25)/.55):lerp3(ORANGE,RED,(q-.8)/.5); put(st.E+p.ox,st.N+p.oz,y0+S*.25+p.oy+q*8,col,sz,sz,1-Math.max(0,q-1)/.3,true); }
+      if(q>.6) put(st.E+p.ox*1.1,st.N+p.oz*1.1,y0+S*.3+p.oy+q*14,SMOKE,sz*1.1,sz*1.1,.85*Math.min(1,(q-.6)/.6)*(1-Math.max(0,q-2.5)),false); }
+    if(a<3){ const I=9*Math.exp(-a/.25)+2.5*Math.exp(-a/1.5)*(.8+.2*Math.sin(a*40)); if(I>flash){ flash=I; fE=st.E; fN=st.N; fU=y0+S*.4; } }
+    if(a<2.5){ const d=Math.hypot(cam.position.x-x,cam.position.z-z); shake=Math.max(shake,5*Math.exp(-a/.7)*clamp(1-d/(3000+S*10),0,1)); }
+    // the shock ring
+    if(a<6){ const r=(500+st.L*2)*(1-Math.exp(-a/1.1)); st.ring.visible=st.dark.visible=true; for(const m of [st.ring,st.dark]){ m.position.set(x,y0+.5,z); m.scale.set(r,r,1); }
+      st.ring.material.opacity=.65*(1-a/6); st.dark.material.opacity=.32*(1-a/6); } else st.ring.visible=st.dark.visible=false;
+    // the mushroom: a dark stem and a boiling cap that flattens and spreads, carried off downwind as it ages
+    const mf=a<120?1:Math.max(0,1-(a-120)/120);
+    if(a>.4&&mf>0){ const H=st.Hm*(1-Math.exp(-a/3.5)), dr=Math.min(a,240)*ws*.35;
+      for(let k=0;k<30;k++){ const q=k/29, w=(S*.42+a*1.3)*(.8+.45*q)*(.85+.2*Math.sin(k*1.7+a*.3)), hh=H*q*.94;
+        put(st.E+wx*dr*q+Math.sin(k*2.1)*w*.12,st.N+wy*dr*q+Math.cos(k*1.4)*w*.12,y0+hh,SMOKE,w,w*1.25,.7*mf*Math.min(1,(a-.4)*1.5),false); }
+      const rc=H*.17+a*1.2; for(let k=0;k<26;k++){ const inner=k>=16, an=(inner?(k-16)/10:k/16)*2*Math.PI+a*(inner?-.07:.05), rr=inner?rc*.45:rc, w=(H*.26+a*1.5)*(.8+.3*Math.sin(k*2.3))*(inner?1.1:1), glow=a<3?1-a/3:0;
+        put(st.E+wx*dr+Math.cos(an)*rr,st.N+wy*dr+Math.sin(an)*rr,y0+H+(inner?H*.07:0)+Math.sin(k*1.3+a*.4)*H*.05,glow>0?lerp3(SMOKE,[.6,.28,.1],glow):SMOKE,w,w*.62,.86*mf,false);
+        if(glow>0) put(st.E+Math.cos(an)*rc*.6,st.N+Math.sin(an)*rc*.6,y0+H*.95,ORANGE,w*.7,w*.45,.5*glow,true); } }
+    // a column of spray beside her, when the magazine is low in the ship
+    if(st.low&&a<12){ const [px,py]=hdgV(st.hdg+90), off=st.side*(st.B/2+4), E=st.E+px*off, N=st.N+py*off, h=(120+st.L*.4)*Math.min(1,a/1.6)*(a>3?1-(a-3)/12:1), w=st.B*.9+a*4;
+      for(let k=0;k<8;k++){ const q=(k+.5)/8; put(E,N,y0+h*q,SPRAY,w*(1-q*.4),h/5,.9*(1-a/12),false); } }
+    // debris on its arcs, trailing smoke; a splash where each piece lands
+    for(const d of st.debris){ if(!d.alive) continue; if(!jump){ d.vU-=g*dt; const k=d.turret?.01:.06; d.vE*=1-k*dt; d.vN*=1-k*dt; d.E+=d.vE*dt; d.N+=d.vN*dt; d.U+=d.vU*dt; }
+      d.m.position.set(d.E-FE,d.U,-(d.N-FN)); d.m.rotation.x+=d.sx*dt; d.m.rotation.z+=d.sz*dt;
+      if(a>d.nt){ d.nt=a+(d.turret?.06:.1); st.trails.push({E:d.E,N:d.N,U:d.U,t:a,big:d.turret?2.5:d.big?1.5:1}); }
+      if(d.U<W(d.E-FE,-(d.N-FN))&&d.vU<0){ d.alive=false; d.m.parent&&d.m.parent.remove(d.m); st.splash.push({E:d.E,N:d.N,t:a,s:d.turret?3.5:d.big?1.4:.8}); } }
+    st.trails=st.trails.filter(q=>a-q.t<3.5); for(const q of st.trails){ const u=(a-q.t)/3.5, w=(4+u*13)*q.big; put(q.E,q.N,q.U+u*3,u<.08?ORANGE:SMOKE,w,w,(u<.08?.8:.5)*(1-u),u<.08); }
+    st.splash=st.splash.filter(q=>a-q.t<6); for(const q of st.splash){ const u=(a-q.t)/6, h=24*q.s*Math.min(1,u*5)*(1-u*.5); put(q.E,q.N,W(q.E-FE,-(q.N-FN))+h*.5,SPRAY,(6+u*10)*q.s,h,.85*(1-u),false); }
+    // burning fragments falling back and fizzing out on the water
+    for(const e of st.embers){ if(!e.alive) continue; if(a>e.life){ e.alive=false; continue; } if(!jump){ e.vU-=g*dt; e.E+=e.vE*dt; e.N+=e.vN*dt; e.U+=e.vU*dt; }
+      if(e.U<W(e.E-FE,-(e.N-FN))){ e.alive=false; st.splash.push({E:e.E,N:e.N,t:a,s:.25}); continue; }
+      put(e.E,e.N,e.U,[1,.6+.3*Math.sin(a*30+e.life),.2],3+e.life*.3,3+e.life*.3,.9*(1-a/e.life),true); }
+    // steam where the hot wreck meets the sea, while she is going
+    if(!gone&&a>1&&T){ if(!st.ns||a>st.ns){ st.ns=a+.4; const k=(T.blowX??T.L*.3)-T.L/2, [hx,hy]=hdgV(st.hdg); st.steam.push({E:st.E,N:st.N,t:a,j:(bRand(st)-.5)*st.B}); } }
+    st.steam=st.steam.filter(q=>a-q.t<25); for(const q of st.steam){ const u=(a-q.t)/25, w=(st.B*.8+u*60); put(q.E+wx*ws*u*25*.5+q.j,q.N+wy*ws*u*25*.5,W(x,z)+4+u*90,STEAM,w,w*.9,.55*(1-u)*Math.min(1,(a-q.t)*2),false); }
+    // the slick: burning oil spreading where she went down, under a drifting column of smoke
+    if(gone){ st.ga=st.ga??a; const b=a-st.ga, life=BOOM.slick, k=Math.max(0,1-b/life); if(k<=0){ boomDrop(st); continue; }
+      const r=st.L*.3+st.L*.7*Math.min(1,b/300); st.slickM.position.set(x,y0+.35,z); st.slickM.scale.set(r*1.15,r,1); st.slickM.material.opacity=.85*Math.min(1,b/5)*Math.min(1,k*3);
+      for(const f of st.fires){ const fr=f.r*r*.85, E=st.E+Math.cos(f.a)*fr, N=st.N+Math.sin(f.a)*fr, h=(10+st.L*.09)*(.65+.35*Math.sin(t*3+f.ph))*k*(1.1-f.r*.5);
+        if(f.r*k>.15||f.ph%3<1.5*k) put(E,N,y0+h*.6,ORANGE,h*1.4,h*1.8,.75*k,true); }
+      if(!st.nsm||a>st.nsm){ st.nsm=a+.6; const an=bRand(st)*2*Math.PI, rr=Math.sqrt(bRand(st))*r*.35; st.smoke.push({E:st.E+Math.cos(an)*rr,N:st.N+Math.sin(an)*rr,t:a,k}); } }
+    st.smoke=st.smoke.filter(q=>a-q.t<90); for(const q of st.smoke){ const u=(a-q.t)/90, w=25+u*110; put(q.E+wx*ws*u*90*.6,q.N+wy*ws*u*90*.6,y0+10+u*260,SMOKE,w,w,.6*(1-u)*q.k*Math.min(1,(a-q.t)/2),false); } }
+  TR3.booms=TR3.booms.filter(st=>!st.done);
+  if(TR3.flash){ TR3.flash.intensity=flash; if(flash>0) TR3.flash.position.set(fE-FE,fU,-(fN-FN)); }
+  if(shake>.05){ cam.position.x+=(Math.random()-.5)*shake; cam.position.y+=(Math.random()-.5)*shake*.6; cam.position.z+=(Math.random()-.5)*shake; } }
+// Where she breaks: torn, glowing edges round the cut and fire inside, cooling from orange through dull red to black.
+function tgt3Cuts(T,r){ r.cuts=[]; const D=T.D, Tt=T.T, B=T.B;
+  for(const h of r.halves){ const sh=new THREE.Shape(), n=22; let s=T.id*7+3; const rnd=()=>(s=(s*9301+49297)%233280)/233280;
+    for(let i=0;i<=n;i++){ const a=i/n*2*Math.PI, ca=Math.cos(a), sa=Math.sin(a), k=1/Math.max(Math.abs(ca)/(B*.5),Math.abs(sa)/(D*.5)), jr=.8+.35*rnd(); const yy=(D*.5-Tt)+sa*k*jr, zz=ca*k*jr; i?sh.lineTo(zz,yy):sh.moveTo(zz,yy); }
+    const g=new THREE.ShapeGeometry(sh); g.rotateY(Math.PI/2); const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xff7a2a,transparent:true,opacity:.95,side:THREE.DoubleSide,fog:true}));
+    h.add(m); r.cuts.push(m); } }
+function tgt3CutFrame(T,r,t){ const a=t-(T.blowT??t); if(!r.cuts) return; const u=clamp(a/45,0,1), fl=.85+.15*Math.sin(t*23+T.id);
+  for(const m of r.cuts){ const c=m.material.color; if(u<.5) c.setRGB(1*fl,(.48-.6*u)*fl,(.16-.2*u)*fl); else c.setRGB(.7*(1-(u-.5)*1.6)+.08,.08,.05); }
+  if(a<75) for(const h of r.halves){ for(const [yy,zz] of [[.3,-.3],[.6,0],[.95,.3],[.95,-.25],[.3,.32]]){ const p=new THREE.Vector3(1.5,(T.D-T.T)*yy,zz*T.B+Math.sin(t*2+yy*9)*.06*T.B); h.localToWorld(p); if(p.y<0) continue; const s=sprTake(TR3.fir); if(!s) continue; s.position.copy(p); const q=(10+T.B*.8)*(1-u*.55)*(.8+.4*Math.random()); s.scale.set(q,q*1.5,1); s.material.opacity=.8; }
+    if(!r.cutSm||t>r.cutSm){ r.cutSm=t+.7; const p=new THREE.Vector3(0,T.D-T.T,0); h.localToWorld(p); TR3.smokes.push({x:p.x+TR3.FE,y:p.y,z:p.z-TR3.FN,t0:t,k:1.2}); } } }
+// How each half goes: the half the magazine was in goes in seconds; the other settles by the broken end, may run on a little if she
+// was under way, and goes after a minute or more; a break amidships folds her into a V, bow and stern rising together.
+function boomPlan(T){ const mf=(T.blowX??T.L*.3)/T.L, lb=T.blowX??T.L*.3, ls=T.L-lb, fast={dur:16,settle:28,pitch:62,hold:0}, slow={dur:95,settle:10,pitch:72,hold:.4}, mid={dur:65,settle:18,pitch:58,hold:.2};
+  const pl=mf<.36?[fast,slow]:mf>.64?[slow,fast]:[mid,mid]; return pl.map((p,h)=>Object.assign({len:h?ls:lb,run:mf<.36&&h===1||mf>.64&&h===0},p)); }
 function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
   if(!TR3.tg){ TR3.tg=new Map(); const stx=smokeTexture();
     TR3.smk=sprPool(640,()=>new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0x3d4044,transparent:true,depthWrite:false,fog:true})));
@@ -5381,18 +5526,20 @@ function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
     if(T===R.ship){ TR3.ship.visible=T.status!=='sunk'&&T.status!=='blown'; TR3.foam.visible=T.status==='afloat'; }
     if(T.status==='sunk'||Math.hypot(x,z)>20000){ if(r) r.outer.visible=false; continue; }
     const cur=T===R.ship&&T.status!=='blown'; if(cur){ if(r) r.outer.visible=false; r={inner:TR3.ship}; } else if(!r){ r=tgt3Make(T); TR3.tg.set(T.id,r); }
-    if(T.status==='burnt') tgt3Char(r.inner); if(T.status==='blown'&&!cur&&!r.halves) tgt3Break(T,r); if(!r.halves) tgt3Marks(T,r.inner);
+    if(T.status==='blown'&&!cur&&!r.halves) tgt3Break(T,r); if(!r.halves) tgt3Marks(T,r.inner);
     let list=T.list, trim=T.trim, sink=T.sink; const f=T.goneF||0;
     if(T.status==='sinking'){ trim+=(T.trim>=0?1:-1)*30*f*f; sink+=T.D*3.4*f*f; }
     if(T.status==='capsizing'){ list+=(T.list>=0?1:-1)*(170-Math.abs(T.list))*ease3(f*1.3); sink+=T.D*2.6*Math.max(0,f-.55)/.45; }
-    if(T.status==='blown'){ list=T.blowSide*16*f; trim=0; sink+=T.D*3.2*ease3(Math.min(1,f*1.15)); if(r.halves){ const a=40*ease3(Math.min(1,f*1.6))*DEG, d=Math.min(1,f*3)*T.L*.05;
-      r.halves[0].rotation.z=a; r.halves[0].position.x=r.bx+d; r.halves[1].rotation.z=-a*.85; r.halves[1].position.x=r.bx-d; } }
+    if(T.status==='blown'){ const ab=t-(T.blowT??t); list=T.blowSide*6*Math.min(1,ab/20); trim=0; sink+=T.D*.25*Math.min(1,ab/8);
+      if(r.halves){ const pl=boomPlan(T), v=(T.kn||0)*.514; pl.forEach((P,h)=>{ const half=r.halves[h], sg=h?-1:1, u=clamp(ab/P.dur,0,1), q=ease3(Math.max(0,(u-P.hold)/(1-P.hold)));
+        const pitch=(P.settle*ease3(Math.min(1,u/.35))+(P.pitch-P.settle)*q)*DEG, run=P.run?v*12*(1-Math.exp(-ab/12)):0;
+        half.rotation.z=sg*pitch; half.position.x=r.bx+sg*Math.min(1,ab/3)*T.L*.02+run; half.position.y=-(P.len*Math.sin(P.pitch*DEG)+T.D*1.3)*q; }); } }
     const Tr=.78*T.B/Math.sqrt(Math.max(.3,T.gm)), A=T.status==='afloat'?rollA(T):0;
     if(cur){ TR3.ship.rotation.x+=list*DEG; TR3.ship.rotation.z+=trim*DEG; TR3.ship.position.y-=sink; } else { r.outer.visible=true; r.outer.position.set(x,0,z); r.outer.rotation.y=(90-T.hdg)*DEG;
     r.inner.rotation.set((list+A*Math.sin(t*2*Math.PI/Tr+T.ph))*DEG,0,(trim+A*.25*Math.sin(t*2*Math.PI/(Tr*.6)+T.ph*2))*DEG);
     r.inner.position.y=-sink+W(x,z)*.35; }
     // smoke and flame from every fire, the flames low on her and the smoke carried off downwind
-    r.inner.updateMatrixWorld(true); if(r.halves) for(const h of r.halves) h.userData.plane.copy(h.userData.local).applyMatrix4(h.matrixWorld);
+    r.inner.updateMatrixWorld(true); charFrame(T,r,t); if(r.halves){ for(const h of r.halves) h.userData.plane.copy(h.userData.local).applyMatrix4(h.matrixWorld); tgt3CutFrame(T,r,t); }
     for(const c of T.comps){ const k=Math.max(c.fire,c.ufire); if(k<.05||T.status!=='afloat'&&f>.6) continue;
       const lp=new THREE.Vector3(T.L/2-(c.x0+c.x1)/2,T.D-T.T+(c.ufire>c.fire?2:.5),0); r.inner.localToWorld(lp);
       const fs=sprTake(TR3.fir); if(fs){ fs.position.copy(lp); const q=(4+k*14*(.85+.3*Math.random()))*FXBIG*(T.status==='burnt'?1.3:1); fs.scale.set(q,q*1.3,1); fs.material.opacity=.55+.4*Math.random(); }
@@ -5420,11 +5567,11 @@ function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
     else if(fx.kind==='hit'){ if(a<1.4) put(0xffa040,(24*(1-a/1.4)+8)*B,(24*(1-a/1.4)+8)*B,6*B,1-a/1.4); if(a<30) put(0x3a3c3f,(10+a*1.8)*B,(10+a*1.8)*B,(8+a*2)*B,.7*(1-a/30)); }
     else if(fx.kind==='flak'){ if(a>7) continue; const yy=fx.alt-y0; if(fx.heavy){ if(a<.3) put(0xffa040,9,9,yy,1-a/.3); put(0x2b2d30,10+a*4,10+a*4,yy+a*1.5,.75*(1-a/7)); }
       else if(a<1.4){ if(a<.15) put(0xffa040,3,3,yy,1); put(0x4a4c4f,2.5+a*2.5,2.5+a*2.5,yy,.55*(1-a/1.4)); } }
-    else if(fx.kind==='boom'){ if(a<4) put(0xffa040,sz*(1.2-a/4)*B,sz*(1.4-a/4)*B,sz*.4*B,1-a/4);   // the fireball, then a column of smoke climbing from her and spreading at the top
-      const Hc=(sz*.45+a*8)*B; for(let k=0;k<10;k++){ const q=k/9, w=(sz*.2+a*1.7)*B*(.7+q*1.2); put(0x2e3033,w,w*1.15,Hc*q+w*.3,.72*(1-a/70)*(1-.25*q)); } }
+    else if(fx.kind==='boom'){ if(!fx.st){ fx.st=boomMake(fx); (TR3.booms||(TR3.booms=[])).push(fx.st); } }
     else if(fx.kind==='sec'){ if(a<2.5) put(0xffa040,(30*sz*(1-a/2.5)+10)*B,(34*sz*(1-a/2.5)+10)*B,10*sz*B,1-a/2.5); if(a<50) put(0x2c2e31,(12*sz+a*2.4)*B,(14*sz+a*3.6)*B,(12*sz+a*2.6)*B,.75*(1-a/50)); }
     else if(fx.kind==='crash'&&a<6){ put(0xf4f8fa,10+a*4,8+a*3,4,.8*(1-a/6)); } }
-  sprDone(TR3.smk); sprDone(TR3.fir); sprDone(TR3.fxs); sprDone(TR3.bmb); }
+  boomsFrame(FE,FN,t,dt,jump,W);
+  sprDone(TR3.smk); sprDone(TR3.fir); sprDone(TR3.fxs); if(TR3.bp) sprDone(TR3.bp); sprDone(TR3.bmb); }
 /* ---------- The air group: squadrons, sorties and patrols ---------- */
 // A squadron is any set of aircraft you pick. Squadrons go together on a sortie, which is ranged, launched and formed up over the ship,
 // then flies to its target at the speed of the slowest aircraft; or they protect the carrier, circling over her and coming down to
