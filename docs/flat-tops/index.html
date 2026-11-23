@@ -132,6 +132,11 @@ legend{padding:0;margin-bottom:6px}
 .stats .why{grid-column:1/-1;margin:-2px 0 6px;font-size:13px;color:var(--muted);max-width:64ch}
 .bar u{position:absolute;top:-3px;bottom:-3px;width:0;margin-left:-1px;border-left:2px dashed var(--ink)}
 .delta{font-family:var(--f-mono);font-size:11px;color:var(--muted)} .delta.up{color:var(--good)} .delta.down{color:var(--bad)}
+.parttip{position:fixed;z-index:60;max-width:320px;background:var(--paper);color:var(--ink);border:1.5px solid var(--ink);padding:8px 11px;font-size:12.5px;line-height:1.45;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.parttip b{font-family:var(--f-display);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.02em}
+.parttip .r{display:flex;justify-content:space-between;gap:12px;font-family:var(--f-mono);font-size:11.5px}
+.parttip .up{color:var(--good)} .parttip .down{color:var(--bad)} .parttip .n{color:var(--muted)}
+.parttip p{margin:4px 0 0}
 .sw{display:block;width:100%;height:10px;border:1px solid var(--line);border-radius:2px;margin:3px 0 2px}
 
 .ladder{display:flex;flex-direction:column;gap:12px}
@@ -210,6 +215,9 @@ legend{padding:0;margin-bottom:6px}
 .hangar .hb button{font:500 12px var(--f-mono,monospace);background:none;border:1px solid var(--line);color:var(--ink);padding:2px 8px;cursor:pointer}
 .sqwrap{align-items:center;justify-content:center}
 .sqpanel{background:var(--paper);color:var(--ink);border:2px solid var(--ink);padding:16px;max-width:680px;width:100%;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.sqpanel .btn.ghost{color:var(--ink);border-color:var(--line)}
+.sqpanel .btn.ghost:hover{border-color:var(--ink)}
+.sqpanel .btn.ghost[aria-pressed="true"]{background:var(--sel);color:var(--ink)}
 .sqpanel h3{font-family:var(--f-display);font-weight:800;font-size:28px;margin:0;text-transform:uppercase;line-height:1}
 .sqrows{display:flex;flex-direction:column;gap:6px}
 .sqrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;border-bottom:1px dotted var(--line);padding-bottom:6px}
@@ -525,8 +533,6 @@ legend{padding:0;margin-bottom:6px}
       <div class="chips" style="margin-top:6px"><button class="chip" data-theme-set="system"><span class="n">Match my device</span></button><button class="chip" data-theme-set="light"><span class="n">Light</span></button><button class="chip" data-theme-set="dark"><span class="n">Dark</span></button></div></fieldset>
     <fieldset style="border:0;padding:0;margin:0"><legend class="label">Battles</legend>
       <div class="chips" style="margin-top:6px"><button class="chip" data-battle="arcade"><span class="n">Arcade battles</span><span class="d">Watch any aircraft on either side, use the map, and see coloured trails.</span></button><button class="chip" data-battle="realistic"><span class="n">Realistic battles</span><span class="d">Watch only your own aircraft, with no map and no trails. You find the fight by eye.</span></button></div></fieldset>
-    <fieldset style="border:0;padding:0;margin:0"><legend class="label">Graphics</legend>
-      <div class="chips" style="margin-top:6px"><button class="chip" data-gfx="auto"><span class="n">Auto</span><span class="d">High detail in small fights, simpler models when there are many aircraft.</span></button><button class="chip" data-gfx="low"><span class="n">Low</span><span class="d">Simple models. Best for big fights or slower computers.</span></button><button class="chip" data-gfx="med"><span class="n">Medium</span><span class="d">Smooth fuselages, shaped tails, framed canopies, exhaust glow, muzzle flashes and contrails.</span></button><button class="chip" data-gfx="high"><span class="n">High</span><span class="d">Adds shiny metal, shadows, panel lines and moving control surfaces.</span></button></div></fieldset>
     <fieldset style="border:0;padding:0;margin:0"><legend class="label">Sound</legend>
       <div class="chips" style="margin-top:6px"><button class="chip" id="soundset" aria-pressed="true"><span class="n">Sound</span><span class="d">Engines, guns and explosions in the 3D view.</span></button></div></fieldset>
     <fieldset style="border:0;padding:0;margin:0"><legend class="label">Dev tools</legend>
@@ -557,7 +563,7 @@ legend{padding:0;margin-bottom:6px}
 </div>
 <div class="viewer" id="viewer" hidden role="dialog" aria-modal="true" aria-label="Your design in 3D">
   <div class="vbar"><span class="nm" id="vtitle"></span>
-    <span class="vtools"><button class="btn ghost" id="vspin" aria-pressed="true">Turn</button><button class="btn ghost" id="vsize" aria-pressed="false">Sizes</button><button class="btn ghost" id="vxray" aria-pressed="false">X-ray</button><button class="btn ghost" id="vrival" aria-pressed="false">Rival</button><button class="btn ghost" id="vengine" aria-pressed="false">Run engine</button><button class="btn ghost" id="vgear" hidden>Gear up</button><button class="btn ghost" id="vfold" hidden aria-pressed="false">Fold wings</button><button class="btn ghost" id="vbay" hidden aria-pressed="false">Open bomb bay</button><button class="btn ghost" id="vgrav" aria-pressed="false">Gravity</button><button class="btn" id="vclose">Close</button></span></div>
+    <span class="vtools"><button class="btn ghost" id="vspin" aria-pressed="true">Turn</button><button class="btn ghost" id="vsize" aria-pressed="false">Sizes</button><button class="btn ghost" id="vrival" aria-pressed="false">Rival</button><button class="btn ghost" id="vengine" aria-pressed="false">Run engine</button><button class="btn ghost" id="vgear" hidden>Gear up</button><button class="btn ghost" id="vfold" hidden aria-pressed="false">Fold wings</button><button class="btn ghost" id="vbay" hidden aria-pressed="false">Open bomb bay</button><button class="btn ghost" id="vgrav" aria-pressed="true">Gravity</button><button class="btn" id="vclose">Close</button></span></div>
   <div class="vstage"><canvas id="v3"></canvas><div class="vkey mono" id="vkey" hidden></div></div>
   <span class="mono vhint" id="vhint">Drag to turn it · scroll or pinch to zoom · Esc to close</span>
 </div>
@@ -633,16 +639,16 @@ const ROWS1=[
 /* ---------- 1939–1945: the monoplane fighter ---------- */
 // Damage is counted in .303-round hits, so a rifle-calibre round does the same harm in both wars.
 const GUN={
-  b303:{name:'.303 Browning',k:'mg',rpm:1150,dmg:1,pen:.05,vel:1,rkg:.028,kg:.0113,gm:10},
-  mg17:{name:'7.92 mm MG 17',k:'mg',rpm:1150,dmg:1,pen:.05,vel:1,rkg:.028,kg:.0118,gm:10},
-  mg131:{name:'13 mm MG 131',k:'mg',rpm:900,dmg:2,pen:.35,vel:.95,rkg:.09,kg:.036,gm:17},
-  ubs:{name:'12.7 mm UBS',k:'mg',rpm:1000,dmg:2.2,pen:.4,vel:1,rkg:.11,kg:.048,gm:21},
-  b50:{name:'.50 Browning',k:'mg',rpm:800,dmg:3.2,pen:.45,vel:1.05,rkg:.12,kg:.043,gm:29},
-  mgff:{name:'20 mm MG FF',k:'cannon',rpm:520,dmg:6.5,pen:.5,vel:.75,rkg:.2,kg:.134,gm:28,max:90},
-  shvak:{name:'20 mm ShVAK',k:'cannon',rpm:750,dmg:9,pen:.55,vel:.95,rkg:.18,kg:.096,gm:42},
-  mg151:{name:'20 mm MG 151/20',k:'cannon',rpm:720,dmg:10.5,pen:.6,vel:.92,rkg:.2,kg:.105,gm:42},
-  hisp:{name:'20 mm Hispano',k:'cannon',rpm:700,dmg:11,pen:.65,vel:1,rkg:.26,kg:.13,gm:50},
-  mk108:{name:'30 mm MK 108',k:'cannon',rpm:600,dmg:26,pen:.9,vel:.6,rkg:.48,kg:.33,gm:58,max:65},
+  b303:{name:'7.7 mm machine gun',k:'mg',rpm:1150,dmg:1,pen:.05,vel:1,rkg:.028,kg:.0113,gm:10},
+  mg17:{name:'7.92 mm machine gun',k:'mg',rpm:1150,dmg:1,pen:.05,vel:1,rkg:.028,kg:.0118,gm:10},
+  mg131:{name:'13 mm machine gun',k:'mg',rpm:900,dmg:2,pen:.35,vel:.95,rkg:.09,kg:.036,gm:17},
+  ubs:{name:'12.7 mm machine gun',k:'mg',rpm:1000,dmg:2.2,pen:.4,vel:1,rkg:.11,kg:.048,gm:21},
+  b50:{name:'12.7 mm heavy machine gun',k:'mg',rpm:800,dmg:3.2,pen:.45,vel:1.05,rkg:.12,kg:.043,gm:29},
+  mgff:{name:'20 mm drum-fed cannon',k:'cannon',rpm:520,dmg:6.5,pen:.5,vel:.75,rkg:.2,kg:.134,gm:28,max:90},
+  shvak:{name:'20 mm fast-firing cannon',k:'cannon',rpm:750,dmg:9,pen:.55,vel:.95,rkg:.18,kg:.096,gm:42},
+  mg151:{name:'20 mm belt-fed cannon',k:'cannon',rpm:720,dmg:10.5,pen:.6,vel:.92,rkg:.2,kg:.105,gm:42},
+  hisp:{name:'20 mm long-barrel cannon',k:'cannon',rpm:700,dmg:11,pen:.65,vel:1,rkg:.26,kg:.13,gm:50},
+  mk108:{name:'30 mm cannon',k:'cannon',rpm:600,dmg:26,pen:.9,vel:.6,rkg:.48,kg:.33,gm:58,max:65},
 };
 const PARTS2={
   layout:[
@@ -650,10 +656,10 @@ const PARTS2={
     {id:'low',labour:1.15,name:'Low-wing monoplane',note:'One cantilever wing under the fuselage. The modern fighter.',from:1935.0,wings:1,str:1},
   ],
   planform:[
-    {id:'rect',name:'Constant chord',note:'Cheap and simple to build. Wasteful tips.',from:1935.0,e:.9,roll:1,labour:1,drag:.01},
-    {id:'taper',name:'Straight taper',note:'Narrows towards the tips. Good all round and easy to build.',from:1935.0,e:.95,roll:1.05,labour:1.1,drag:0},
-    {id:'ellip',name:'Elliptical',note:'Least induced drag and a gentle stall. Slow to build and heavy to roll.',from:1936.2,e:1,roll:.85,labour:1.35,drag:0},
-    {id:'gull',name:'Inverted gull wing',note:'Bent down from the root to a knee, then up, as on the Corsair. The wheels hang from the knee on short, light legs: the deeper the knee, the lighter they are. Heavy and slow to build. Monoplanes only.',from:1940.0,e:.95,roll:1,labour:1.3,drag:0,mono:true},
+    {id:'rect',name:'Constant chord',note:'Cheap and simple. Wasteful tips.',from:1935.0,e:.9,roll:1,labour:1,drag:.01},
+    {id:'taper',name:'Straight taper',note:'Narrows towards the tips. Good all round, and only a little dearer than a constant chord.',from:1935.0,e:.95,roll:1.05,labour:1.1,drag:0},
+    {id:'ellip',name:'Elliptical',note:'Least induced drag and a gentle stall. Expensive, and heavy to roll.',from:1936.2,e:1,roll:.85,labour:1.35,drag:0},
+    {id:'gull',name:'Inverted gull wing',note:'Bent down from the root to a knee, then up, as on the Corsair. The wheels hang from the knee on short, light legs: the deeper the knee, the lighter they are. Heavy and expensive. Monoplanes only.',from:1940.0,e:.95,roll:1,labour:1.3,drag:0,mono:true},
   ],
   airfoil:[
     {id:'std',name:'Conventional section',note:'NACA-type section. Forgiving at the stall.',from:1935.0,cl:1.45,cd:.006,depth:.13},
@@ -669,7 +675,7 @@ const PARTS2={
     {id:'bubble',name:'Bubble canopy',note:'Blown Perspex over a cut-down rear fuselage. The pilot sees attacks coming.',from:1943.5,mass:30,drag:.004,cost:350,view:.06},
   ],
   frame:[
-    {id:'tube',cost:300,name:'Steel tube and fabric',note:'Hurricane method. Quick to build and repair, but draggy and it burns.',from:1935.0,kgm:34,wkg:19,hp:380,fire:.022,drag:.025},
+    {id:'tube',cost:300,name:'Steel tube and fabric',note:'Hurricane method. Cheap and easy to repair, but draggy and it burns.',from:1935.0,kgm:34,wkg:19,hp:380,fire:.022,drag:.025},
     {id:'skin',cost:450,name:'Stressed-skin aluminium',note:'An alloy monocoque shell. Light for its strength.',from:1935.5,kgm:36,wkg:21,hp:420,fire:.016,drag:0},
     {id:'wood',cost:220,name:'Wooden monocoque',note:'Bonded plywood. Cheap and uses no strategic alloy, but heavy.',from:1940.0,kgm:42,wkg:24,hp:360,fire:.02,drag:.005},
   ],
@@ -694,18 +700,18 @@ const PARTS2={
     {id:'j213',price:3000,name:'Junkers Jumo 213A',type:'inline',hp:1750,mass:940,from:1944.6,rel:.88,eta:.92,note:'Inverted V12 for the long-nosed Fw 190.'},
   ],
   arm:[
-    {id:'mg4',price:300,name:'Four rifle-calibre MGs',note:'Two in the cowling, two in the wings.',from:1935.0,banks:[{g:'b303',n:2,at:'cowl'},{g:'b303',n:2,at:'wing'}]},
-    {id:'mg8',price:520,name:'Eight .303 Brownings',note:'A wall of light rounds from the wings.',from:1937.9,banks:[{g:'b303',n:8,at:'wing'}]},
-    {id:'emil',price:900,name:'Two MGs and two 20 mm MG FF',note:'Cowling MGs and slow drum-fed wing cannon. 90 shells a gun at most.',from:1939.0,banks:[{g:'mg17',n:2,at:'cowl'},{g:'mgff',n:2,at:'wing'}]},
-    {id:'hub',price:850,name:'Hub cannon and two MGs',note:'A 20 mm gun firing through the propeller hub. Accurate. Needs an inline engine.',from:1941.0,needsInline:true,banks:[{g:'mg151',n:1,at:'hub'},{g:'mg17',n:2,at:'cowl'}]},
-    {id:'mixb',price:1100,name:'Two 20 mm Hispano and four .303',note:'The Spitfire V\'s "B" wing.',from:1941.2,banks:[{g:'hisp',n:2,at:'wing'},{g:'b303',n:4,at:'wing'}]},
-    {id:'fw',price:1500,name:'Two MGs and four 20 mm',note:'Cowling MGs, two MG 151 in the wing roots, two MG FF outboard.',from:1941.6,banks:[{g:'mg17',n:2,at:'cowl'},{g:'mg151',n:2,at:'wing'},{g:'mgff',n:2,at:'wing'}]},
-    {id:'six50',price:1000,name:'Six .50 Brownings',note:'Heavy machine guns. Hard-hitting, long-reaching, plenty of rounds.',from:1942.0,banks:[{g:'b50',n:6,at:'wing'}]},
-    {id:'yak',price:700,name:'Hub ShVAK and two 12.7 mm',note:'Light, centreline armament. Needs an inline engine.',from:1942.5,needsInline:true,banks:[{g:'shvak',n:1,at:'hub'},{g:'ubs',n:2,at:'cowl'}]},
-    {id:'eight50',price:1300,name:'Eight .50 Brownings',note:'Four in each wing. Heavy, but devastating.',from:1943.0,banks:[{g:'b50',n:8,at:'wing'}]},
-    {id:'hisp4',price:1600,name:'Four 20 mm Hispano',note:'The Tempest and late Spitfire battery.',from:1943.5,banks:[{g:'hisp',n:4,at:'wing'}]},
-    {id:'mk108x4',price:2400,name:'Four 30 mm MK 108 in the nose',note:'Possible only with jets, which free the nose of an engine. Devastating, short-ranged.',from:1944.6,needsJet:true,banks:[{g:'mk108',n:4,at:'hub'}]},
-    {id:'mk108',price:1100,name:'Hub 30 mm and two 13 mm',note:'The MK 108 kills with three hits, but its slow shells drop fast. 65 rounds. Needs an inline engine.',from:1944.0,needsInline:true,banks:[{g:'mk108',n:1,at:'hub'},{g:'mg131',n:2,at:'cowl'}]},
+    {id:'mg4',price:300,name:'Four 7.7 mm machine guns',note:'Two in the cowling, two in the wings.',from:1935.0,banks:[{g:'b303',n:2,at:'cowl'},{g:'b303',n:2,at:'wing'}]},
+    {id:'mg8',price:520,name:'Eight 7.7 mm machine guns',note:'A wall of light rounds from the wings.',from:1937.9,banks:[{g:'b303',n:8,at:'wing'}]},
+    {id:'emil',price:900,name:'Two 7.92 mm MGs and two 20 mm cannon',note:'Cowling machine guns and slow, drum-fed wing cannon. 90 shells a gun at most.',from:1939.0,banks:[{g:'mg17',n:2,at:'cowl'},{g:'mgff',n:2,at:'wing'}]},
+    {id:'hub',price:850,name:'One 20 mm hub cannon and two 7.92 mm MGs',note:'A 20 mm gun firing through the propeller hub, and two machine guns in the cowling. Accurate. Needs an inline engine.',from:1941.0,needsInline:true,banks:[{g:'mg151',n:1,at:'hub'},{g:'mg17',n:2,at:'cowl'}]},
+    {id:'mixb',price:1100,name:'Two 20 mm cannon and four 7.7 mm MGs',note:'The Spitfire V\'s "B" wing.',from:1941.2,banks:[{g:'hisp',n:2,at:'wing'},{g:'b303',n:4,at:'wing'}]},
+    {id:'fw',price:1500,name:'Two 7.92 mm MGs and four 20 mm cannon',note:'Cowling machine guns, two fast belt-fed cannon in the wing roots and two slower drum-fed ones outboard.',from:1941.6,banks:[{g:'mg17',n:2,at:'cowl'},{g:'mg151',n:2,at:'wing'},{g:'mgff',n:2,at:'wing'}]},
+    {id:'six50',price:1000,name:'Six 12.7 mm machine guns',note:'Heavy (.50 calibre) machine guns. Hard-hitting, long-reaching, plenty of rounds.',from:1942.0,banks:[{g:'b50',n:6,at:'wing'}]},
+    {id:'yak',price:700,name:'One 20 mm hub cannon and two 12.7 mm MGs',note:'Light, centreline armament. Needs an inline engine.',from:1942.5,needsInline:true,banks:[{g:'shvak',n:1,at:'hub'},{g:'ubs',n:2,at:'cowl'}]},
+    {id:'eight50',price:1300,name:'Eight 12.7 mm machine guns',note:'Four heavy machine guns in each wing. Heavy, but devastating.',from:1943.0,banks:[{g:'b50',n:8,at:'wing'}]},
+    {id:'hisp4',price:1600,name:'Four 20 mm cannon',note:'The Tempest and late Spitfire battery.',from:1943.5,banks:[{g:'hisp',n:4,at:'wing'}]},
+    {id:'mk108x4',price:2400,name:'Four 30 mm cannon in the nose',note:'Possible only with jets, which free the nose of an engine. Devastating, short-ranged.',from:1944.6,needsJet:true,banks:[{g:'mk108',n:4,at:'hub'}]},
+    {id:'mk108',price:1100,name:'One 30 mm hub cannon and two 13 mm MGs',note:'The 30 mm shell kills with three hits, but its slow shells drop fast. 65 rounds. Needs an inline engine.',from:1944.0,needsInline:true,banks:[{g:'mk108',n:1,at:'hub'},{g:'mg131',n:2,at:'cowl'}]},
   ],
   fuelPos:[
     {id:'fus',name:'Main tank ahead of the pilot',note:'Between engine and cockpit, near the centre of gravity. A fire there reaches the pilot.',from:1935.0,fire:1.2},
@@ -729,6 +735,7 @@ const PARTS2={
     {id:'seablue',name:'Gloss sea blue',note:'Naval carrier fighter finish.',from:1935.0,body:'#1F2E4A',dark:'#0E1626',mark:'#E8E8E8'},
     {id:'night',name:'Night black',note:'Matt black for night fighting.',from:1935.0,body:'#262626',dark:'#0A0A0A',mark:'#8C2A22'},
     {id:'bnose',name:'Bare metal, blue nose',note:'Unpainted, with a blue unit nose.',from:1935.0,body:'#B8BEC4',dark:'#4B5157',mark:'#1F3B73',nose:'#2F5FA8'},
+    {id:'tricolor',name:'Three-tone sea blue',note:'Dark sea blue over intermediate blue, as on American carrier aircraft from 1943.',from:1935.0,body:'camo',dark:'#131D30',mark:'#E8E8E8',swatch:['#22324F','#5B7394']},
     {id:'checker',name:'Olive drab, yellow nose',note:'Olive drab with a yellow cowling.',from:1935.0,body:'#5A5638',dark:'#2C2A1A',mark:'#E8E8E8',nose:'#E2B53A'},
   ],
 };
@@ -760,12 +767,15 @@ const RATED={bmw3a:2000,mer9:4500,j210:3000,mer2:5000,db601:4500,v1710:3500,mer4
 PARTS2.frame.push(
   {id:'lite',cost:420,name:'Lightweight stressed skin',note:'Thin skins and drilled-out frames, Zero-style. Light and long-ranged, but it breaks up and burns under fire.',from:1936.0,kgm:28,wkg:16,hp:330,fire:.02,drag:0},
   {id:'rugged',cost:520,name:'Rugged stressed skin',note:'Heavy-gauge skins and frames built for hard deck landings and battle damage. Grumman-style.',from:1937.0,kgm:46,wkg:26,hp:540,fire:.014,drag:0});
+PARTS2.frame.sort((a,b)=>a.hp-b.hp);   // weakest airframe first
 PARTS2.arm.push(
-  {id:'mg1',price:60,name:'One cowling MG',note:'A single synchronised rifle-calibre gun, for strafing and self-defence.',from:1935.0,banks:[{g:'b303',n:1,at:'cowl'}]},
-  {id:'mg2',price:110,name:'Two cowling MGs',note:'Two synchronised rifle-calibre guns.',from:1935.0,banks:[{g:'b303',n:2,at:'cowl'}]},
-  {id:'b50x2',price:300,name:'Two .50 in the cowling',note:'Two heavy machine guns firing through the propeller. SBD-style.',from:1941.0,banks:[{g:'b50',n:2,at:'cowl'}]},
-  {id:'hisp2',price:700,name:'Two 20 mm in the wings',note:'A pair of wing cannon for a strike aircraft.',from:1943.0,banks:[{g:'hisp',n:2,at:'wing'}]});
-PARTS2.arm.sort((a,b)=>a.from-b.from||a.price-b.price);
+  {id:'mg1',price:60,name:'One 7.7 mm cowling MG',note:'A single synchronised rifle-calibre gun, for strafing and self-defence.',from:1935.0,banks:[{g:'b303',n:1,at:'cowl'}]},
+  {id:'mg2',price:110,name:'Two 7.7 mm cowling MGs',note:'Two synchronised rifle-calibre guns.',from:1935.0,banks:[{g:'b303',n:2,at:'cowl'}]},
+  {id:'b50x2',price:300,name:'Two 12.7 mm cowling MGs',note:'Two heavy machine guns firing through the propeller. SBD-style.',from:1941.0,banks:[{g:'b50',n:2,at:'cowl'}]},
+  {id:'hisp2',price:700,name:'Two 20 mm wing cannon',note:'A pair of wing cannon for a strike aircraft.',from:1943.0,banks:[{g:'hisp',n:2,at:'wing'}]});
+// Guns are listed from the lightest weight of fire to the heaviest: kilograms of shot a second, synchronised guns firing 15% slower.
+const fireWeight=a=>a.banks.reduce((t,b)=>t+b.n*GUN[b.g].rpm*(b.at==='cowl'?.85:1)/60*GUN[b.g].kg,0);
+PARTS2.arm.sort((a,b)=>fireWeight(a)-fireWeight(b));
 Object.assign(PARTS2,{
   role:[
     {id:'fighter',name:'Fighter',note:'Guards the fleet and escorts strikes. Guns only.',from:1935.0},
@@ -779,9 +789,9 @@ Object.assign(PARTS2,{
   ],
   rear:[
     {id:'none',name:'No rear gun',note:'Nothing to stop a fighter sitting on the tail.',from:1935.0,mass:0,drag:0,price:0,n:0},
-    {id:'r1',name:'One flexible MG',note:'A rifle-calibre gun on a ring mounting. +35 kg',from:1935.0,mass:35,drag:.003,price:80,g:'b303',n:1},
-    {id:'r2',name:'Twin flexible MGs',note:'Two rifle-calibre guns on one mounting. +60 kg',from:1940.0,mass:60,drag:.005,price:150,g:'b303',n:2},
-    {id:'t50',name:'Power turret, one .50',note:'An electrically driven turret with a heavy machine gun. TBF-style. +140 kg',from:1942.0,mass:140,drag:.008,price:600,g:'b50',n:1},
+    {id:'r1',name:'One 7.7 mm flexible MG',note:'A rifle-calibre gun on a ring mounting. +35 kg',from:1935.0,mass:35,drag:.003,price:80,g:'b303',n:1},
+    {id:'r2',name:'Twin 7.7 mm flexible MGs',note:'Two rifle-calibre guns on one mounting. +60 kg',from:1940.0,mass:60,drag:.005,price:150,g:'b303',n:2},
+    {id:'t50',name:'Power turret, one 12.7 mm MG',note:'An electrically driven turret with a heavy machine gun. TBF-style. +140 kg',from:1942.0,mass:140,drag:.008,price:600,g:'b50',n:1},
   ],
   load:[
     {id:'none',name:'No bomb or torpedo',note:'A fighter carries only its guns.',from:1935.0,roles:['fighter'],mass:0,drag:0,kind:''},
@@ -831,7 +841,7 @@ Object.assign(PARTS2,{
 });
 // The deepest knee an inverted gull wing can have: the bend no steeper than 22 degrees, the knee's underside above the wheel it
 // carries, and its trailing edge clear of the deck when she is parked tail-down. A deeper chord or a steeper sit allows less.
-function kneeMax(d){ const zb=d.span/2*.36, A=part('airfoil',d.airfoil), tc=A?A.depth:.13, w=chordAt('taper',d.chord,.36), low=.24*tc*w.c, gx=d.wingPos+.25,
+function kneeMax(d){ const zb=d.span/2*.36, A=part('airfoil',d.airfoil), tc=A?A.depth:.13, w=chordAt('taper',d.chord,.36), low=.24*tc*w.c, gx=d.wingPos+.45,
     ang=Math.min(15*DEG,Math.atan2(1.15,Math.max(.5,d.fusLen-.65-gx))), dx=Math.max(0,d.wingPos+w.le+w.c-gx);
   return Math.max(.1,Math.floor(Math.min(.6,zb*Math.tan(22*DEG),.5-low,1.25-low-(.07+dx*Math.sin(ang))/Math.cos(ang))*100)/100); }
 const kneeOf=d=>d.planform==='gull'?Math.min(d.knee??.4,kneeMax(d)):0;
@@ -1055,6 +1065,7 @@ ROWS2.splice(ROWS2.findIndex(r=>r.k==='endur')+1,0,
    why:(s,d)=>s.load?`${part('load',d.load).name}, ${d.stow==='bay'?'inside a bomb bay':'slung under the fuselage'}. Every figure on this sheet is for the aircraft carrying it.`:'A fighter carries only its guns.'});
 { const c=ROWS2.find(r=>r.k==='cost'), w=c.why; c.why=(s,d)=>`${w(s,d)} Carrier kit (arrester hook, flaps, wing folding, extra seats, rear guns, bomb bay) £${s.costParts.naval.toLocaleString()}.`; }
 { const c=ROWS2.find(r=>r.k==='stall'); c.hint='clean, without flaps'; }
+ROWS2.splice(ROWS2.findIndex(r=>r.k==='endur'),1);   // endurance only matters in test flights, so it is worked out but not shown
 const DESIGN2={paint:'silver',layout:'low',planform:'rect',airfoil:'std',gear:'fixed',canopy:'open',frame:'tube',engine:'mer9',arm:'mg4',span:11.6,chord:2.05,gap:1.2,dihedral:5,
   wingPos:1.95,fusLen:8.4,tailArea:3.2,cockpitPos:3.9,fuelPos:'fus',fuelL:360,ammo:500,ammoC:100,armour:{pilot:false,engine:false,fuel:false},doctrine:'turn',name:'Fighter Mk I',
   role:'fighter',roleWas:'fighter',crew:'c1',rear:'none',load:'none',stow:'ext',brakes:'none',flaps:'split',fold:'none',foldIn:4.6};
@@ -1330,6 +1341,28 @@ function computeCV(cv){
   return {std:Math.round(std),full:Math.round(full),trial,T,Tstd,KG,GM,speed,range,fuel,avgasM3,hArea,hArea2:hArea*cv.hangars,hLen,hFD,fbHangar,fbDeck:hFD-T,need,vol,reqs,W,errs,warns,unit,protL,prot,
     crew:need.crew,N:need.N,cat:Ca,wire:Wi,island:Is,aa:cv.nH*H.aa+cv.nM*M.aa+cv.nL*Lg.aa};
 }
+// A carrier with design faults can still go to sea, but each fault costs her something there. These are the costs, with a line
+// for each saying what it does. cvSea gives her figures at sea with them applied.
+function cvFaults(cv,cs){ cs=cs||cvStats(cv); const F={notes:[],speedK:1,maxKn:99,landK:1,handleK:1,rearmK:1,hangarK:1,broken:[],noCats:false};
+  for(const e of cs.errs){ let m;
+    if(/^Deck-edge lifts: not available/.test(e)){ cv.lifts.forEach((l,i)=>{ if(l.edge) F.broken.push(i); }); F.notes.push('Her deck-edge lifts are untried and do not work.'); }
+    else if((m=e.match(/^(.+): not available until/))){ if(cv.cats&&m[1]===cvPart('cat',cv.cat).name){ F.noCats=true; F.notes.push(`Her ${m[1]} is an untried prototype and does not work.`); } else { F.handleK*=1.15; F.notes.push(`The ${m[1]} is an untried prototype that keeps breaking down: everything aboard is slower.`); } }
+    else if(/flush deck has no island/.test(e)){ F.landK*=2; F.notes.push('Funnel smoke blows across the flight deck: twice as many wave-offs and crashes when landing.'); }
+    else if(/^Magazines:/.test(e)){ F.rearmK*=1.5; F.notes.push('Too little magazine space: bombs and torpedoes come up slowly, so rearming takes half as long again.'); }
+    else if(/^Aviation fuel tanks:/.test(e)) F.notes.push('Too little aviation fuel stowage: she runs out sooner.');
+    else if(/^Crew quarters:/.test(e)){ F.handleK*=1.3; F.notes.push('Too few berths: she sails short-handed, and handling aircraft on deck is slower.'); }
+    else if(/too short for boilers/.test(e)){ F.speedK*=.85; F.notes.push('Her boilers are too cramped to fire at full power: 15% off her top speed.'); }
+    else if((m=e.match(/(\d+) shafts need at least (\d+) engine rooms/))){ const have=cv.hold.filter(h=>h==='engine').length, k=Math.cbrt(Math.max(.25,have/+m[2])); F.speedK*=k; F.notes.push(`Too few engine rooms to drive every shaft: ${f0((1-k)*100)}% off her top speed.`); }
+    else if(/No fuel oil tanks/.test(e)){ F.maxKn=Math.min(F.maxKn,12); F.notes.push('No fuel tanks: the oil in her double bottom gives her 12 knots at most.'); }
+    else if(/hangar deck is only/.test(e)){ F.maxKn=Math.min(F.maxKn,18); F.notes.push('She ships green water over the hangar deck: no more than 18 knots.'); }
+    else if(/Metacentric height only/.test(e)) F.notes.push('She is unstable: she rolls heavily, and modest flooding will capsize her.');
+    else if(/too far into the narrow ends/.test(e)){ F.hangarK*=.85; F.notes.push('The ends of the hangar are too narrow to use: 15% less hangar space.'); }
+    else if(/almost no hangar/.test(e)) F.notes.push('With almost no hangar, nearly everything lives on deck.');
+    else if(/^No lifts/.test(e)) F.notes.push('No lifts: aircraft in the hangar can never reach the deck.');
+    else if((m=e.match(/^(?:Deck-edge )?[Ll]ift (\d+) (?:is not over the hangar|needs an open hangar side)/))){ F.broken.push(+m[1]-1); F.notes.push(`Lift ${m[1]} cannot reach the hangar, so it is never used.`); }
+    else { F.handleK*=1.1; F.notes.push(e); } }
+  return F; }
+function cvSea(cv){ const cs=Object.assign({},cvStats(cv)), F=cvFaults(cv,cs); cs.speed=Math.min(cs.speed*F.speedK,F.maxKn); cs.hArea2*=F.hangarK; cs.faults=F; return cs; }
 // How one aircraft design suits one carrier: does it fit the hangar and a lift, can it take off from the deck or a catapult, and can it land on?
 // The wind over the deck is the carrier's top speed plus a light natural wind.
 function cvAircraft(cv,cs,a,d){
@@ -1472,10 +1505,10 @@ function paintGA2(c,d,opt){
   const x0=opt.x0, X=m=>x0-m*s, y0=opt.plan?ERA.ga.y0:118, Y=m=>y0-m*s;
   c.strokeStyle=T.line; c.setLineDash([6,6]); c.lineWidth=1; c.beginPath(); c.moveTo(20,Y(-1.75)); c.lineTo(620,Y(-1.75)); c.stroke(); c.setLineDash([]);
   const rootC=chordAt(d.planform,d.chord,0).cr;
-  const wings=bi?[{y:1.3,le:d.wingPos-.25,ch:d.chord},{y:-.68,le:d.wingPos,ch:d.chord*.9}]:[{y:-.78,le:d.wingPos,ch:rootC}];
+  const gullK=G2.gull?kneeOf(d):0, wings=bi?[{y:1.3,le:d.wingPos-.25,ch:d.chord},{y:-.68,le:d.wingPos,ch:d.chord*.9}]:G2.gull?[{y:-.5,le:d.wingPos,ch:rootC,root:true},{y:-.5-gullK,le:d.wingPos,ch:rootC}]:[{y:-.78,le:d.wingPos,ch:rootC}];
   const low=wings[wings.length-1];
   // undercarriage
-  const gx=d.wingPos+.25;
+  const gx=G2.gx;
   if(d.gear==='fixed'){ c.strokeStyle=ink; c.lineWidth=2.4; c.beginPath(); c.moveTo(X(gx+.15),Y(-.75)); c.lineTo(X(gx),Y(-1.3)); c.stroke();
     c.fillStyle=T.paper; c.lineWidth=2.2; c.beginPath(); c.arc(X(gx),Y(-1.4),.35*s,0,TAU); c.fill(); c.stroke();
     c.fillStyle=body; c.lineWidth=1.4; c.beginPath(); c.ellipse(X(gx),Y(-1.34),.58*s,.3*s,0,0,TAU); c.fill(); c.stroke(); }
@@ -1550,7 +1583,7 @@ function paintGA2(c,d,opt){
   // wings last
   for(const w of wings){ const dep=A.depth*w.ch, xl=X(w.le), xt=X(w.le+w.ch), yy=Y(w.y);
     c.beginPath(); c.moveTo(xl,yy); c.quadraticCurveTo(xl-w.ch*s*.1,yy-dep*s,xl-w.ch*s*.35,yy-dep*s*.9); c.lineTo(xt,yy-1); c.lineTo(xt,yy+1);
-    c.quadraticCurveTo(xl-w.ch*s*.35,yy+dep*s*.35,xl,yy+2); c.closePath(); c.fillStyle=opt.dark||body; c.globalAlpha=.85; c.fill(); c.globalAlpha=1; c.strokeStyle=ink; c.lineWidth=1.6; c.stroke(); }
+    c.quadraticCurveTo(xl-w.ch*s*.35,yy+dep*s*.35,xl,yy+2); c.closePath(); c.fillStyle=opt.dark||body; c.globalAlpha=w.root?.35:.85; c.fill(); c.globalAlpha=1; c.strokeStyle=ink; c.lineWidth=w.root?1:1.6; c.stroke(); }
   // the load in its bay (hidden detail, dashed), in the lower fuselage under the main tank
   if(Ld.mass&&G2.bay){ c.setLineDash([4,3]); c.strokeStyle=ink; c.lineWidth=1.2; loadShape(G2.bay.cy); c.stroke(); c.setLineDash([]); }
 
@@ -1583,6 +1616,8 @@ function paintGA2(c,d,opt){
   c.lineWidth=1; for(const sg of [-1,1]){ c.beginPath(); for(let i=0;i<=6;i++){ const f=.55+i*.065, w=chordAt(pf,d.chord,f), x=PX(sg*f*d.span/2), y=PY(wl+w.le+w.c*.75); i?c.lineTo(x,y):c.moveTo(x,y);} c.stroke(); }
   c.fillStyle=opt.mark; for(const sg of [-1,1]){ const w=chordAt(pf,d.chord,.7); c.beginPath(); c.arc(PX(sg*.7*d.span/2),PY(wl+w.le+w.c/2),Math.min(w.c*.32,.5)*s,0,TAU); c.fill(); }
   if(d.brakes==='dive'&&!opt.ghost){ c.strokeStyle=T.accent; c.lineWidth=2.4; for(const sg of [-1,1]){ c.beginPath(); for(let i=0;i<=6;i++){ const f=.16+.32*i/6, w=chordAt(pf,d.chord,f), x=PX(sg*f*d.span/2), y=PY(wl+w.le+w.c*.82); i?c.lineTo(x,y):c.moveTo(x,y);} c.stroke(); } }
+  // a gull wing's knees: where it bends from down to up
+  if(G2.gull&&!opt.ghost){ const zk=d.span/2*.36; c.strokeStyle=ink; c.lineWidth=1.2; for(const sg of [-1,1]){ const w=chordAt(pf,d.chord,.36); c.beginPath(); c.moveTo(PX(sg*zk),PY(wl+w.le)); c.lineTo(PX(sg*zk),PY(wl+w.le+w.c)); c.stroke(); } }
   // fold hinges
   if(d.fold!=='none'&&!opt.ghost){ const hx=d.fold==='tips'?d.span/2-.5:st.foldSpan/2-(d.fold==='up'||d.fold==='uph'?.2:.3); c.setLineDash([5,4]); c.strokeStyle=T.accent; c.lineWidth=1.4;
     for(const sg of [-1,1]){ const w=chordAt(pf,d.chord,Math.min(1,hx/(d.span/2))); c.beginPath(); c.moveTo(PX(sg*hx),PY(wl+w.le-.3)); c.lineTo(PX(sg*hx),PY(wl+w.le+w.c+.3)); c.stroke(); } c.setLineDash([]); }
@@ -1766,7 +1801,7 @@ function fleetChecks(r){
   else if(!S.ships.length) out.push({bad:true,t:'Lay down at least one ship on the Carriers tab.'});
   else if(!ships.length) out.push({bad:true,t:'Choose at least one carrier to sail.'});
   else out.push(tons>r.tons?{bad:true,t:`${fmtK(tons-r.tons)} t over the ${fmtK(r.tons)} t limit.`}:{t:`${ships.length} carrier${ships.length>1?'s':''}, ${fmtK(tons)} t, within the limit.`});
-  for(const s of ships){ const c=clsOf(s.cls), e=cvStats(c.cv).errs; if(e.length) out.push({bad:true,t:`${s.name}: the ${c.name} class has ${e.length} design fault${e.length>1?'s':''}. ${e[0]}`}); }
+  for(const s of ships){ const c=clsOf(s.cls), F=cvFaults(c.cv); if(F.notes.length) out.push({t:`${s.name} sails with ${F.notes.length} design fault${F.notes.length>1?'s':''}: ${F.notes.join(' ')}`}); }
   if(!n) out.push({bad:true,t:'No aircraft in the air group.'});
   else { out.push(cost>r.air?{bad:true,t:`£${fmtK(cost-r.air)} over the aircraft budget.`}:{t:`${n} aircraft for £${fmtK(cost)}, within the budget.`});
     if(ships.length){ const st=stowAir(); if(st.left.length) for(const l of st.left) out.push({bad:true,t:`${l.n} × ${l.name} will not fit: ${l.why}.`}); else out.push({t:`All ${n} aircraft have a place aboard.`}); } }
@@ -2056,7 +2091,7 @@ function renderCV(){
 function renderCVSheet(){
   const c=cvSel(); if(!c) return; const cv=c.cv, cs=cvStats(cv);
   $('#cvstats').innerHTML=cvStatRows(cv,cs);
-  $('#cvwarn').innerHTML=[...cs.errs.map(t=>`<p class="warn">${esc(t)}</p>`),...cs.warns.map(t=>`<p class="warn ok">${esc(t)}</p>`)].join('')||'<p class="warn ok">No design faults. She can join the fleet.</p>';
+  $('#cvwarn').innerHTML=[...cs.errs.map(t=>`<p class="warn">${esc(t)}</p>`),...(cs.errs.length?[`<p class="warn ok">She can still go to sea with ${cs.errs.length>1?'these faults':'this fault'}, but at a cost: ${esc(cvFaults(cv,cs).notes.join(' '))}</p>`]:[]),...cs.warns.map(t=>`<p class="warn ok">${esc(t)}</p>`)].join('')||'<p class="warn ok">No design faults. She can join the fleet.</p>';
   $('#cvair').innerHTML=cvAirTable(cv,cs); $('#cvsea').innerHTML=cvSeaTable(cv,cs);
   $('#cvweights').innerHTML=cs.W.slice().sort((a,b)=>b.w-a.w).map(w=>`<span>${w.k}</span><span class="v">${fmtK(w.w)} t</span>`).join('');
   drawCV(cv,cs); cvViewApply();
@@ -2118,6 +2153,37 @@ $('#controls').addEventListener('click',e=>{
   if(PARTS[cat]){ const why=blocked(cat,part(cat,id),S.design); if(why){toast(`${part(cat,id).name}: ${why.toLowerCase()}.`);return;} }
   S.design[cat]=id; fixDesign(S.design); save(); renderControls(); renderSheet(); renderRivals();
 });
+// Hovering over a part: what fitting it would change. The figures under the drawing, better in green and worse in red, and the
+// effects that are not among them: the view from the cockpit, fire, armour, crew and rear guns. Carrier fit is left to its own table.
+const partTip=document.createElement('div'); partTip.className='parttip'; partTip.hidden=true; document.body.appendChild(partTip);
+function partChange(btn){ const d0=S.design, d1=JSON.parse(JSON.stringify(d0));
+  if(btn.dataset.armour){ const a=ARMOUR.find(x=>x.id===btn.dataset.armour); if(techDate()<a.from) return {why:`Not available until ${dateText(a.from)}`}; d1.armour=Object.assign({},d1.armour); d1.armour[a.id]=!d1.armour[a.id]; }
+  else { const cat=btn.dataset.cat, id=btn.dataset.id; if(d0[cat]===id) return {same:true}; if(PARTS[cat]){ const why=blocked(cat,part(cat,id),d0); if(why) return {why}; } d1[cat]=id; }
+  fixDesign(d1); const a=compute(d0), b=compute(d1), rows=[], notes=[];
+  for(const row of ROWS){ const v0=row.get(a), v1=row.get(b); if(row.fmt(v0)===row.fmt(v1)) continue; const dv=v1-v0;
+    const good=row.k==='stab'?Math.abs(v1-.115)<Math.abs(v0-.115):row.better==='down'?dv<0:dv>0;
+    rows.push(`<div class="r"><span>${row.label}</span><span class="${good?'up':'down'}">${dv>0?'+':'−'}${(row.dfmt||row.fmt)(Math.abs(dv))} ${row.unit}</span></div>`); }
+  const say=(good,t)=>notes.push(`<p class="${good==null?'n':good?'up':'down'}">${t}</p>`);
+  if(b.view!==a.view) say(b.view>a.view,b.view>a.view?'Better view from the cockpit: the pilot sees attackers sooner.':'Worse view from the cockpit: the pilot sees attackers later.');
+  if(Math.abs(b.fireP-a.fireP)>1e-4) say(b.fireP<a.fireP,b.fireP<a.fireP?'Less likely to catch fire when hit.':'More likely to catch fire when hit.');
+  const A0=d0.armour||{}, A1=d1.armour||{}, AT={pilot:'the pilot from fire from behind',engine:'the engine and its cooling from hits',fuel:'the tanks: they seal over bullet holes, so fires are rarer'};
+  for(const k in AT) if(!!A0[k]!==!!A1[k]) say(!!A1[k],(A1[k]?'Protects ':'No longer protects ')+AT[k]+'.');
+  if(b.crewN!==a.crewN) say(b.crewN>a.crewN,b.crewN>a.crewN?'Another crew member to navigate over the sea and watch the tail.':'One crew member fewer to navigate and watch the tail.');
+  const R0=part('rear',d0.rear)||{n:0}, R1=part('rear',d1.rear)||{n:0}, rw=R=>R.n?R.n*GUN[R.g].kg*GUN[R.g].rpm:0;
+  if(rw(R1)!==rw(R0)) say(rw(R1)>rw(R0),rw(R1)>rw(R0)?(R0.n?'A stronger rear gun against fighters attacking from behind.':'A rear gun to fight off fighters attacking from behind.'):(R1.n?'A weaker rear gun.':'No rear gun: nothing to stop a fighter sitting on the tail.'));
+  if(b.glide!==a.glide&&d1.role==='dive') say(!b.glide,b.glide?'Without dive brakes it has to glide in: its bombs land wider of the target.':'Dives steeply under control: its bombs land closer to the target.');
+  if(fuelCap(d1)!==fuelCap(d0)) say(fuelCap(d1)>fuelCap(d0),`Room for ${Math.abs(fuelCap(d1)-fuelCap(d0))} L ${fuelCap(d1)>fuelCap(d0)?'more':'less'} fuel.`);
+  if(btn.dataset.cat==='flaps') say(null,'Flaps change the take-off run and the landing speed: see Carrier fit.');
+  if(btn.dataset.cat==='fold') say(null,'Folding changes the space it takes in the hangar and whether it fits the lifts: see Carrier fit.');
+  return {rows,notes}; }
+function showPartTip(btn){ const r=partChange(btn), name=btn.querySelector('.n')?.textContent||'';
+  if(r.same){ partTip.hidden=true; return; }
+  partTip.innerHTML=`<b>${esc(name)}</b>${r.why?`<p class="n">${esc(r.why)}.</p>`:(r.rows.length||r.notes.length)?r.rows.join('')+r.notes.join(''):'<p class="n">No change to its figures.</p>'}`;
+  partTip.hidden=false; const br=btn.getBoundingClientRect(), tw=partTip.offsetWidth, th=partTip.offsetHeight;
+  let x=br.right+10; if(x+tw>innerWidth-8) x=Math.max(8,br.left-tw-10); let y=Math.min(br.top,innerHeight-th-8); partTip.style.left=x+'px'; partTip.style.top=Math.max(8,y)+'px'; }
+for(const [ev,on] of [['mouseover',1],['focusin',1],['mouseout',0],['focusout',0]]) $('#controls').addEventListener(ev,e=>{ const b=e.target.closest('.chip[data-cat],[data-armour]');
+  if(on&&b&&!(b.dataset.cat==='paint')) showPartTip(b); else if(!on&&b&&!b.contains(e.relatedTarget)) partTip.hidden=true; });
+$('#controls').addEventListener('click',()=>{ partTip.hidden=true; });
 $('#controls').addEventListener('input',e=>{
   const k=e.target.dataset.dim; if(!k) return;
   S.design[k]=parseFloat(e.target.value);
@@ -2626,7 +2692,7 @@ function stationAt(s,f){ const z=clamp(f,0,1)*s[s.length-1][0];
   return s[0]; }
 /* Graphics quality: 0 Low, 1 Medium, 2 High. Auto picks from how many aircraft are in the fight. */
 const GFXQ={low:0,med:1,high:2};
-function gfxLevel(n){ const g=S.gfx||'auto'; return g in GFXQ?GFXQ[g]:n<=8?2:n<=24?1:0; }
+function gfxLevel(n){ return 2; }   // always the highest setting
 const gfxRatio=q=>q===0?1:Math.min(q===1?1.5:2,window.devicePixelRatio||1);
 // A soft sky-and-ground environment for reflections on bare metal, made once per renderer.
 const ENVS=new WeakMap(), GLR=new Set();
@@ -2710,7 +2776,7 @@ function gaShape(d,st){
   const Fk=PARTS.fold?d.fold:'none', zh=Fk==='tips'?Math.max(1.2,half-.55):FOLD_HINGE({fold:Fk})?clamp((d.foldIn||4.6)/2,1.2,half-.4):0;
   // the main wheels: at a gull wing's knee, otherwise inboard of any fold
   const gearZ=gull?Math.min(zb,zh?zh-.3:99):d.gear==='fixed'?1.05:clamp(zh?zh-.3:1.5,.8,1.5);
-  const gx=d.wingPos+.25, G0=-1.75, low=[...botL,hook.b,[len+.08,-.12]], Ld=part('load',d.load), Dp=part('drop',d.drop);
+  const gx=d.wingPos+.45, G0=-1.75, low=[...botL,hook.b,[len+.08,-.12]], Ld=part('load',d.load), Dp=part('drop',d.drop);
   // a drop tank: on the centreline, or under the wing when a store is there: outboard of the wheel, or on a gull wing inboard of it
   // It never hangs lower than 20 cm above the deck: if it would, it moves out along the wing until it clears.
   let tank=null; if(Dp&&Dp.L){ const tl=1.3+Dp.L/420, td=.36+Dp.L/1600, lw=wings[wings.length-1], floor=-1.55+td/2;
@@ -2728,7 +2794,7 @@ function gaShape(d,st){
   ang=Math.max(.04,ang); const park={ang,tw:Math.min(-.6,G0+((len-.65)-gx)*Math.tan(ang))};
   const cowlY=lerpPts(sortPts(topL),.25);
   return {hook,park,cowlY,gull,dyW,zb,zh,gearZ,tank,len,ck,el,nC,radial,jet,bi,top,nose,nw,fw,topL,botL,planL,bay,wings,rootC,seats,glass,tur,gun,
-    gx:d.wingPos+.25,ground:-1.75,fh:.55*sq,tl:.6*sq,ts,tc,tailX:len-tc*.55,tailY:.06};
+    gx:d.wingPos+.45,ground:-1.75,fh:.55*sq,tl:.6*sq,ts,tc,tailX:len-tc*.55,tailY:.06};
 }
 // A surface swept along x: f(x,u) gives the point at x and u (0 to 1 across the section). Caps close either end.
 function loftGeo(xs,f,n,closed,caps,us=1){ const pos=[],uv=[],idx=[],R=n+1;
@@ -2836,21 +2902,22 @@ function meshFor(p,q=1,opt={}){
   // the wing between |z|=a and |z|=b, one side (sg) or both (sg 0, through the centre)
   const part2=(s,a,b,sg)=>{ const half=s[s.length-1][0], pts=[]; pts.push(a>0?stationAt(s,a/half):s[0]); for(const v of s) if(v[0]>a+1e-3&&v[0]<b-1e-3) pts.push(v); if(b<half-1e-3) pts.push(stationAt(s,b/half)); else pts.push(s[s.length-1]);
     return sg?(sg>0?pts:pts.slice().reverse()).map(v=>[sg*v[0],v[1],v[2]]):[...pts.slice(1).reverse().map(v=>[-v[0],v[1],v[2]]),...pts]; };
-  W.forEach((w,wi)=>{ const s=stationsOf(w), half=s[s.length-1][0], low=wi===W.length-1, zW=bay&&low?bay.r+.05:0, zc=zh||half+1;
+  const ailOn=q===2;
+  W.forEach((w,wi)=>{ let s=stationsOf(w); const sFull=s;
+    if(ailOn&&wi===0){ const h=s[s.length-1][0], za=.55*h, zb=.93*h, cut=v=>[v[0],v[1],v[1]+(v[2]-v[1])*.76], A=stationAt(s,.55), B=stationAt(s,.93);
+      s=[...s.filter(v=>v[0]<za-1e-3),[za-2e-3,A[1],A[2]],cut(A),...s.filter(v=>v[0]>za+1e-3&&v[0]<zb-1e-3).map(cut),cut(B),[zb+2e-3,B[1],B[2]],...s.filter(v=>v[0]>zb+1e-3)]; }
+    const s0=s; half=s[s.length-1][0], low=wi===W.length-1, zW=bay&&low?bay.r+.05:0, zc=zh||half+1;
     // the fixed part: through the centre, or from the bomb bay's sides out
     if(zW) for(const sg of [-1,1]) add(wingGeo(s,X,tcW,dyW,PW,part2(s,zW,zc,sg),cam),body,0,w.y); else add(wingGeo(s,X,tcW,dyW,PW,part2(s,0,zc,0),cam),body,0,w.y);
     if(zh) for(const sg of [-1,1]){ const g=folds[sg], geo=wingGeo(s,X,tcW,dyW,PW,part2(s,zh,half+1,sg),cam); geo.translate(-g.position.x,w.y-g.position.y,-g.position.z); add(geo,body,0,0,0,g); }
-    if(wi===0){ const qq=stationAt(s,.7), c=qq[2]-qq[1], rg=new THREE.CircleGeometry(Math.min(c*.32,.5),16); rg.rotateX(-Math.PI/2);
-      for(const sg of [-1,1]){ const m=add(rg,mark,X((qq[1]+qq[2])/2),w.y+(naca(.5,tcW)+cam)*c+dyW(qq[0])+.03,sg*qq[0]); m.rotation.x=-sg*Math.atan(slope(qq[0])); } }
-    // ailerons on the outer trailing edge, hinged so they can move (High)
-    if(q===2&&wi===0) for(const sg of [-1,1]){
-      const a=stationAt(s,.55), b=stationAt(s,.93), ca=a[2]-a[1], cb=b[2]-b[1];
-      const pa=new THREE.Vector3(X(a[2]-ca*.24),w.y+dyW(a[0]),sg*a[0]), pb=new THREE.Vector3(X(b[2]-cb*.24),w.y+dyW(b[0]),sg*b[0]);
-      const ta=new THREE.Vector3(X(a[2]),pa.y,pa.z), tb=new THREE.Vector3(X(b[2]),pb.y,pb.z), h=hinge('ail',pa.x,pa.y,pa.z,pb.clone().sub(pa).normalize().toArray()); h.userData.side=sg;
-      const tk=Math.max(.035,naca(.8,tcW)*ca*2.4), up=new THREE.Vector3(0,tk/2,0), pts=[pa,pb,tb,ta].map(v=>v.clone().sub(pa)), pos=[];
-      for(const v of pts) pos.push(...v.clone().add(up).toArray()); for(const v of pts) pos.push(...v.clone().sub(up).toArray());
-      const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
-      g.setIndex([0,1,2,0,2,3,4,6,5,4,7,6,0,4,5,0,5,1,1,5,6,1,6,2,2,6,7,2,7,3,3,7,4,3,4,0]); g.computeVertexNormals(); add(g,body,0,0,0,h); }
+    if(wi===0){ const qq=stationAt(sFull,.7), c=qq[2]-qq[1], rg=new THREE.CircleGeometry(Math.min(c*.26,.5),16); rg.rotateX(-Math.PI/2);
+      for(const sg of [-1,1]){ const m=add(rg,mark,X(qq[1]+c*.4),w.y+(naca(.4,tcW)+cam*.96)*c+dyW(qq[0])+.03,sg*qq[0]); m.rotation.x=-sg*Math.atan(slope(qq[0])); } }
+    // ailerons: the strip cut from the outer trailing edge, a section of its own, hinged along the cut
+    if(ailOn&&wi===0){ const tcA=2*naca(.76,tcW)/.24; for(const sg of [-1,1]){
+      const st=[.55,.62,.7,.78,.86,.93].map(f=>{ const v=stationAt(sFull,f); return [v[0],v[1]+(v[2]-v[1])*.76,v[2]]; });
+      const a0=st[0], b0=st[st.length-1], pa=new THREE.Vector3(X(a0[1]),w.y+dyW(a0[0])+cam*(a0[2]-a0[1])/.24*.42,sg*a0[0]), pb=new THREE.Vector3(X(b0[1]),w.y+dyW(b0[0])+cam*(b0[2]-b0[1])/.24*.42,sg*b0[0]);
+      const h=hinge('ail',pa.x,pa.y,pa.z,pb.clone().sub(pa).normalize().toArray()); h.userData.side=sg;
+      const sec=(sg>0?st:st.slice().reverse()).map(v=>[sg*v[0],v[1],v[2]]), g=wingGeo(st,X,tcA,dyW,PW,sec,0); g.translate(-pa.x,w.y+cam*(a0[2]-a0[1])/.24*.42-pa.y,-pa.z); add(g,body,0,0,0,h); } }
     // dive brakes: perforated plates along the inner trailing edge, above and below
     if(q&&low&&d.brakes==='dive') for(const sg of [-1,1]){ const a=stationAt(s,.16), b=stationAt(s,.48), x=((a[1]+(a[2]-a[1])*.82)+(b[1]+(b[2]-b[1])*.82))/2, c=(a[2]-a[1]+b[2]-b[1])/2;
       for(const v of [1,-1]) add(new THREE.BoxGeometry(c*.14,.025,b[0]-a[0]),dark,X(x+c*.06),w.y+dyW((a[0]+b[0])/2)+(v>0?(naca(.82,tcW)+cam*.6)*c+.015:-(naca(.82,tcW)-cam*.6)*c-.015),sg*(a[0]+b[0])/2); }
@@ -2929,9 +2996,18 @@ function meshFor(p,q=1,opt={}){
     tailWheel(); }
   else if(opt.gear){
     // retractable gear: main legs fold inward into the wing, the tail wheel back into the fuselage
-    const gz=gearZ, hy=Math.min(-.62,legTop(gz)), gl=hy+1.4, wg=new THREE.CylinderGeometry(.35,.35,.18,18); wg.rotateX(Math.PI/2);
-    for(const sg of [-1,1]){ const h=hinge('gear',X(gx),hy,sg*gz,[1,0,0]); h.userData.fold=sg*Math.PI/2; add(new THREE.CylinderGeometry(.06,.06,gl,8),steel,0,-gl/2,0,h); add(wg,black,0,-gl,0,h);
-      add(new THREE.BoxGeometry(.5,gl-.06,.02),body,-.05,-gl/2-.02,sg*.14,h); }
+    // The leg is hinged inside the wing at mid-depth, behind the leading edge, so the folded wheel lies flat within it. It folds
+    // inward if there is room before the fuselage, otherwise outward, as on the Spitfire.
+    const gz=gearZ, [,gle,gte]=stationAt(ms,Math.min(1,gz/msH)), gc=gte-gle, gxx=gle+.4>gte-.4?(gle+gte)/2:clamp(gx,gle+.4,gte-.4);
+    // the wing's depth where the folded wheel lies, at its thinnest across the wheel, and the middle of it there
+    // (worked out where the folded wheel ends up: a leg's length inboard or outboard of the hinge)
+    const depthAt=z=>{ const [,le,te]=stationAt(ms,clamp(z/msH,0,1)), c=te-le, fr=x=>clamp((x-le)/c,0,1), wy0=mw.y+dyW(z), lowAt=f=>wy0+(cam*4*f*(1-f)-naca(f,tcW))*c, upAt=f=>wy0+(cam*4*f*(1-f)+naca(f,tcW))*c;
+      const fs2=[-.35,-.18,0,.18,.35].map(o=>fr(gxx+o)); return [Math.max(...fs2.map(lowAt)),Math.min(...fs2.map(upAt))]; };
+    let [lo,hi]=depthAt(gz), gl=(lo+hi)/2+1.4; const inward=gz-gl-.36>=wF(gxx)*.9, zf=inward?gz-gl:gz+gl; { const D=[-.3,0,.3].map(o=>depthAt(zf+o)); lo=Math.max(...D.map(q=>q[0])); hi=Math.min(...D.map(q=>q[1])); }
+    const dep=Math.max(.04,hi-lo), hy=(lo+hi)/2, ww=Math.min(.16,dep*.55); gl=hy+1.4;   // a margin for the wing's facets
+    const wg=new THREE.CylinderGeometry(.35,.35,ww,18); wg.rotateX(Math.PI/2);
+    for(const sg of [-1,1]){ const h=hinge('gear',X(gxx),hy,sg*gz,[1,0,0]); h.userData.fold=(inward?sg:-sg)*Math.PI/2; add(new THREE.CylinderGeometry(.06,.06,gl,8),steel,0,-gl/2,0,h); add(wg,black,0,-gl,0,h);
+      add(new THREE.BoxGeometry(.5,gl-.06,.02),body,-.05,-gl/2-.02,(inward?sg:-sg)*.14,h); }
     const th=hinge('gear',X(Lf-.6),-.1,0,[0,0,1]); th.userData.fold=-Math.PI/2; const tw=new THREE.Group(); tw.position.set(-X(Lf-.6),.1,0); th.add(tw); tailWheel(tw); }
   // parked: the tail settles until the tail wheel touches the ground the main wheels stand on
   grp.userData.park={x:X(gx),y:G.ground,ang:G.park.ang};
@@ -3012,7 +3088,7 @@ function setupScene(){
 }
 // Propellers turn, jet exhausts flicker, guns flash, and on High the ailerons, elevator and rudder follow the stick.
 function animate3D(p,an,q){
-  for(const pr of an.props) pr.rotation.x+=p.engineOut?0:.9; for(const o of an.discs) o.visible=!p.engineOut;
+  const rpm=engSpool(p.eng3||(p.eng3={rpm:1,t:1e3}),!p.engineOut&&!(p.fuel<=0),1/60,part('engine',p.d.engine)); for(const pr of an.props) pr.rotation.x+=rpm*.9; for(const o of an.discs) o.visible=rpm>.6;
   if(!q) return;
   const on=!p.engineOut&&p.alive&&!(p.fuel<=0); for(const o of an.glows){ o.visible=on; if(on) o.scale.set((o.userData.ab?1:.7)*(.85+Math.random()*.3),1,1); }
   const fl=F.t-(p.shotT||-9)<.06; for(const o of an.flash){ o.visible=fl&&Math.random()<.75; if(o.visible) o.rotation.x=Math.random()*3; }
@@ -3301,7 +3377,6 @@ const SND={ctx:null,last:{},
 
 /* ---------- Settings: appearance and a fresh start ---------- */
 function applyTheme(){ const t=S.theme||'system'; if(t==='system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme=t;
-  document.querySelectorAll('[data-gfx]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.gfx===(S.gfx||'auto')));
   document.querySelectorAll('[data-theme-set]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.themeSet===t)); document.querySelectorAll('[data-battle]').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.battle==='realistic')===!!S.realistic)); document.querySelectorAll('[data-squad]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.squad===(S.squad||'m'))); $('#soundset').setAttribute('aria-pressed',S.sound!==false); $('#devadv').setAttribute('aria-pressed',String(!!(S.dev&&S.dev.adv))); }
 $('#settings').addEventListener('click',()=>{ applyTheme(); $('#reset').textContent='Reset progress'; $('#reset').dataset.armed=''; $('#setd').hidden=false; $('#setclose').focus(); });
 $('#setclose').addEventListener('click',()=>{ $('#setd').hidden=true; });
@@ -3311,7 +3386,6 @@ $('#devall').addEventListener('click',e=>{ const b=e.currentTarget, n=b.querySel
 $('#devadv').addEventListener('click',()=>{ S.dev=S.dev||{}; S.dev.adv=!S.dev.adv; save(); applyTheme(); if(S.tab==='trials'&&!TR) renderTrials();
   toast(S.dev.adv?'Advanced trials on. Set up your task force on the Trials tab.':'Advanced trials off. They take effect the next time you put to sea.'); });
 document.querySelectorAll('[data-battle]').forEach(b=>b.addEventListener('click',()=>{ S.realistic=b.dataset.battle==='realistic'; save(); applyTheme(); }));
-document.querySelectorAll('[data-gfx]').forEach(b=>b.addEventListener('click',()=>{ S.gfx=b.dataset.gfx; save(); applyTheme(); toast('Graphics change from the next battle.'); }));
 $('#soundset').addEventListener('click',()=>{ S.sound=S.sound===false; save(); applyTheme(); if(S.sound===false) SND.stop(); });
 $('#setd').addEventListener('click',e=>{ const b=e.target.closest('[data-theme-set]'); if(b){ S.theme=b.dataset.themeSet; save(); applyTheme(); } });
 $('#reset').addEventListener('click',e=>{ const b=e.currentTarget;
@@ -3494,6 +3568,20 @@ const DROPS=[
     'Cowling guns lie level, as they were fitted, rather than following the slope of the nose. The arrester hook lies flush under the tail instead of hanging below it.',
     'Parked, nothing touches the deck but the wheels: the tail settles no further than 15 degrees, and a taller tail wheel keeps a long torpedo or low drop tank clear. Drop tanks hang outboard of the wheels (inboard of them on a gull wing), never under a bomb bay, and an inline engine’s radiator moves under the wing roots when something hangs under the belly.',
   ]},
+  {at:'2026-11-23T19:46:00+13:00',items:[
+    'Hover over any part in the drawing office to see what it would change: each figure under the drawing that moves, better in green and worse in red, and the effects that are not among them, such as the view from the cockpit, fire, armour, crew and rear guns.',
+    'Carriers with design faults can now go on trials and into battle. Each fault costs her something at sea, and the designer and the trials page say what: a lift that cannot reach the hangar is never used, too few engine rooms take knots off her speed, funnel smoke over a flush deck doubles the wave-offs, and so on.',
+    'Lifts work properly. An aircraft is hidden in the hangar while the lift goes down for it, rides up facing the way it will be moved, and stands on the lift until the deck crew move it off; only then does the lift go down again. No lift goes down while an aircraft is on it, taxiing across it, parked on it or taking off over it, and nobody sets off across a lift that is down.',
+    'Arrester wires stand across the landing area and take the hook: the wire is dragged forward into a V as the aircraft stops, then springs back. The crash barrier is a real barrier that rises for landings, lies flat to let each aircraft taxi forward through it, and lies flat whenever nobody is landing.',
+    'On deck, aircraft sit back on their tail wheels.',
+    'Ship wakes wander and break up instead of running out in ruler-straight lines. Torpedo tracks in 3D are a streak of bubbles that shows a little behind the torpedo, then spreads and fades. Bomb near misses throw up a column, a crown of spray, a ring of foam and drifting mist, much higher for a big bomb.',
+    'Engines start like engines, in the viewer, on deck and in battle: a pause, a few slow turns on the starter, then she fires and runs up, taking longer for a bigger engine. One that cuts out runs down.',
+    'The viewer opens with Gravity on, and the rival outline now does whatever your aircraft does: gear, bomb bay, folding, Gravity, engine. X-ray is gone.',
+    'Retracted wheels fold away inside the wing, inward or outward (as on the Spitfire) depending on the room, and doors close over them. Ailerons are cut out of the wing and hinged along the cut, so they no longer pass through it.',
+    'The inverted gull wing shows in 2D: its knees in the plan, and the wing at the knee with the root above it in the side elevation.',
+    'A new paint, three-tone sea blue. Guns are named by calibre (no maker’s names) and listed from the lightest weight of fire to the heaviest; structures from the weakest to the strongest. Parts are described as dearer or cheaper, not slower or quicker to build. Endurance is still worked out for test flights but no longer shown in the figures.',
+    'Graphics always run at the highest setting, so the setting has gone. The Reset progress button and the other outline buttons in Settings no longer vanish on the light theme.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -3505,7 +3593,7 @@ $('#logclose').addEventListener('click',logShut);
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!$('#logd').hidden) logShut(); });
 
 /* ---------- 3D viewer: the current design on its own, painted, at High detail ---------- */
-const VW3={r:null,open:false,yaw:-.7,pitch:.35,dist:1,drag:null,pinch:null,spin:true,sizes:false,grav:false,gravA:0,gravV:0,bayOpen:false,bayT:0,xray:false,rival:false,gearUp:false,gearT:0,dock:false,key:'',to:null,last:0};
+const VW3={r:null,open:false,yaw:-.7,pitch:.35,dist:1,drag:null,pinch:null,spin:true,sizes:false,grav:true,gravA:0,gravV:0,bayOpen:false,bayT:0,xray:false,rival:false,gearUp:false,gearT:0,dock:false,key:'',to:null,last:0};
 function textSprite(txt,h,bg){
   const c=document.createElement('canvas'), g=c.getContext('2d'), font='600 40px "IBM Plex Mono", monospace'; g.font=font; const w=Math.ceil(g.measureText(txt).width)+28;
   c.width=w; c.height=60; g.font=font; g.fillStyle=bg||'rgba(16,35,63,.88)'; g.fillRect(0,0,w,60); g.fillStyle='#EEF2F5'; g.textBaseline='middle'; g.fillText(txt,14,32);
@@ -3566,8 +3654,12 @@ function cvHullGeo(cv,cs,ln,holes){
   for(let t=0;t<pos.count/3;t++){ const y=(pos.getY(3*t)+pos.getY(3*t+1)+pos.getY(3*t+2))/3, c=tag[t]?CV3C.fore:y<-.02?CV3C.red:y<.75?CV3C.boot:CV3C.hull; for(let k=0;k<3;k++) col.push(c.r,c.g,c.b); }
   n.setAttribute('color',new THREE.Float32BufferAttribute(col,3)); return n;
 }
+// An arrester wire from sheave to sheave, pulled forward to hx (ship x) at the middle by a hook.
+const UPV=new THREE.Vector3(0,1,0);
+function wireSet(w,hx){ const A=new THREE.Vector3(w.x,w.y,-w.W), M=new THREE.Vector3(hx,w.y+(hx>w.x+.05?.12:0),0), B=new THREE.Vector3(w.x,w.y,w.W);
+  for(const [o,p,q] of [[w.a,A,M],[w.b,M,B]]){ const d=q.clone().sub(p), l=d.length(); o.position.copy(p).add(q).multiplyScalar(.5); o.scale.set(1,l,1); o.quaternion.setFromUnitVectors(UPV,d.normalize()); } }
 // The flight deck's markings, painted onto its top: planks or steel plates, edge and centre lines, lifts, wires, barrier and catapults.
-function cvDeckTexture(cv){
+function cvDeckTexture(cv,real){
   const dS=deckStart(cv), len=cv.deckL, W=2048, H=Math.max(128,Math.min(1024,Math.round(W*cv.deckW/len))), o=document.createElement('canvas'); o.width=W; o.height=H;
   const g=o.getContext('2d'), px=m=>(dS+len-m)/len*W, py=s=>(s/cv.deckW+.5)*H, steel=cv.deckArm>0;
   g.fillStyle=steel?'#4F565B':'#7E6A4C'; g.fillRect(0,0,W,H);
@@ -3581,8 +3673,8 @@ function cvDeckTexture(cv){
   for(const l of cv.lifts){ if(l.edge) continue; const x0=px(l.x+l.l/2), x1=px(l.x-l.l/2), y0=py(-l.w/2), y1=py(l.w/2);
     g.fillStyle=steel?'rgba(0,0,0,.18)':'rgba(70,52,30,.35)'; g.fillRect(x0,y0,x1-x0,y1-y0); g.strokeStyle='rgba(20,20,20,.7)'; g.lineWidth=Math.max(2,H/250); g.strokeRect(x0,y0,x1-x0,y1-y0); }
   g.strokeStyle='rgba(25,25,25,.75)'; g.lineWidth=Math.max(1.5,H/400);
-  if(cv.wires){ const a=dS+len*.62, b=dS+len*.9; for(let k=0;k<cv.wires;k++){ const x=px(a+(b-a)*k/Math.max(1,cv.wires-1)); g.beginPath(); g.moveTo(x,py(-cv.deckW*.42)); g.lineTo(x,py(cv.deckW*.42)); g.stroke(); } }
-  if(cv.barrier){ g.strokeStyle='rgba(220,180,40,.9)'; g.lineWidth=Math.max(2,H/200); const x=px(dS+len*.55); g.beginPath(); g.moveTo(x,py(-cv.deckW*.44)); g.lineTo(x,py(cv.deckW*.44)); g.stroke(); }
+  if(cv.wires&&!real){ const a=dS+len*.62, b=dS+len*.9; for(let k=0;k<cv.wires;k++){ const x=px(a+(b-a)*k/Math.max(1,cv.wires-1)); g.beginPath(); g.moveTo(x,py(-cv.deckW*.42)); g.lineTo(x,py(cv.deckW*.42)); g.stroke(); } }
+  if(cv.barrier&&!real){ g.strokeStyle='rgba(220,180,40,.9)'; g.lineWidth=Math.max(2,H/200); const x=px(dS+len*.55); g.beginPath(); g.moveTo(x,py(-cv.deckW*.44)); g.lineTo(x,py(cv.deckW*.44)); g.stroke(); }
   g.strokeStyle='rgba(25,25,25,.8)'; g.lineWidth=Math.max(3,H/120); for(let k=0;k<cv.cats;k++){ const s=(k?1:-1)*cv.deckW*.2; g.beginPath(); g.moveTo(px(dS+3),py(s)); g.lineTo(px(dS+38),py(s)); g.stroke(); }
   const t=new THREE.CanvasTexture(o); t.anisotropy=8; return t;
 }
@@ -3616,7 +3708,7 @@ function cvMesh(cv,cs,opt={}){
     sh.lineTo(...P(e-ra,hw)); sh.quadraticCurveTo(...P(e,hw),...P(e,hw-ra)); sh.lineTo(...P(e,-hw+ra)); sh.quadraticCurveTo(...P(e,-hw),...P(e-ra,-hw));
     if(opt.lifts) for(const l of cv.lifts) if(!l.edge){ const h=new THREE.Path(), a2=l.x-l.l/2, b2=l.x+l.l/2; h.moveTo(...P(a2,-l.w/2)); h.lineTo(...P(b2,-l.w/2)); h.lineTo(...P(b2,l.w/2)); h.lineTo(...P(a2,l.w/2)); h.closePath(); sh.holes.push(h); }
     const g=new THREE.ExtrudeGeometry(sh,{depth:th,bevelEnabled:false,curveSegments:6}); g.rotateX(-Math.PI/2);
-    const tex=cvDeckTexture(cv); tex.repeat.set(1/cv.deckL,1/cv.deckW); tex.offset.set(-X(e)/cv.deckL,.5);
+    const tex=cvDeckTexture(cv,opt.lifts); tex.repeat.set(1/cv.deckL,1/cv.deckW); tex.offset.set(-X(e)/cv.deckL,.5);
     const dm=mat('#ffffff',{map:tex,roughness:.9,metalness:0,envMapIntensity:.2}); add(g,[dm,steel],0,yFD-th,0);
   }
   // everything hung on the ship's side stands on a plated wedge down to the hull, or on braces, never on air
@@ -3691,7 +3783,18 @@ function cvMesh(cv,cs,opt={}){
     const a=i*len, b=(i+1)*len, zm=(z0+z1)/2, w=Math.min(bAt(a+.2,zm),bAt(b-.2,zm),bAt((a+b)/2,z0+.3))*.96; if(w<.5) continue;
     const o=add(new THREE.BoxGeometry(len*.97,(z1-z0)*.97,2*w),new THREE.MeshLambertMaterial({color:sp.col}),X((a+b)/2),Yz(zm),0,xray); o.renderOrder=2; }
   { const w=Math.min(bAt(cv.hFrom,cv.D),bAt(cv.hTo,cv.D))-1, h=nh*(cv.hH+.7); add(new THREE.BoxGeometry(cv.hTo-cv.hFrom,h,2*w),new THREE.MeshLambertMaterial({color:'#9CC3DA',transparent:true,opacity:.55,depthWrite:false}),X((cv.hFrom+cv.hTo)/2),Yz(cv.D+h/2),0,xray); }
-  return {grp,xray,mats,lifts,smoke};
+  // Arrester wires stretched across the landing area on bow springs, each between two sheaves, and the crash barrier: two stanchions
+  // and three wires on a hinge, laid flat on the deck until it is wanted.
+  const wires=[]; let barrier=null;
+  if(opt.lifts&&cv.wires){ const wm=mat('#2a2d30',{roughness:.5,metalness:.6}), cg=new THREE.CylinderGeometry(.03,.03,1,6), W=cv.deckW*.42;
+    for(let k=0;k<cv.wires;k++){ const m=dS+cv.deckL*(.62+.28*k/Math.max(1,cv.wires-1)), x=X(m), w={x,dx:m-dS,W,y:yFD+.1,a:add(cg,wm),b:add(cg,wm)};
+      for(const sg of [-1,1]) box(.3,.22,.3,x,yFD+.1,sg*W,dark); wireSet(w,x); wires.push(w); } }
+  if(opt.lifts&&cv.barrier){ const W=cv.deckW*.44, pm=mat('#C9A227',{roughness:.6}), cm=mat('#2a2d30',{roughness:.5,metalness:.6});
+    barrier=new THREE.Group(); barrier.position.set(X(dS+cv.deckL*.55),yFD+.1,0); grp.add(barrier);
+    for(const sg of [-1,1]){ const p=new THREE.Mesh(new THREE.CylinderGeometry(.08,.1,1.7,8),pm); p.position.set(0,.85,sg*W); barrier.add(p); }
+    for(const h of [.55,1.05,1.55]){ const c=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,2*W,6),cm); c.rotation.x=Math.PI/2; c.position.y=h; barrier.add(c); }
+    barrier.rotation.z=-Math.PI/2; }
+  return {grp,xray,mats,lifts,smoke,wires,barrier};
 }
 // The 3D view in the designer: the ship on the sea or on a plain floor, turned by dragging. Rebuilt whenever the design changes.
 const CV3={yaw:.62,pitch:.32,dist:0,key:'',loop:false};
@@ -3720,6 +3823,20 @@ function seaTexture(){
 // Churning foam: tileable value noise in four octaves, contrast stretched, so a threshold on it gives patches of white water that
 // range from scattered flecks to solid as the threshold falls. Made once and shared.
 let FOAMN=null;
+// Torpedo tracks. A torpedo runs a few metres down, so its exhaust bubbles take a few seconds to reach the surface: the track shows
+// a little way behind it, a narrow broken streak of foam over a paler band, spreading and fading over a minute or so. Each track is
+// a ribbon of TW points along its run; uv.x is the distance along it (for the bubble pattern), uv.y the side, aAge seconds since the
+// torpedo passed.
+const TW=56, TWN=24;
+function torpWakeMesh(){ const nv=TWN*TW*2, g=new THREE.BufferGeometry(), idx=[];
+  for(let k=0;k<TWN;k++) for(let i=0;i<TW-1;i++){ const a=(k*TW+i)*2; idx.push(a,a+2,a+1,a+1,a+2,a+3); }
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(nv*3),3)); g.setAttribute('uv',new THREE.BufferAttribute(new Float32Array(nv*2),2)); g.setAttribute('aAge',new THREE.BufferAttribute(new Float32Array(nv),1)); g.setIndex(idx); g.setDrawRange(0,0);
+  const m=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{uFN:{value:foamNoise()}},
+    vertexShader:'attribute float aAge; varying vec2 vUv; varying float vAge; void main(){ vUv=uv; vAge=aAge; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+    fragmentShader:'uniform sampler2D uFN; varying vec2 vUv; varying float vAge; void main(){ float a=vAge, rise=smoothstep(1.5,5.0,a), fade=1.0-smoothstep(20.0,75.0,a), x=abs(vUv.y), prof=exp(-x*x*3.2);'+
+      ' float n=texture2D(uFN,vec2(vUv.x/11.0,vUv.y*0.3+0.5)).r*0.6+texture2D(uFN,vec2(vUv.x/3.3+0.37,vUv.y*0.55)).r*0.4; float core=smoothstep(0.36,0.72,n*prof+0.32*prof*(1.0-smoothstep(10.0,45.0,a)));'+
+      ' float al=(0.18*prof+0.78*core)*rise*fade; if(al<0.01) discard; gl_FragColor=vec4(mix(vec3(0.70,0.83,0.86),vec3(0.97,0.99,1.0),core),al); }'});
+  const o=new THREE.Mesh(g,m); o.frustumCulled=false; o.renderOrder=2; return o; }
 function foamNoise(){ if(FOAMN) return FOAMN; const N=256, c=document.createElement('canvas'); c.width=c.height=N; const g=c.getContext('2d'), im=g.createImageData(N,N); let r=11; const rnd=()=>(r=(r*9301+49297)%233280)/233280;
   const oct=[8,16,32,64].map(G=>{ const a=new Float32Array(G*G); for(let i=0;i<a.length;i++) a[i]=rnd(); return {G,a}; }), sm=x=>x*x*(3-2*x);
   for(let y=0;y<N;y++) for(let x=0;x<N;x++){ let v=0, amp=.5, tot=0;
@@ -3797,17 +3914,18 @@ const hdgV=a=>[Math.sin(a*Math.PI/180),Math.cos(a*Math.PI/180)];
 const angN=a=>((a%360)+540)%360-180;
 const bearing=(dx,dy)=>(Math.atan2(dx,dy)*180/Math.PI+360)%360;
 const mmss=s=>{ s=Math.max(0,Math.round(s)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60; return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(x).padStart(2,'0'); };
-function trClass(){ const ok=S.classes.filter(c=>!cvStats(c.cv).errs.length); const c=clsOf(trS().cls); return ok.includes(c)?c:ok[0]; }
+function trClass(){ const ok=S.classes; const c=clsOf(trS().cls); return ok.includes(c)?c:ok[0]; }
 // The setup: which class, how rough the sea, and which aircraft. Aircraft that cannot fly from her are left out with the reason.
 function trSetupHTML(){
   const ts=trS(), cls=trClass();
-  if(!cls) return `<p class="muted" style="margin:0">Trials need a carrier class with no design faults. Design one on the Carriers tab.</p>`;
-  const cv=cls.cv, cs=cvStats(cv), ok=S.classes.filter(c=>!cvStats(c.cv).errs.length);
+  if(!cls) return `<p class="muted" style="margin:0">Trials need a carrier class. Design one on the Carriers tab.</p>`;
+  const cv=cls.cv, cs=cvStats(cv), ok=S.classes;
   const rows=trLib().map(d=>{ const a=compute(d), f=cvAircraft(cv,cs,a,d), n=f.ok?(ts.air[d.name]??0):0;
     return `<div class="sqrow"><div><strong>${esc(d.name||'Untitled')}</strong><div class="st">${part('role',navalise(d).role).name}${f.ok?` · ${f.tall||!f.lift?'stays on deck':'fits the hangar'}`:` · <span style="color:var(--bad)">${esc(f.why.join('; '))}</span>`}</div></div>
       <div class="cnt"><button data-trstep="-1" data-trname="${esc(d.name)}" aria-label="One fewer ${esc(d.name)}"${f.ok?'':' disabled'}>−</button><input type="number" min="0" max="120" data-trn="${esc(d.name)}" value="${n}" aria-label="Number of ${esc(d.name)}"${f.ok?'':' disabled'}><button data-trstep="1" data-trname="${esc(d.name)}" aria-label="One more ${esc(d.name)}"${f.ok?'':' disabled'}>+</button></div></div>`; }).join('');
   const st=trStow(cv,cs,trAirList(cv,cs));
-  return `<div class="panel"><span class="label">Carrier</span><div class="chips">${ok.map(c=>`<button class="chip" data-trcls="${c.id}" aria-pressed="${c===cls}"><span class="n">${esc(c.name)} class</span><span class="d">${fmtK(cvStats(c.cv).std)} t · ${f1(cvStats(c.cv).speed)} kn</span></button>`).join('')}</div>
+  return `<div class="panel"><span class="label">Carrier</span><div class="chips">${ok.map(c=>`<button class="chip" data-trcls="${c.id}" aria-pressed="${c===cls}"><span class="n">${esc(c.name)} class</span><span class="d">${fmtK(cvStats(c.cv).std)} t · ${f1(cvStats(c.cv).speed)} kn${cvStats(c.cv).errs.length?` · <span style="color:var(--bad)">${cvStats(c.cv).errs.length} fault${cvStats(c.cv).errs.length>1?"s":""}</span>`:""}</span></button>`).join('')}</div>
+      ${(()=>{ const F=cvFaults(cv,cs); return F.notes.length?`<div class="warn"><strong>She sails with ${F.notes.length} design fault${F.notes.length>1?"s":""}.</strong> ${F.notes.map(esc).join(" ")}</div>`:""; })()}
       <span class="label">Sea</span><div class="chips">${SEAS.map(s=>{ const m=cvMotion(cv,cs,s); return `<button class="chip" data-trsea="${s.n}" aria-pressed="${ts.sea===s.n}"><span class="n">${s.name}</span><span class="d">${f1(s.hs)} m waves, wind ${s.wind} kn · ${m.ops?`flying ${Math.round(m.ops*100)}%`:'no flying'}</span></button>`; }).join('')}</div></div>
     <div class="panel"><span class="label">Aircraft aboard</span><p class="muted" style="margin:0;font-size:13.5px">From your hangar on the Aircraft tab. They start in the hangar, fuelled and armed, with any that do not fit parked on the forward deck.</p>
       <div class="sqrows">${rows||'<p class="muted" style="margin:0">Save some designs to your hangar on the Aircraft tab first.</p>'}</div>
@@ -3820,7 +3938,7 @@ function advSetupHTML(ok){ const ad=trS().adv||{};
     <div class="sqrows">${ok.map(c=>`<div class="sqrow"><div><strong>More ${esc(c.name)} class</strong><div class="st">${fmtK(cvStats(c.cv).std)} t · ${f1(cvStats(c.cv).speed)} kn</div></div>${advCnt(`data-adv="cv:${c.id}"`,(ad.cvs||{})[c.id]||0,'extra '+c.name+' class carriers')}</div>`).join('')}
     ${['BB','BC','CA','CL','DD'].map(ty=>`<div class="sqrow"><div><strong>${TGT[ty].name}s</strong><div class="st">${fmtK(TGT[ty].disp)} t · ${TGTKN[ty]} kn</div></div>${advCnt(`data-adv="esc:${ty}"`,(ad.esc||{})[ty]||0,TGT[ty].name+'s')}</div>`).join('')}</div></div>`; }
 // The enemy task force to place: its ships, its carriers' class and the aircraft each carrier takes (rival types or your own designs).
-function etfHTML(){ const e=etfOf(), ok=S.classes.filter(c=>!cvStats(c.cv).errs.length), cls=etfCls(), cs=cls&&cvStats(cls.cv);
+function etfHTML(){ const e=etfOf(), ok=S.classes, cls=etfCls(), cs=cls&&cvStats(cls.cv);
   const ships=['CV','BB','BC','CA','CL','DD'].map(ty=>`<div class="sqrow"><div><strong>${ty==='CV'?'Carriers':TGT[ty].name+'s'}</strong></div>${advCnt(`data-etf="s:${ty}"`,e[ty]||0,ty==='CV'?'carriers':TGT[ty].name+'s')}</div>`).join('');
   const air=etfTypes().map(x=>{ const a=compute(x.d), f=cls?cvAircraft(cls.cv,cs,a,x.d):{ok:false,why:['no carrier class']};
     return `<div class="sqrow"><div><strong>${esc(x.d.name||'Untitled')}</strong><div class="st">${part('role',navalise(x.d).role).name} · ${esc(x.who)}${f.ok?'':` · <span style="color:var(--bad)">${esc(f.why.join('; '))}</span>`}</div></div>${advCnt(`data-etf="a:${esc(x.key)}"`,e.air[x.key]||0,x.d.name||'aircraft')}</div>`; }).join('');
@@ -3873,8 +3991,9 @@ function trKeep(){ const C=TR.cur; if(C) for(const k of CK) C[k]=TR[k]; }
 function withC(C,fn){ const c0=TR.cur; if(C===c0) return fn(); trKeep(); trUse(C); try{ return fn(); } finally{ trKeep(); trUse(c0); } }
 const cvAll=()=>{ trKeep(); return TR.cvs.filter(C=>!C.gone); };
 // A carrier and her aircraft. o: where she starts (x, y, hdg), whose she is (side), her name, her damage model (T) and the aircraft (list).
-function trCarrier(cls,o){ const R=TR, cv=JSON.parse(JSON.stringify(cls.cv)), cs=cvStats(cls.cv), list=o.list||trAirList(cv,cs); trStow(cv,cs,list);
-  const lifts=cv.lifts.map((l,i)=>({i,x:l.x-deckStart(cv),l:l.l,w:l.w,edge:l.edge,busy:0,load:null}));
+function trCarrier(cls,o){ const R=TR, cv=JSON.parse(JSON.stringify(cls.cv)), cs=cvSea(cls.cv), list=o.list||trAirList(cv,cs); trStow(cv,cs,list);
+  if(cs.faults.noCats) cv.cats=0;
+  const lifts=cv.lifts.map((l,i)=>({i,x:l.x-deckStart(cv),l:l.l,w:l.w,edge:l.edge,busy:0,load:null,broken:cs.faults.broken.includes(i)}));
   const planes=list.filter(x=>x.where).map(x=>({id:++R.pid,d:x.d,st:x.a,f:x.f,role:navalise(x.d).role,state:x.where,armed:true,warm:false,t:0,fuel:x.a.range/x.a.cruise*3600*.92,fl:null}));
   const ship=o.T||{x:o.x,y:o.y,hdg:o.hdg,kn:12,ordHdg:o.hdg,ordKn:12}; if(o.T) Object.assign(o.T,{kn:12,ordHdg:o.T.hdg,ordKn:12});
   const C={cls,cv,cs,lifts,planes,pack:[],fwd:planes.filter(p=>p.state==='fwd'),circuit:[],flights:[],orders:[],ops:'idle',nextLaunch:0,nextLand:0,teams:Array(4+Math.floor(cs.N/25)).fill(0),ship,
@@ -3897,11 +4016,26 @@ const trClear=(...ks)=>{ for(const k of Object.keys(TR.warned)) if(ks.some(x=>k.
 // Wind over the deck: the true wind less the ship's own way through the water, as felt on the flight deck.
 function trWOD(){ const sh=TR.ship, [wx,wy]=hdgV(TR.wind.from+180), [sx,sy]=hdgV(sh.hdg), ax=wx*TR.wind.kn-sx*sh.kn, ay=wy*TR.wind.kn-sy*sh.kn, kn=Math.hypot(ax,ay);
   const from=bearing(-ax,-ay), rel=angN(from-sh.hdg); return {kn,rel,head:kn*Math.cos(rel*Math.PI/180)*KN}; }
-const trMot=()=>{ if(TR.t-TR.motT>30||!TR.mot){ TR.mot=cvMotion(TR.cv,TR.cs,TR.sea,{kn:Math.max(4,TR.ship.kn)}); TR.motT=TR.t; } return TR.mot; };
+const trMot=()=>{ if(TR.t-TR.motT>30||!TR.mot){ TR.mot=cvMotion(TR.cv,TR.cs,TR.sea,{kn:Math.max(4,TR.ship.kn)}); const F=TR.cs.faults; if(F) TR.mot.handle*=F.handleK; TR.motT=TR.t; } return TR.mot; };
 function trTeam(dur){ for(let i=0;i<TR.teams.length;i++) if(TR.teams[i]<=TR.t){ TR.teams[i]=TR.t+dur; return true; } return false; }
 // Which lifts can be used now: a centreline lift is a hole in the deck while it runs, so not one in the landing area during a recovery,
 // and not one with aircraft parked on it.
+// Deck lanes. An aircraft being moved along the deck has the strip between where it is and where it is going. A centreline lift may
+// not leave the deck while anyone is on the way across it, and nobody sets off across a lift that is down in the hangar.
+const liftDown=(L,t)=>!L.edge&&(L.busy>t||(L.upAt||0)>t);
+const laneOver=(a,b,L,pad)=>Math.max(a,b)+pad>L.x-L.l/2&&Math.min(a,b)-pad<L.x+L.l/2;
+function laneBlocks(L,t){ if(L.edge) return false; for(const p of TR.planes){ const n=p.lane; if(!n||t>=n.t1) continue;
+    const u=clamp((t-n.t0)/Math.max(1,n.t1-n.t0)-.25,0,1), cur=n.from+(n.to-n.from)*u; if(laneOver(cur,n.to,L,p.d.fusLen/2+1.5)) return true; } return false; }
+const pathClear=(a,b,t,p,skip)=>TR.lifts.every(L=>L===skip||!liftDown(L,t)||!laneOver(a,b,L,p.d.fusLen/2+1));
+const setLane=(p,a,b,t0,t1)=>{ p.lane={from:a,to:b,t0,t1}; };
 function trLiftOK(L,p,down){ const cv=TR.cv; if(L.busy>TR.t||L.broken) return false;
+  if(L.hold&&L.hold.state==='deckq'&&L.hold.lift===L.i) return false;   // an aircraft is still standing on it
+  if(laneBlocks(L,TR.t)) return false;
+  if(!L.edge){ if(TR.ops==='launch'&&TR.pack.length) return false;   // the deck run must stay whole while the range takes off
+    // nor with an aircraft standing on it, parked or arriving at its spot (the one going down on it excepted)
+    const over=q=>q!==p&&q.dx<L.x+L.l/2&&q.dx+q.d.fusLen>L.x-L.l/2&&Math.abs(q.dy)<L.w/2+(q.state==='ranged'||q.state==='spotting'?q.d.span:q.st.foldSpan)/2;
+    const occ=[...TR.planes.filter(q=>q.state==='spotting').sort((a,b)=>b.t-a.t),...TR.pack]; trPackLayout(cv,occ); if(occ.some(over)) return false;
+    const fo=[...TR.fwd,...TR.planes.filter(q=>q.state==='spotfwd').sort((a,b)=>a.t-b.t)]; trFwdLayout(cv,fo); if(fo.some(over)) return false; }
   if(!L.edge){ if(TR.ops==='recover'&&L.x+L.l/2>trBar(cv)) return false; const pk=trPackLayout(cv,TR.pack); if(TR.pack.length&&L.x+L.l/2>pk.front) return false;
     if(!down&&TR.fwd.length){ const fl=trFwdLayout(cv,TR.fwd); if(L.x-L.l/2<fl.end) return false; } }
   const a=p.st, d=p.d; return L.edge?a.foldSpan<=L.w+4&&d.fusLen<=L.l+1:(a.foldSpan<=L.w&&d.fusLen<=L.l)||(a.foldSpan<=L.l&&d.fusLen<=L.w); }
@@ -3909,7 +4043,7 @@ const trCanBelow=p=>!p.f.tall&&p.f.lift;
 // The deck an aircraft needs ahead of it to fly off with this wind over the deck: 40 m for a catapult shot, or its take-off run.
 function trRunNeed(p,W){ const cv=TR.cv, cs=TR.cs; if(cv.cats>0&&!TR.ship.catsOut&&(p.st.massTO||p.st.mass)<=cs.cat.kg&&p.st.vlof<=cs.cat.v/3.6+W.head) return 40; return Math.max(0,p.st.vlof-W.head)**2/(2*p.st.acc)+15; }
 const trHangarFree=()=>TR.cs.hArea2-TR.planes.filter(p=>p.state==='hangar'||p.state==='liftdown').reduce((s,p)=>s+p.st.foldSpan*p.d.fusLen*1.3,0);
-function trRearmTime(p){ return TRK.rearm[p.role]*(p.state==='fwd'&&!trCanBelow(p)?1.5:1); }
+function trRearmTime(p){ return TRK.rearm[p.role]*(p.state==='fwd'&&!trCanBelow(p)?1.5:1)*((TR.cs.faults&&TR.cs.faults.rearmK)||1); }
 // A ship turning at about two of her lengths' radius and gathering or losing way slowly, toward the course and speed she has been
 // given: steerHdg and steerKn when she keeps station or takes evasive action, otherwise ordHdg and ordKn.
 function shipMove(sh,dt,L,max){ const oh=sh.steerHdg??sh.ordHdg, ok=sh.steerKn??sh.ordKn, dh=angN(oh-sh.hdg), rate=Math.max(.15,sh.kn*KN/(2.2*L)*180/Math.PI);
@@ -3975,7 +4109,7 @@ function trStepCV(dt){
     if(p.state==='hangar'&&p.armed&&p.order&&cv.hside==='open'&&!p.warm){ p.warmT=p.warmT||t; if(t-p.warmT>=TRK.warm) p.warm=true; } }
   // lifts finishing their trips
   for(const L of R.lifts) if(L.load&&L.busy<=t){ const p=L.load; L.load=null;
-    if(p.state==='liftup'){ p.state='deckq'; } else if(p.state==='liftdown'){ p.state='hangar'; p.warm=false; if(!p.armed&&!p.rearm) p.rearm=t+trRearmTime(p); } }
+    if(p.state==='liftup'){ p.state='deckq'; L.hold=p; } else if(p.state==='liftdown'){ p.state='hangar'; L.upAt=t+12; p.warm=false; if(!p.armed&&!p.rearm) p.rearm=t+trRearmTime(p); } }   // empty, a lift takes 12 s to come back up
   // ordered up for a launch: up a lift that fits and is free, then spotted at the front of the range by a deck crew
   if(R.ops!=='recover'&&flyable){ for(const p of R.planes.filter(q=>q.order&&q.state==='hangar'&&q.armed)){
       if(trPackLayout(cv,[p,...R.planes.filter(q=>q.state==='liftup'||q.state==='deckq'||q.state==='spotting'),...R.pack]).front<Math.min(cv.deckL*.6,trRunNeed(p,W))){ trWarn('packfull','The range is as big as it can be and still leave the first aircraft room to take off.',600); break; }
@@ -3984,20 +4118,23 @@ function trStepCV(dt){
   for(const p of R.planes.filter(q=>q.state==='deckq'||(q.state==='fwd'&&q.respot&&q.armed))){ if(R.ops==='recover') break;
     const spotting=R.planes.filter(q=>q.state==='spotting'), pk=trPackLayout(cv,[p,...spotting,...R.pack]), fe=R.fwd.length?trFwdLayout(cv,R.fwd.filter(q=>q!==p)).end:0;
     if(pk.front<Math.max(Math.min(cv.deckL*.6,trRunNeed(p,W)),fe+2)){ trWarn('packfull','The range is as big as it can be and still leave the first aircraft room to take off.',600); break; }
+    const toC=p.dx+p.d.fusLen/2; let fromC; if(p.state==='fwd'){ trFwdLayout(cv,R.fwd); fromC=p.dx+p.d.fusLen/2; } else fromC=R.lifts[p.lift].x;
+    if(!pathClear(fromC,toC,t,p,p.state==='deckq'?R.lifts[p.lift]:null)) break;   // a lift is down in the way: wait for it
     const dur=(TRK.spot+part('fold',p.d.fold).time)*m.handle*(p.state==='fwd'?1.3:1); if(!trTeam(dur)) break;
     if(p.state==='fwd'){ trFwdLayout(cv,R.fwd); p.fx=p.dx; p.fy=p.dy; p.fromLift=null; R.fwd=R.fwd.filter(q=>q!==p); } else p.fromLift=p.lift;
-    p.state='spotting'; p.t0=t; p.dur=dur; p.t=t+dur; p.order=false; p.respot=false; }
+    p.state='spotting'; p.t0=t; p.dur=dur; p.t=t+dur; p.order=false; p.respot=false; setLane(p,fromC,toC,t,t+dur); const HL=R.lifts[p.lift]; if(HL&&HL.hold===p) HL.hold=null; }
   for(const p of R.planes) if(p.state==='spotting'&&p.t<=t){ p.state='ranged'; R.pack.unshift(p); if(!p.warm) p.warmT=t; }
   for(const p of R.pack.filter(q=>q.unrange)){ if(R.ops==='launch') break; if(trFwdLayout(cv,[...R.fwd,p]).fit<R.fwd.length+1){ trWarn('unr','No room forward to push the range into.',120); break; }
-    if(!trTeam(TRK.spot*m.handle)) break; trPackLayout(cv,R.pack); p.fx=p.dx; p.fy=p.dy; R.pack=R.pack.filter(q=>q!==p); p.unrange=false; p.state='spotfwd'; p.t0=t; p.dur=TRK.spot*m.handle; p.t=t+p.dur; }
+    trPackLayout(cv,R.pack); const fromC=p.dx+p.d.fusLen/2; trFwdLayout(cv,[...R.fwd,...R.planes.filter(q=>q.state==='spotfwd'),p]); const toC=p.dx+p.d.fusLen/2; if(!pathClear(fromC,toC,t,p)) break;
+    if(!trTeam(TRK.spot*m.handle)) break; trPackLayout(cv,R.pack); p.fx=p.dx; p.fy=p.dy; R.pack=R.pack.filter(q=>q!==p); p.unrange=false; p.state='spotfwd'; p.t0=t; p.dur=TRK.spot*m.handle; p.t=t+p.dur; setLane(p,fromC,toC,t,p.t); }
   for(const p of R.planes) if(p.state==='spotfwd'&&p.t<=t){ p.state='fwd'; R.fwd.push(p); }
   for(const p of R.pack) if(!p.warm&&t-p.warmT>=TRK.warm) p.warm=true;
   // struck below from the forward park
   for(const p of R.fwd.filter(q=>q.below)){ if(!trCanBelow(p)){ p.below=false; trLog(`${p.d.name} cannot go below: ${p.f.tall?'too tall for the hangar':'fits no lift'}.`); continue; }
     if(trHangarFree()<p.st.foldSpan*p.d.fusLen*1.3){ trWarn('hfull','The hangar is full.',900); break; }
-    const L=R.lifts.find(L=>trLiftOK(L,p,true)); if(!L) break; if(!trTeam(TRK.taxi*m.handle)) break;
+    const L=R.lifts.find(L=>trLiftOK(L,p,true)); if(!L) continue; trFwdLayout(cv,R.fwd); if(!pathClear(p.dx+p.d.fusLen/2,L.x,t,p,L)) continue; if(!trTeam(TRK.taxi*m.handle)) break;
     trFwdLayout(cv,R.fwd); p.fx=p.dx; p.fy=p.dy; L.busy=t+(TRK.taxi+TRK.lift)*m.handle; L.load=p; L.t0=t; L.dur=(TRK.taxi+TRK.lift)*m.handle; L.taxi=TRK.taxi*m.handle; L.dir='down'; p.lift=L.i;
-    p.state='liftdown'; p.below=false; R.fwd=R.fwd.filter(q=>q!==p); }
+    p.state='liftdown'; p.below=false; R.fwd=R.fwd.filter(q=>q!==p); setLane(p,p.fx+p.d.fusLen/2,L.x,t,t+L.taxi); }
   // fighters in the forward park are refuelled and rearmed where they stand; bombers must go below for bombs and torpedoes
   for(const p of R.fwd) if(!p.armed&&!p.rearm&&(p.role==='fighter'||!trCanBelow(p))) p.rearm=t+trRearmTime(p);
   // launching: the front aircraft of the range goes when the deck is clear ahead of it, into the wind, warm and armed
@@ -4008,9 +4145,10 @@ function trStepCV(dt){
     else { const p=R.pack[0], pk=trPackLayout(cv,R.pack), run=p.dx, need=Math.max(0,p.st.vlof-W.head)**2/(2*p.st.acc)+15;
       const cat=cv.cats>0&&!TR.ship.catsOut&&run>=40&&(p.st.massTO||p.st.mass)<=cs.cat.kg&&p.st.vlof<=cs.cat.v/3.6+W.head;
       if(!p.warm) trWarn('warm',`Launch waiting: ${p.d.name} is still warming up.`,1e9);
+      else if(!pathClear(0,run+p.d.fusLen,t,p)) trWarn('liftL','Launch waiting: a lift is down on the deck run.',60);
       else if(run<need&&!cat){ trWarn('run'+p.id,`${p.d.name} cannot get off: it needs ${f0(need)} m with ${f0(W.head/KN)} knots over the deck, and has ${f0(run)} m. More wind over the deck, or a smaller range, gives it more.`,240); }
       else { R.pack.shift(); p.state='air'; p.warm=false; R.stats.launched++; const byCat=run<need; trClear('xwind','stopL','warm');
-        p.launchT=t; p.runDx=run; p.runDy=p.dy||0; p.wod=W.head; p.byCat=byCat;
+        p.launchT=t; p.runDx=run; p.runDy=p.dy||0; p.wod=W.head; p.byCat=byCat; setLane(p,run+p.d.fusLen/2,-20,t,t+14);
         if(!byCat&&run<need*1.1&&Math.random()<.08){ p.state='lost'; p.lostKind='bow'; p.lostT=t; R.stats.lost++; R.stats.crashes++; trLog(`${p.d.name} went off the bow on take-off: too little deck.`); }
         else { const fl=trJoinFlight(p); fl.planes.push(p); p.fl=fl; }
         R.nextLaunch=t+(byCat?TRK.cat[cv.cat]||60:TRK.launch)*m.launch; } } }
@@ -4048,13 +4186,15 @@ function trStepCV(dt){
     else if(!into) trWarn('xwindR',`Landing held: the wind is ${f0(Math.abs(W.rel))}° on the ${W.rel>0?'starboard':'port'} bow. Turn into the wind.`,1e9);
     else if(!cv.barrier&&R.fwd.length) trWarn('nobar','Landing held: with no crash barrier, each aircraft must be struck below before the next lands.',1e9);
     else if(cv.barrier&&fl.fit<R.fwd.length+1) trWarn('fwdfull','Landing held: the forward deck is full. Strike some aircraft below.',1e9);
+    else if(!pathClear(cv.deckL*.7+p.d.fusLen/2,p.dx+p.d.fusLen/2,t+18,p)) trWarn('liftR','Landing held: a lift is down where the next aircraft will taxi forward.',60);
     else { const eng=p.st.approach/3.6-W.head, wire=cs.wire;
       if(eng>wire.v/3.6||p.st.landMass>wire.kg){ R.stats.waveoffs++; p.woT=t; p.wod=W.head; p.eng=eng; trWarn('eng'+p.id,`${p.d.name} waved off: it would catch the wire at ${f0(eng*3.6)} km/h, more than the gear takes. More wind over the deck helps.`,120); p.fuel-=TRK.go; R.nextLand=t+TRK.land*m.land; R.circuit.push(R.circuit.shift()); }
-      else { const pw=.03+.04*(m.stern/1.5)**2+.02*(m.roll/4)**2, pc=.006+.012*(m.stern/1.5)**2+(eng>wire.v/3.6*.9?.03:0);
+      else { const lk=(cs.faults&&cs.faults.landK)||1, pw=(.03+.04*(m.stern/1.5)**2+.02*(m.roll/4)**2)*lk, pc=(.006+.012*(m.stern/1.5)**2+(eng>wire.v/3.6*.9?.03:0))*lk;
         if(Math.random()<pw){ R.stats.waveoffs++; p.woT=t; p.wod=W.head; p.eng=eng; p.fuel-=TRK.go; R.circuit.push(R.circuit.shift()); trLog(`${p.d.name} waved off and goes round again.`); }
         else { R.circuit.shift(); R.stats.landed++; p.landT=p.tdT=t; p.wod=W.head; p.eng=eng; p.armed=false; trClear('packR','nobar','fwdfull','xwindR','stopR');
           if(cv.barrier&&Math.random()<pc){ p.state='lost'; p.lostKind='barrier'; p.lostT=t; R.stats.crashes++; R.stats.lost++; trLog(`${p.d.name} missed the wires and went into the barrier: written off.`); }
-          else { p.state='fwd'; R.fwd.push(p); if(!cv.barrier) p.below=true; } }
+          else { p.state='fwd'; R.fwd.push(p); if(!cv.barrier) p.below=true;
+            trFwdLayout(cv,R.fwd); const vc=clamp(eng,6,35), stop=cv.deckL*.76-vc*.8, dist=Math.hypot(stop-p.dx,p.dy)+1e-6; setLane(p,stop+p.d.fusLen/2,p.dx+p.d.fusLen/2,t+14,t+14+4.5+dist/5+6); } }
         R.nextLand=t+TRK.land*m.land; } } }
   trSorties(); if(R.auto) trDeckOfficer();
   atkFlights(dt);
@@ -4073,7 +4213,7 @@ function tfSpot(tf,T){ const [hx,hy]=hdgV(tf.ghdg); return {x:tf.gx+hx*T.su+hy*T
 function tfPlace(tf){ tfStations(tf); for(const T of tf.ships){ const s=tfSpot(tf,T); T.x=s.x; T.y=s.y; T.hdg=tf.ghdg; T.kn=tf.gkn; T.ordHdg=tf.ghdg; T.ordKn=tf.gkn; T.tf=tf; } }
 // Your task force: the carrier chosen for trials leads; the extra carriers and the escorts from the setup sail with her.
 function advFleet(cls,h0){ const R=TR, ad=trS().adv||{}, tf={id:1,side:'blue',name:'Your task force',ships:[],gx:0,gy:0,ghdg:h0,gkn:12,ordHdg:h0,ordKn:12}; R.tfs.push(tf);
-  const ok=S.classes.filter(c=>!cvStats(c.cv).errs.length), cl=[cls]; for(const c of ok) for(let i=0;i<((ad.cvs||{})[c.id]||0);i++) cl.push(c);
+  const ok=S.classes, cl=[cls]; for(const c of ok) for(let i=0;i<((ad.cvs||{})[c.id]||0);i++) cl.push(c);
   cl.forEach((c,i)=>{ const own=S.ships.filter(s=>s.cls===c.id).map(s=>s.name), k=cl.slice(0,i).filter(q=>q===c).length, name=own[k]||(k?`${c.name} ${k+1}`:c.name);
     const T=tgtMake('CV',0,0,h0,{side:'blue',cv:c.cv,cs:cvStats(c.cv),name}); R.tgts.push(T); tf.ships.push(T); R.cvs.push(trCarrier(c,{T,side:'blue',name,tf})); });
   for(const ty of ['BB','BC','CA','CL','DD']) for(let i=0;i<((ad.esc||{})[ty]||0);i++){ const T=tgtMake(ty,0,0,h0,{side:'blue'}); R.tgts.push(T); tf.ships.push(T); }
@@ -4081,7 +4221,7 @@ function advFleet(cls,h0){ const R=TR, ad=trS().adv||{}, tf={id:1,side:'blue',na
 // An enemy task force, put where you click. It does not know where you are: it sails on a course into the trials area, and its carriers
 // keep a fighter patrol up and send scouts out to look for you.
 const etfOf=()=>{ const ts=trS(); return ts.etf||(ts.etf={CV:1,BB:0,BC:0,CA:1,CL:0,DD:4,cls:null,air:{'r:fighter':12,'r:dive':12,'r:torpedo':9}}); };
-const etfCls=()=>{ const ok=S.classes.filter(c=>!cvStats(c.cv).errs.length), e=etfOf(); return ok.find(c=>c.id===e.cls)||trClass(); };
+const etfCls=()=>{ const ok=S.classes, e=etfOf(); return ok.find(c=>c.id===e.cls)||trClass(); };
 function etfTypes(){ const r=RIVALS[S.selected]||RIVALS[0], out=[]; for(const [k,role] of [['fighter','fighter'],['dive','dive'],['torpedo','torpedo']]){ const d=rivalD(r,role); if(d) out.push({key:'r:'+k,d,who:r.title}); }
   for(const d of trLib()) out.push({key:'h:'+d.name,d,who:'your hangar'}); return out; }
 function etfAir(cls){ const e=etfOf(), cv=cls.cv, cs=cvStats(cv), out=[];
@@ -5009,13 +5149,15 @@ float wn(vec2 p,float t){ vec2 q=p+uFo.xy; return sin(dot(q,vec2(.071,.033))+t*.
 float kelv(vec2 p,float px,out float foam){ float h=0.0; foam=0.0; float tt=uFo.z;
   for(int i=0;i<8;i++){ vec4 c=uCalm[i], k=uKel[i]; if(c.w<=0.0||k.x<0.8) continue;
     vec2 d=p-c.xy; float cs=cos(c.z), sn=sin(c.z); float u=d.x*cs-d.y*sn, v=d.x*sn+d.y*cs;
-    float L=c.w, B=k.y, s=L*0.5-u, av=abs(v), k0=9.81/(k.x*k.x), lam=6.2832/k0, reach=min(30.0*lam+2.0*L,5000.0);
+    float L=c.w, B=k.y, s=L*0.5-u; float av=abs(v);
+    float k0=9.81/(k.x*k.x), lam=6.2832/k0, reach=min(30.0*lam+2.0*L,5000.0);
     if(s<-L*0.08||s>reach||av>s*0.45+B) continue;
-    float sp=max(s,0.5), w1=wn(p,tt), w2=wn(p*1.9+vec2(37.0,11.0),tt*1.3), q=av/sp/0.35355, a=min(q,1.0)*0.35355, disc=sqrt(max(0.0,1.0-8.0*a*a));
+    float sp=max(s,0.5), w1=wn(p,tt), w2=wn(p*1.9+vec2(37.0,11.0),tt*1.3), mv=(sin(s*0.011+w1*1.7)*0.05+sin(s*0.0041+w2*1.3)*0.045)*smoothstep(0.0,L,s);
+    av=abs(v+mv*s); float q=av/sp/0.35355, a=min(q,1.0)*0.35355, disc=sqrt(max(0.0,1.0-8.0*a*a));
     float t1=a<1e-4?a:(1.0-disc)/(4.0*a), t2=a<1e-3?250.0:(1.0+disc)/(4.0*a);
     float ph1=k0*(sp+av*t1)*sqrt(1.0+t1*t1)+w1*0.8, ph2=k0*(sp+av*t2)*sqrt(1.0+t2*t2)+w2*1.3;
     float A=clamp(0.035*k.x,0.0,0.7)*sqrt(B/20.0)*sqrt(L/(L+s))*smoothstep(-L*0.08,L*0.1,s);
-    float edge=1.0-smoothstep(0.92,1.22,q+0.08*w1), cusp=1.0+0.9*smoothstep(0.7,1.0,q)*edge, feather=0.7+0.3*w2, tfade=exp(-s/(12.0*lam+1.5*L));
+    float brk=0.5+0.5*sin(s*0.021+w2*2.6+w1*1.4), edge=1.0-smoothstep(0.82,1.32,q+0.14*w1), cusp=1.0+0.5*smoothstep(0.72,1.0,q)*edge*brk, feather=0.7+0.3*w2, tfade=exp(-s/(12.0*lam+1.5*L));
     float f1=1.0-smoothstep(0.12,0.35,px*k0*(1.0+t1*t1)/6.2832), f2=(1.0-smoothstep(0.06,0.2,px*k0*(1.0+t2*t2)/6.2832))*smoothstep(0.3,0.85,min(q,1.0));
     float c2=cos(ph2); h+=A*edge*cusp*(0.6*cos(ph1)*f1*tfade+0.32*c2*f2*feather);
     float fr=clamp((k.x-2.5)/9.0,0.0,1.0);
@@ -5168,12 +5310,12 @@ function tr3Build(){
   // funnel smoke: puffs that drift away on the true wind as she steams on
   const stx=smokeTexture(), puffs=[]; for(let i=0;i<70;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0x5d6266,transparent:true,depthWrite:false,opacity:0,fog:true})); s.visible=false; sc.add(s); puffs.push({s,t0:-1e9}); }
   // aircraft: one model per design, cloned for each aircraft, gear down, and the height that puts its wheels on the deck
-  const tpl=new Map(); TR3.planeTpl=d=>{ const k=d.name; if(!tpl.has(k)){ const g=meshFor({design:d,st:compute(d)},1,{gear:true}); g.traverse(o=>{ if(o.name==='glow'||o.name==='flash') o.visible=false; });
+  const tpl=new Map(); TR3.planeTpl=d=>{ const k=d.name; if(!tpl.has(k)){ const g=meshFor({design:d,st:compute(d)},2,{gear:true}); g.traverse(o=>{ if(o.name==='glow'||o.name==='flash') o.visible=false; });
       g.updateMatrixWorld(true); const b=new THREE.Box3().setFromObject(g); tpl.set(k,{g,h:-b.min.y+.05}); }
     const T=tpl.get(k), o=T.g.clone(); o.rotation.order='YZX'; return {o,h:T.h,an:animParts(o),fold:-1,gear:0,vis:false}; };
   const th0=(90-R.ship.hdg)*DEG;
   Object.assign(TR3,{scene:sc,yawG,ship,sea,seaT,tile:SEATILE,foam,wake,wpos,wuv,NW,trail:[],puffs,smokeAt:mesh.smoke,nextPuff:R.t,key:R,lastT:null,fails:0,planes:new Map(),fprev:new Map(),
-    lifts:mesh.lifts.map(v=>v&&Object.assign(v,{pos:0,t0:null,start:0}))});
+    lifts:mesh.lifts.map(v=>v&&Object.assign(v,{pos:0,t0:null,start:0})),wires:mesh.wires,barrier:mesh.barrier,barUp:0});
   TR3.yaw=TR3.follow?.9:.9-th0; TR3.pitch=TR3.pitch??.28; TR3.dist=TR3.dist||1300;
   if(!TR3.bound){ TR3.bound=true; const cvs=$('#tr3'), pts=new Map(); let dr=null, pan=false, pinch=null, moved=false;
     cvs.addEventListener('contextmenu',e=>e.preventDefault());
@@ -5190,6 +5332,15 @@ function tr3Calm(x,z,th){ const sh=TR.ship, out=[{x,z,th,L:TR.cv.L,kn:sh.status=
   for(const T of TR.tgts){ if(T.status==='sunk'||T===TR.ship) continue; const tx=T.x*1000-TR3.FE, tz=-(T.y*1000-TR3.FN), d=Math.hypot(tx,tz); if(d<20000) o.push({x:tx,z:tz,th:(90-T.hdg)*DEG,L:T.L,kn:T.status==='afloat'?T.kn||0:0,B:T.B,wake:true,d}); }
   return out.concat(o.sort((a,b)=>a.d-b.d).slice(0,7)); }
 const ease3=u=>{ u=clamp(u,0,1); return u*u*(3-2*u); };
+// Starting an engine: a pause while the starter is made ready, a few slow turns on the starter, then she fires and runs up to speed.
+// A bigger engine turns over longer before it fires; a jet spools up slowly from the start. Switched off, the propeller runs down
+// over a few seconds. r keeps the state; the result is the fraction of full speed.
+function engSpool(r,on,dt,E){ const hp=(E&&E.hp)||1000, jet=E&&E.type==='jet';
+  if(!on){ r.t=null; r.rpm=Math.max(0,(r.rpm||0)-dt/3); return r.rpm; }
+  if(r.t==null) r.t=(r.rpm||0)>.5?1e3:0; r.t+=dt; const t=r.t;
+  if(jet) return r.rpm=clamp((t-1.5)/10,r.rpm>.5?r.rpm:0,1);
+  const pause=.8+hp/2500, crank=pause+1.2+hp/1500, run=crank+2.6;
+  return r.rpm=t<pause?0:t<crank?.07+.02*Math.sin(t*9):t<run?.07+.93*ease3((t-crank)/(run-crank)):1; }
 function tr3Frame(){
   const R=TR; if(!TR3.r) return; if(TR3.key!==R||!TR3.scene) tr3Build();
   const el=$('#tr3'), w=el.clientWidth, h=el.clientHeight, sz=TR3.r.getSize(new THREE.Vector2()); if(w&&h&&(sz.x!==w||sz.y!==h)){ TR3.r.setSize(w,h,false); TR3.cam.aspect=w/h; TR3.cam.updateProjectionMatrix(); }
@@ -5226,7 +5377,7 @@ function tr3Frame(){
   trFwdLayout(cv,[...R.fwd,...R.planes.filter(q=>q.state==='spotfwd').sort((a,b)=>a.t-b.t)]);
   const CX=(p,dx)=>cv.L/2-dS-dx-p.d.fusLen/2;
   const liftAt=(p,i,onDeck)=>{ const L=R.lifts[i??p.lift??0]||R.lifts[0], v=L&&TR3.lifts[L.i]; if(!L||!v) return {x:CX(p,cv.deckL*.4),z:0,y:yD};
-    const x=cv.L/2-dS-L.x; return onDeck&&!L.edge?{x:x+L.l/2+p.d.fusLen/2+1,z:0,y:yD}:{x,z:v.z,y:onDeck?yD:v.o.position.y+(L.edge?.25:.2)}; };
+    const x=cv.L/2-dS-L.x; return onDeck?{x,z:L.edge?v.z:0,y:yD}:{x,z:v.z,y:v.o.position.y+(L.edge?.25:.2)}; };
   const foldTime=p=>Math.max(4,part('fold',p.d.fold).time||0)*m.handle;
   // taxiing under its own power from A to B (ship x forward, z to starboard): it swings round on its brakes to face the way it has to
   // go, rolls along a first leg across the deck and a last leg fore and aft into its spot, rounding the corner, then swings to face
@@ -5235,7 +5386,7 @@ function tr3Frame(){
   const taxi=(A,B,f)=>{ const dxx=B.x-A.x, dir=dxx>=0?1:-1, W={x:B.x-dir*Math.min(14,Math.abs(dxx)*.35),z:B.z}, l1=Math.hypot(W.x-A.x,W.z-A.z), l2=Math.hypot(B.x-W.x,B.z-W.z), S=l1+l2;
     if(S<.5) return {x:B.x,z:B.z,yaw:0};
     const h1=l1>.3?hdgOf(W.x-A.x,W.z-A.z):hdgOf(B.x-W.x,B.z-W.z), h2=l2>.3?hdgOf(B.x-W.x,B.z-W.z):h1, pa=.13, pb=.13;
-    if(f<pa) return {x:A.x,z:A.z,yaw:turnTo(0,h1,f/pa)};
+    if(f<pa) return {x:A.x,z:A.z,yaw:turnTo(A.yaw||0,h1,f/pa)};
     if(f>1-pb) return {x:B.x,z:B.z,yaw:turnTo(h2,0,(f-1+pb)/pb)};
     const s=S*ease3((f-pa)/(1-pa-pb)), at=q=>q<=l1?{x:A.x+(W.x-A.x)*q/Math.max(l1,1e-6),z:A.z+(W.z-A.z)*q/Math.max(l1,1e-6)}:{x:W.x+(B.x-W.x)*(q-l1)/Math.max(l2,1e-6),z:W.z+(B.z-W.z)*(q-l1)/Math.max(l2,1e-6)};
     const P=at(s), r=Math.min(5,S/4), k=clamp((s-(l1-r))/(2*r),0,1);
@@ -5278,13 +5429,21 @@ function tr3Frame(){
     const alt={form:450,cap:1200,scout:900,strike:1500,home:600}[f.mission]||800, fx=Math.cos(yaw), fz=-Math.sin(yaw);
     f.planes.forEach((q,i)=>{ if(q.atk) return; const j=Math.ceil(i/2), sdv=i%2?1:-1; flightPose.set(q.id,{par:'world',x:x-fx*14*j+fz*sdv*12*j,y:alt,z:z-fz*14*j-fx*sdv*12*j,yaw,fold:0,spin:true,gear:1,snap:false}); }); }
   if(typeof atkPose==='function') atkPose(flightPose,FE,FN,t);
+  // the arrester wires: the one a landing aircraft's hook catches is dragged forward with it, then springs back when it lets go
+  if(TR3.wires&&TR3.wires.length){ const pull=new Map();
+    for(const p of R.planes){ if(p.tdT==null||!(p.state==='fwd'||p.state==='lost'&&p.lostKind==='barrier')) continue; const tau=t-p.tdT-14; if(tau<0||tau>6) continue;
+      const vc=vc0(p), ta=1.6, td=cv.deckL*.76, dxn=tau<ta?td-vc*(tau-tau*tau/(2*ta)):td-vc*ta/2, hook=x=>x+p.d.fusLen-.45, h0=hook(td);
+      const w=TR3.wires.filter(w=>w.dx<h0).sort((a,b)=>b.dx-a.dx)[0]; if(!w||p.lostKind==='barrier') continue;
+      let k=Math.max(0,w.dx-hook(dxn)); if(tau>ta+1.2) k*=Math.max(0,1-(tau-ta-1.2)/.8); pull.set(w,Math.max(pull.get(w)||0,k)); }
+    for(const w of TR3.wires) wireSet(w,w.x+(pull.get(w)||0)); }
+  // the crash barrier: up while aircraft are landing, laid flat to let each one taxi forward through it and when nobody is landing
+  if(TR3.barrier){ const bx=TR3.barrier.position.x, thru=R.planes.some(p=>{ if(p.state!=='fwd'||!p.lane||p.tdT==null||t<p.lane.t0+3||t>p.lane.t1) return false; const rc=TR3.planes.get(p.id); return !rc||rc.o.position.x<bx+p.d.fusLen/2+4; }), crash=R.planes.some(p=>p.state==='lost'&&p.lostKind==='barrier'&&t-p.lostT<90);
+    const want=cv.barrier&&(crash||R.ops==='recover'&&!thru)?1:0; TR3.barUp=jump?want:clamp((TR3.barUp||0)+(want?1:-1)*dt/1.4,0,1); TR3.barrier.rotation.z=-Math.PI/2*(1-ease3(TR3.barUp)); }
   const poseOf=(p,rec)=>{ const s=p.state;
     if(s==='hangar') return {vis:false};
-    if(s==='liftup'){ const q=liftAt(p,p.lift,false); return {x:q.x,y:q.y+rec.h,z:q.z,fold:1,snap:true}; }
-    if(s==='deckq'){ const q=liftAt(p,p.lift,true), L=R.lifts[p.lift??0], k=R.planes.filter(o=>o.state==='deckq'&&o.lift===p.lift&&o.id<p.id).length;
-      if(!k) return {x:q.x,z:q.z,fold:1}; const row=Math.ceil(k/2), side=k%2?1:-1, dx=L&&L.edge?0:row*(p.d.fusLen+1.5), dz=L&&L.edge?-Math.sign(q.z||1)*row*(p.st.foldSpan+1.5):side*Math.min(cv.deckW*.28,p.st.foldSpan*.8+1);
-      return {x:q.x+dx,z:q.z+dz,fold:1}; }
-    if(s==='spotting'){ const a=rec.from||(p.fromLift!=null||p.fx==null?liftAt(p,p.fromLift,true):{x:CX(p,p.fx),z:-p.fy}), ft=foldTime(p), f=clamp((t-p.t0)/Math.max(1,p.dur-ft),0,1);
+    if(s==='liftup'){ const L=R.lifts[p.lift], f=L&&L.t0!=null?(t-L.t0)/L.dur:1; if(L&&L.dir==='up'&&f<.2) return {vis:false}; const q=liftAt(p,p.lift,false); return {x:q.x,y:q.y+rec.h,z:q.z,yaw:Math.PI,fold:1,snap:true}; }
+    if(s==='deckq'){ const q=liftAt(p,p.lift,false); return {x:q.x,y:q.y+rec.h,z:q.z,yaw:Math.PI,fold:1,snap:true}; }
+    if(s==='spotting'){ const a=rec.from||(p.fromLift!=null||p.fx==null?{...liftAt(p,p.fromLift,true),yaw:Math.PI}:{x:CX(p,p.fx),z:-p.fy}), ft=foldTime(p), f=clamp((t-p.t0)/Math.max(1,p.dur-ft),0,1);
       return {...taxi(a,{x:CX(p,p.dx),z:-p.dy},f),fold:p.t-t>ft?1:0,spin:true,snap:true}; }
     if(s==='ranged') return {x:CX(p,p.dx),z:-p.dy,fold:0,spin:true};
     if(s==='spotfwd'){ const f=clamp((t-p.t0)/Math.max(1,p.dur),0,1); return {...taxi(rec.from||{x:CX(p,p.fx),z:-p.fy},{x:CX(p,p.dx),z:-p.dy},f),fold:1,spin:true,snap:true}; }
@@ -5298,17 +5457,21 @@ function tr3Frame(){
   const tv=new THREE.Vector3();
   const mine=new Set(R.planes), allP=[...R.planes,...cvAll().filter(C=>C!==R.cur).flatMap(C=>C.planes.filter(p=>p.state==='air'))];
   for(const p of allP){ let rec=TR3.planes.get(p.id);
-    if(rec&&rec.st!==p.state){ rec.from=rec.vis&&rec.o.parent===TR3.ship&&!jump?{x:rec.o.position.x,z:rec.o.position.z}:null; rec.st=p.state; }
+    if(rec&&rec.st!==p.state){ rec.from=rec.vis&&rec.o.parent===TR3.ship&&!jump?{x:rec.o.position.x-(rec.pdx||0),z:rec.o.position.z-(rec.pdz||0),yaw:rec.o.rotation.y}:null; rec.st=p.state; }
     const ps=mine.has(p)?poseOf(p,rec||{h:1.6}):(flightPose.get(p.id)||{vis:false});
     if(ps.vis===false){ if(rec) rec.o.visible=false; continue; }
     if(!rec){ rec=TR3.planeTpl(p.d); rec.st=p.state; TR3.planes.set(p.id,rec); }
     const par=ps.par==='yaw'?TR3.yawG:ps.par==='world'?TR3.scene:TR3.ship; let snap=ps.snap||jump||!rec.vis; if(rec.o.parent!==par){ par.add(rec.o); snap=true; }
-    rec.o.visible=true; rec.vis=true; tv.set(ps.x,ps.y??yD+rec.h,ps.z);
+    const deck=ps.par==null&&ps.pitch==null, pk=rec.park||(rec.park=rec.o.userData.park||{x:0,y:0,ang:0}), want=deck?pk.ang:(ps.pitch||0);
+    rec.pitchV=(snap&&!rec.vis)||jump||rec.pitchV==null?want:rec.pitchV+clamp(want-rec.pitchV,-dt*.5,dt*.5);
+    { const th=rec.pitchV, c=Math.cos(th), sn=Math.sin(th), lx=pk.x-(pk.x*c-pk.y*sn), ly=pk.y-(pk.x*sn+pk.y*c), yw=ps.yaw||0; rec.pdx=deck?lx*Math.cos(yw):0; rec.pdz=deck?-lx*Math.sin(yw):0; rec.pdy=deck?ly:0; }
+    rec.o.visible=true; rec.vis=true; tv.set(ps.x+rec.pdx,(ps.y??yD+rec.h)+rec.pdy,ps.z+rec.pdz);
     if(snap||rec.o.position.distanceTo(tv)>(ps.par==='world'?400:45)) rec.o.position.copy(tv); else { const d=tv.clone().sub(rec.o.position), l=d.length(), mv=Math.min(l,ps.par==='world'?Math.max(dt*120,l*.25):dt*6); if(l>1e-6) rec.o.position.addScaledVector(d,mv/l); }
-    rec.o.rotation.set(ps.roll||0,ps.yaw||0,ps.pitch||0);
+    rec.o.rotation.set(ps.roll||0,ps.yaw||0,rec.pitchV);
     if(rec.an.fold.length){ const ft=foldTime(p); if(rec.fold<0||jump) rec.fold=ps.fold; else rec.fold+=clamp(ps.fold-rec.fold,-dt/ft,dt/ft); setFold(rec.an.fold,ease3(rec.fold)); }
-    if(rec.an.gear.length){ const g=ps.gear||0; rec.gear+=clamp(g-rec.gear,-Math.max(dt,.05)/3,Math.max(dt,.05)/3); setHinges(rec.an.gear,o=>o.userData.fold*rec.gear); }
-    if(ps.spin) for(const pr of rec.an.props) pr.rotation.x+=.55; for(const o of rec.an.discs) o.visible=!!ps.spin;
+    if(rec.an.gear.length){ const g=ps.gear||0; rec.gear+=clamp(g-rec.gear,-Math.max(dt,.05)/3,Math.max(dt,.05)/3); setHinges(rec.an.gear,o=>o.userData.fold*rec.gear); for(const h of rec.an.gear) h.visible=rec.gear<.995; }
+    if(!rec.eng) rec.eng=ps.par==='world'||ps.par==='yaw'?{rpm:1,t:1e3}:{}; if(jump) rec.eng=ps.spin?{rpm:1,t:1e3}:{};
+    const rpm=engSpool(rec.eng,!!ps.spin,dt,part('engine',p.d.engine)); for(const pr of rec.an.props) pr.rotation.x+=rpm*28*dt; for(const o of rec.an.discs) o.visible=rpm>.6;
     if(!rec.loads){ rec.loads=[]; rec.o.traverse(o=>{ if(o.name==='load') rec.loads.push(o); }); } for(const o of rec.loads) o.visible=!p.dropped; }
   const ids=new Set(allP.map(p=>p.id)); for(const [id,rec] of TR3.planes) if(!ids.has(id)) rec.o.visible=false;
   // the camera: fixed to the compass, so you see her turn, or following her round; or close behind a followed aircraft
@@ -5656,8 +5819,7 @@ function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
     TR3.fxs=sprPool(260,()=>new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0xffffff,transparent:true,depthWrite:false,fog:true})));
     const bm=new THREE.MeshStandardMaterial({color:0x2a2d2f,roughness:.6}), bg=new THREE.CylinderGeometry(.22,.22,1.8,8); bg.rotateZ(Math.PI/2);
     TR3.bmb=sprPool(30,()=>new THREE.Mesh(bg,bm));
-    const NT=48*12, tp=new Float32Array(NT*6*3), tg=new THREE.BufferGeometry(); tg.setAttribute('position',new THREE.BufferAttribute(tp,3)); tg.setDrawRange(0,0);
-    TR3.twake=new THREE.Mesh(tg,new THREE.MeshBasicMaterial({color:0xf2f7fa,transparent:true,opacity:.75,depthWrite:false,side:THREE.DoubleSide,fog:true})); TR3.twake.frustumCulled=false; TR3.scene.add(TR3.twake); TR3.smokes=[];
+    TR3.twake=torpWakeMesh(); TR3.scene.add(TR3.twake); TR3.smokes=[];
     const NTR=700, trp=new Float32Array(NTR*6), trc=new Float32Array(NTR*6), trg=new THREE.BufferGeometry(); trg.setAttribute('position',new THREE.BufferAttribute(trp,3)); trg.setAttribute('color',new THREE.BufferAttribute(trc,3)); trg.setDrawRange(0,0);
     TR3.tracer=new THREE.LineSegments(trg,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.95,depthWrite:false,fog:false})); TR3.tracer.frustumCulled=false; TR3.scene.add(TR3.tracer); }
   // tracer: a short bright streak for each round in flight
@@ -5695,19 +5857,26 @@ function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
   const [wx,wy]=hdgV(R.wind.from+180), ws=R.wind.kn*KN*.8; TR3.smokes=TR3.smokes.filter(q=>t-q.t0<60&&t>=q.t0-1).slice(-TR3.smk.length);
   for(const q of TR3.smokes){ const a=t-q.t0, s=sprTake(TR3.smk); if(!s) break; s.position.set(q.x+wx*ws*a-FE,q.y+2.4*a,q.z-wy*ws*a+FN); const k=(6+a*(1.2+q.k))*FXBIG; s.scale.set(k,k,1); s.material.opacity=.62*(1-a/60)*Math.min(1,a/1.5+.3); }
   // weapons: torpedo tracks, bombs falling, and what happened when they arrived
-  { const P=TR3.twake.geometry.attributes.position.array; let n=0;
-    for(const q of R.torps){ if(q.done&&t-q.doneT>40) continue; const x0=q.x0*1000-FE, z0=-(q.y0*1000-FN), x1=q.x*1000-FE, z1=-(q.y*1000-FN), L=Math.hypot(x1-x0,z1-z0); if(L<1||Math.hypot(x1,z1)>15000) continue;
-      const ux=(x1-x0)/L, uz=(z1-z0)/L, s0=Math.max(0,L-1400), segs=12, fade=q.done?Math.max(0,1-(t-q.doneT)/40):1;
-      for(let i=0;i<segs&&n<P.length/18;i++){ const sa=s0+(L-s0)*i/segs, sb=s0+(L-s0)*(i+1)/segs, wa=(.6+2.4*(sa-s0)/(L-s0+1))*fade, wb=(.6+2.4*(sb-s0)/(L-s0+1))*fade;
-        const ax=x0+ux*sa, az=z0+uz*sa, bx=x0+ux*sb, bz=z0+uz*sb, ya=W(ax,az)+.2, yb=W(bx,bz)+.2, o=n*18;
-        P.set([ax-uz*wa,ya,az+ux*wa, bx-uz*wb,yb,bz+ux*wb, bx+uz*wb,yb,bz-ux*wb, ax-uz*wa,ya,az+ux*wa, bx+uz*wb,yb,bz-ux*wb, ax+uz*wa,ya,az-ux*wa],o); n++; } }
-    TR3.twake.geometry.setDrawRange(0,n*6); TR3.twake.geometry.attributes.position.needsUpdate=true; }
+  { const G=TR3.twake.geometry, P=G.attributes.position.array, U=G.attributes.uv.array, A=G.attributes.aAge.array; let k=0;
+    for(const q of R.torps){ if(k>=TWN) break; const extra=q.done?t-q.doneT:0; if(extra>75) continue;
+      const x0=q.x0*1000-FE, z0=-(q.y0*1000-FN), x1=q.x*1000-FE, z1=-(q.y*1000-FN), L=Math.hypot(x1-x0,z1-z0), v=Math.max(1,q.v); if(L<1||Math.hypot(x1,z1)>15000) continue;
+      const ux=(x1-x0)/L, uz=(z1-z0)/L, s0=Math.max(0,L-v*80);
+      for(let i=0;i<TW;i++){ const sd=s0+(L-s0)*i/(TW-1), age=(L-sd)/v+extra, w=.6+Math.min(4.2,age*.1), x=x0+ux*sd, z=z0+uz*sd, y=W(x,z)+.15, j=(k*TW+i)*2;
+        P.set([x-uz*w,y,z+ux*w,x+uz*w,y,z-ux*w],j*3); U.set([sd,-1,sd,1],j*2); A[j]=age; A[j+1]=age; }
+      k++; }
+    G.setDrawRange(0,k*(TW-1)*6); G.attributes.position.needsUpdate=true; G.attributes.uv.needsUpdate=true; G.attributes.aAge.needsUpdate=true; }
   for(const b of R.bombs){ if(b.done||t<b.t0) continue; const u=clamp((t-b.t0)/(b.t1-b.t0),0,1), x=(b.rx+(b.x-b.rx)*u)*1000-FE, z=-((b.ry+(b.y-b.ry)*u)*1000-FN), y=b.ralt*(1-u*u*.6-u*.4)+(1-u)*0, m=sprTake(TR3.bmb); if(!m) break;
     m.position.set(x,y,z); m.rotation.set(0,(90-b.hdg)*DEG,-(Math.PI/2)*Math.min(1,u*1.4+(b.dive?.7:0))); }
   for(const fx of R.fx){ const a=t-fx.t, x=fx.x*1000-FE, z=-(fx.y*1000-FN); if(a<0||a>70||Math.hypot(x,z)>15000) continue; const y0=W(x,z);
     const put=(col,sx,sy,yy,op)=>{ const s=sprTake(TR3.fxs); if(!s) return; s.material.color.set(col); s.position.set(x,y0+yy,z); s.scale.set(sx,sy,1); s.material.opacity=op; s.material.blending=col===0xffa040?THREE.AdditiveBlending:THREE.NormalBlending; };
     const sz=fx.size||1, B=FXBIG;
-    if(fx.kind==='splash'&&a<8){ const h=sz*(28*Math.min(1,a/1.2)); put(0xf4f8fa,sz*9+a*3,h,h*.5,.85*(1-a/8)); }
+    if(fx.kind==='splash'&&a<16){ const k=Math.pow(sz,1.35)*(fx.near?1.15:1), rise=Math.min(1,a/1.1), fall=clamp((a-2.4)/8,0,1), H=34*k*rise*(1-.3*fall);
+      const putO=(col,sx,sy,dx,yy,dz,op)=>{ const s=sprTake(TR3.fxs); if(!s) return; s.material.color.set(col); s.position.set(x+dx,y0+yy,z+dz); s.scale.set(sx,sy,1); s.material.opacity=op; s.material.blending=THREE.NormalBlending; };
+      if(a<10) putO(0xf4f8fa,(5+a*1.4)*k,H,0,H*.5,0,.92*(1-fall));   // the column
+      for(let j=0;j<7;j++){ const an=j/7*TAU+fx.x*917, r=(2+a*3.2)*k*Math.min(1,a/1.4), h2=H*(.35+.18*Math.sin(j*2.3+fx.y*311))*(1-.5*fall);   // the crown of spray
+        if(a<11) putO(0xeef4f7,(4+a*1.8)*k,(5+h2*.55),Math.cos(an)*r,h2*.6,Math.sin(an)*r,.75*(1-a/11)); }
+      putO(0xe6eef1,(14+a*9)*k,(2.5+a*.9)*k,0,.8,0,.6*(1-a/16));   // the foam ring
+      if(a>1.5) putO(0xdfe6ea,(12+a*4)*k,(10+a*3)*k,(a-1.5)*1.2,H*.45+a*1.5,0,.35*(1-a/16)); }   // mist
     else if(fx.kind==='tsplash'&&a<4) put(0xf4f8fa,6+a*2,6+a*3,3,.8*(1-a/4));
     else if(fx.kind==='col'&&a<12){ const h=60*Math.min(1,a/1.5); put(0xf4f8fa,16+a*2.5,h,h*.5,.9*(1-a/12)); }
     else if(fx.kind==='hit'){ if(a<1.4) put(0xffa040,(24*(1-a/1.4)+8)*B,(24*(1-a/1.4)+8)*B,6*B,1-a/1.4); if(a<30) put(0x3a3c3f,(10+a*1.8)*B,(10+a*1.8)*B,(8+a*2)*B,.7*(1-a/30)); }
@@ -5932,12 +6101,15 @@ function viewerBuild(){
     <div>${gap>0?`The centre of gravity is ${f2(gap)} m ahead of the neutral point, so it is stable.`:`The centre of gravity is ${f2(-gap)} m behind the neutral point, so it is unstable.`}</div>`;
   // the selected rival's outline at the same scale, noses together
   const r0=RIVALS[S.selected], r=r0&&{title:r0.title,d:rivalD(r0,S.design.role)}; let ghost=null;
-  if(r){ ghost=meshFor({design:r.d,st:compute(r.d)},1); const gm=new THREE.MeshBasicMaterial({color:0xD94F3D,transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide});
-    ghost.traverse(o=>{ if(o.isMesh) o.material=gm; if(o.name==='glow'||o.name==='flash') o.visible=false; });
-    ghost.position.copy(off).add(new THREE.Vector3((d.fusLen-r.d.fusLen)*.5,0,0)); ghost.visible=VW3.rival; scene.add(ghost); }
+  // it has its own wheels, bay, folding wings and propeller, and does whatever yours is doing: gravity, gear, bay, folding, engine
+  let gan=null, gpark=0;
+  if(r){ const gm0=meshFor({design:r.d,st:compute(r.d)},2,{gear:r.d.gear!=='fixed'}), gm=new THREE.MeshBasicMaterial({color:0xD94F3D,transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide});
+    gm0.traverse(o=>{ if(o.isMesh) o.material=gm; if(o.name==='flash') o.visible=false; }); gan=animParts(gm0); setHinges(gan.gear,0);
+    const gp=gm0.userData.park; gpark=gp.ang; ghost=new THREE.Group(); ghost.position.copy(off).add(new THREE.Vector3((d.fusLen-r.d.fusLen)*.5+gp.x,gp.y,0)); gm0.position.set(-gp.x,-gp.y,0); ghost.add(gm0);
+    ghost.visible=VW3.rival; scene.add(ghost); }
   VW3.rivalName=r?(r.d.name||r.title):'';
-  VW3.scene=scene; VW3.model=model; VW3.pose=pose; VW3.parkA=pk.ang; VW3.an=an; VW3.sizesG=sizes; VW3.xr=xr; VW3.ghost=ghost; VW3.span=span; VW3.retract=retract;
-  if(!VW3.camera||VW3.dist<=0||!VW3.built){ VW3.dist=span*1.25; }
+  VW3.scene=scene; VW3.model=model; VW3.pose=pose; VW3.parkA=pk.ang; VW3.an=an; VW3.sizesG=sizes; VW3.xr=xr; VW3.ghost=ghost; VW3.gan=gan; VW3.gpark=gpark; VW3.span=span; VW3.retract=retract;
+  if(!VW3.camera||VW3.dist<=0||!VW3.built){ VW3.dist=span*1.25; if(VW3.grav&&!VW3.gearUp){ VW3.gravA=pk.ang; VW3.gravV=0; pose.rotation.z=pk.ang; } }
   VW3.built=true;
   VW3.camera=VW3.camera||new THREE.PerspectiveCamera(40,1,.1,span*20); VW3.camera.far=span*20; VW3.camera.updateProjectionMatrix();
   setXray(VW3.xray);
@@ -5953,7 +6125,6 @@ function setXray(on){
   if(VW3.model) VW3.model.traverse(o=>{ if(!o.isMesh||o.name==='glow') return; const m=o.material;
     if(m.userData.op==null){ m.userData.op=m.opacity; m.userData.tr=m.transparent; m.userData.dw=m.depthWrite; }
     m.transparent=on||m.userData.tr; m.opacity=on?Math.min(m.userData.op,.16):m.userData.op; m.depthWrite=on?false:m.userData.dw; m.needsUpdate=true; o.castShadow=!on&&!m.userData.tr; });
-  $('#vxray').setAttribute('aria-pressed',on);
 }
 function viewerKey(){
   const k=$('#vkey'), parts=[];
@@ -5970,19 +6141,21 @@ function viewerFrame(){
   else if(VW3.spin&&!VW3.drag&&!VW3.pinch) VW3.yaw+=.003;
   // moving parts: propeller, exhaust, control surfaces working, gear folding
   const an=VW3.an;
-  const run=!!VW3.engine; if(run) for(const p of an.props) p.rotation.x+=.45; for(const o of an.discs) o.visible=run;   // the engine runs only when you start it
-  for(const o of an.glows){ o.visible=run; if(run) o.scale.set((o.userData.ab?.45:.5)*(.9+Math.random()*.2),.9,.9); }
-  setHinges(an.ail,Math.sin(now*1.3)*.3); setHinges(an.elev,Math.sin(now*.9)*.2); setHinges(an.rud,Math.sin(now*.7)*.25);
+  const rpm=engSpool(VW3.eng||(VW3.eng={}),!!VW3.engine,dt,part('engine',S.design.engine)), ANS=[an,VW3.gan].filter(Boolean);   // the engine runs only when you start it
+  for(const A of ANS){ for(const p of A.props) p.rotation.x+=rpm*28*dt; for(const o of A.discs) o.visible=rpm>.6;
+    for(const o of A.glows){ o.visible=rpm>.05; if(o.visible) o.scale.set((o.userData.ab?.45:.5)*(.9+Math.random()*.2)*Math.max(.3,rpm),.9,.9); }
+    setHinges(A.ail,Math.sin(now*1.3)*.3); setHinges(A.elev,Math.sin(now*.9)*.2); setHinges(A.rud,Math.sin(now*.7)*.25); }
   VW3.gearT=clamp(VW3.gearT+(VW3.gearUp?1:-1)*dt/1.6,0,1); const e=VW3.gearT*VW3.gearT*(3-2*VW3.gearT);
-  setHinges(an.gear,o=>o.userData.fold*e);
-  VW3.bayT=clamp(VW3.bayT+(VW3.bayOpen?1:-1)*dt/1.1,0,1); { const b=VW3.bayT*VW3.bayT*(3-2*VW3.bayT); setHinges(an.bay,o=>o.userData.fold*b); }
+  for(const A of ANS){ setHinges(A.gear,o=>o.userData.fold*e); for(const h of A.gear) h.visible=e<.995; }   // folded away, the well doors close over it
+  VW3.bayT=clamp(VW3.bayT+(VW3.bayOpen?1:-1)*dt/1.1,0,1); { const b=VW3.bayT*VW3.bayT*(3-2*VW3.bayT); for(const A of ANS) setHinges(A.bay,o=>o.userData.fold*b); }
   // Gravity: with the wheels down the tail falls onto its wheel, a little faster as it goes, and bumps to rest; off, it is lifted level
   { const down=VW3.grav&&!VW3.gearUp&&VW3.gearT<.02, tgt=down?VW3.parkA:0;
     if(down&&VW3.gravA<tgt){ VW3.gravV+=1.3*dt; VW3.gravA+=VW3.gravV*dt; if(VW3.gravA>=tgt){ VW3.gravA=tgt; VW3.gravV=VW3.gravV>.06?-VW3.gravV*.22:0; } }
     else if(down&&VW3.gravV<0){ VW3.gravA+=VW3.gravV*dt; VW3.gravV+=1.3*dt; if(VW3.gravA>=tgt){ VW3.gravA=tgt; VW3.gravV=0; } }
     else { VW3.gravV=0; VW3.gravA+=(tgt-VW3.gravA)*Math.min(1,dt*2.5); }
-    if(VW3.pose) VW3.pose.rotation.z=VW3.gravA; }
+    if(VW3.pose) VW3.pose.rotation.z=VW3.gravA; if(VW3.ghost&&VW3.gan) VW3.ghost.rotation.z=VW3.parkA>1e-3?VW3.gravA/VW3.parkA*VW3.gpark:0; }
   if(an.fold.length){ const ft=Math.max(1.5,Math.min(5,(part('fold',S.design.fold).time||12)/6)); VW3.foldT=clamp((VW3.foldT||0)+(VW3.folded?1:-1)*dt/ft,0,1); setFold(an.fold,VW3.foldT*VW3.foldT*(3-2*VW3.foldT)); }
+  if(VW3.gan&&VW3.gan.fold.length) setFold(VW3.gan.fold,VW3.foldT*VW3.foldT*(3-2*VW3.foldT));
   const c=VW3.camera, D=VW3.dist;
   c.position.set(D*Math.cos(VW3.pitch)*Math.cos(VW3.yaw),D*Math.sin(VW3.pitch),D*Math.cos(VW3.pitch)*Math.sin(VW3.yaw)); c.lookAt(0,0,0);
   try{ R.render(VW3.scene,c); if(!VW3.glChecked){ VW3.glChecked=true; glCheck(R,()=>{ VW3.key=''; }); } }catch(e){ console.error(e); } requestAnimationFrame(viewerFrame);
@@ -5997,7 +6170,6 @@ $('#view3d').addEventListener('click',openViewer);
 $('#vclose').addEventListener('click',closeViewer);
 $('#vspin').addEventListener('click',()=>{ VW3.spin=!VW3.spin; VW3.to=null; $('#vspin').setAttribute('aria-pressed',VW3.spin); });
 $('#vsize').addEventListener('click',()=>{ VW3.sizes=!VW3.sizes; if(VW3.sizesG) VW3.sizesG.visible=VW3.sizes; $('#vsize').setAttribute('aria-pressed',VW3.sizes); });
-$('#vxray').addEventListener('click',()=>{ setXray(!VW3.xray); viewerKey(); });
 $('#vrival').addEventListener('click',()=>{ VW3.rival=!VW3.rival; if(VW3.ghost) VW3.ghost.visible=VW3.rival; $('#vrival').setAttribute('aria-pressed',VW3.rival); viewerKey(); });
 $('#vengine').addEventListener('click',()=>{ VW3.engine=!VW3.engine; $('#vengine').setAttribute('aria-pressed',String(VW3.engine)); });
 $('#vgear').addEventListener('click',()=>{ VW3.gearUp=!VW3.gearUp; $('#vgear').textContent=VW3.gearUp?'Gear down':'Gear up'; });
