@@ -458,7 +458,7 @@ legend{padding:0;margin-bottom:6px}
             <span class="trbtns"><button class="btn ghost" id="trtfbtn" hidden>Enemy task force</button><button class="btn" id="trair">Airgroups</button></span></div>
           <div class="trview"><canvas id="trmap" aria-label="Chart of the trials area, with the ship, the wind, target ships and the flights aloft. Drag to move it, scroll or pinch to zoom, and zoom right in to see that spot in 3D. Click to steer toward a point."></canvas>
             <canvas id="tr3" hidden aria-label="The sea in 3D at the spot you zoomed in on. Drag to turn the view, right-drag or shift-drag to move it, scroll to zoom; zoom out to go back to the chart."></canvas></div>
-          <div class="trbtns"><button class="btn ghost" id="trzin" aria-label="Zoom in">+</button><span class="mono" id="trzoom"></span><button class="btn ghost" id="trzout" aria-label="Zoom out">−</button>
+          <div class="trbtns"><button class="btn ghost" id="trzin" aria-label="Zoom in">+</button><span class="mono" id="trzoom" style="display:inline-block;min-width:14ch;text-align:center"></span><button class="btn ghost" id="trzout" aria-label="Zoom out">−</button>
             <button class="btn ghost" id="trfollow" aria-pressed="true">Follow ship</button><button class="btn ghost" id="trgrid" aria-pressed="true">Squares</button><button class="btn ghost" id="trwind" aria-pressed="true">Wind arrows</button><button class="btn ghost" id="trrings" aria-pressed="true">Strike range</button><button class="btn ghost" id="trsight" aria-pressed="true" hidden>Sight</button><button class="btn ghost" id="trturn" aria-pressed="false" hidden>Turn with her</button><span class="trbtns" id="trchase" hidden><button class="btn ghost" id="trcprev" aria-label="Follow the previous aircraft of this flight">◂ Aircraft</button><span class="mono" id="trcname" style="font-size:12px"></span><button class="btn ghost" id="trcnext" aria-label="Follow the next aircraft of this flight">Aircraft ▸</button><button class="btn ghost" id="trcstop">Stop following</button></span>
             <span class="muted" id="trhint" style="font-size:12.5px">Drag to move the chart. Scroll to zoom: right in, it turns to 3D. Click to steer.</span></div></div>
         <div class="panel" id="trtf" hidden></div>
@@ -1190,6 +1190,8 @@ const CVP={
   funnel:[{id:'island',name:'Funnel in the island',note:'Uptakes led into the island. In light winds smoke and hot gas trail over the after deck and make landings harder.',from:1920,w:0},
     {id:'down',name:'Downturned side funnels',note:'Big funnels curving down over the starboard side keep smoke off the deck. Japanese practice. Heavy.',from:1920,w:1},
     {id:'stacks',name:'Small side stacks',note:'A row of small stacks along the starboard side, as in the Independence class. Lighter, but smoke drifts over the deck in a beam wind.',from:1920,w:.5}],
+  tpsk:[{id:'internal',name:'Inside the hull',note:'Void and oil compartments behind the plating along the vitals. Keeps her lines clean, but takes space from the hold.',from:1920},
+    {id:'bulge',name:'Bulges',note:'Blisters built onto the outside of the hull along the vitals, as on Akagi, Kaga and Courageous. The hold stays free and she is steadier, but she is wider at the waterline and slower for her power.',from:1920}],
   avgas:[{id:'plain',name:'Plain avgas tanks',note:'Tanks in the hold. Fumes leak into the ship when they are hit or strained.',from:1920,fill:.7,w:.25},
     {id:'saddle',name:'Tanks inside water-filled saddles',note:'Each tank sits in a tank of sea water that takes the place of the petrol as it is used. Safer, holds less.',from:1939,fill:.45,w:.5}],
 };
@@ -1206,6 +1208,7 @@ const SPACE={
   void:{name:'Empty',short:'',hold:1,low:1,col:''},
 };
 const cvPart=(c,id)=>CVP[c].find(p=>p.id===id)||CVP[c][0];
+const tpsIn=cv=>cv.tpsk!=='bulge';   // torpedo protection inside the hull (it takes hold space) rather than in bulges outside it
 // The hull's fullness along its length: full amidships, fine at the ends. f(x) is the fraction of the beam at x.
 function hullShape(cv){ const Cp=Math.min(.75,cv.Cb/.98), p=Cp/(1-Cp); return x=>Math.max(0,1-Math.pow(Math.abs(2*x/cv.L-1),p)); }
 // A sensible ship for a given size and date, as a starting point: a Yorktown-like layout scaled to the tonnage, with the best gear of the day.
@@ -1226,10 +1229,10 @@ function autoLayout(cv){
   const n=cv.n, need=cvNeeds(cv), vol=cvVolumes(Object.assign({},cv,{hold:Array(n).fill('boiler')})), hold=Array(n).fill('void'), low=Array(n).fill('crew');
   hold[0]='stores'; hold[n-1]='stores';
   // machinery grows outwards from amidships: two boiler rooms to each engine room, so the plant is split into units
-  const mid=Math.floor(n*.5); let a=mid, b=mid-1, k=0; const got={boiler:0,engine:0}, seq=['boiler','boiler','engine'];
-  while((got.boiler<need.boiler||got.engine<need.engine)&&(a<n-1||b>0)){
-    let want=seq[k%3]; if(got[want]>=need[want]) want=want==='boiler'?'engine':'boiler';
-    const i=(k%2===0&&a<n-1)||b<1?a++:b--; hold[i]=want; got[want]+=vol.hold[i]; k++; }
+  const mid=Math.floor(n*.5); let a=mid, b=mid-1, k=0; const got={boiler:0,engine:0}, seq=['boiler','boiler','engine'], minE=Math.ceil(cvPart('shafts',cv.shafts).n/2); let eRooms=0;   // at least one engine room for every two shafts
+  while((got.boiler<need.boiler||got.engine<need.engine||eRooms<minE)&&(a<n-1||b>0)){
+    let want=seq[k%3]; if(got[want]>=need[want]&&!(want==='engine'&&eRooms<minE)) want=want==='boiler'?(got.engine<need.engine||eRooms<minE?'engine':'boiler'):'boiler';
+    const i=(k%2===0&&a<n-1)||b<1?a++:b--; hold[i]=want; got[want]+=vol.hold[i]; if(want==='engine') eRooms++; k++; }
   // magazines next to the machinery, then avgas beyond them, alternately forward and aft
   const fill=(what,needV)=>{ let g=0, side=0; while(g<needV){ let free=[...hold.keys()].filter(i=>i>0&&i<n-1&&hold[i]==='void');
       if(!free.length) free=[...hold.keys()].filter(i=>hold[i]==='stores'&&what!=='fuel');   // the end stores can move up to the lower decks
@@ -1246,7 +1249,7 @@ function autoLayout(cv){
 // Volumes of each compartment, hold and lower decks, after the torpedo protection takes its share of the sides.
 function cvVolumes(cv){
   const f=hullShape(cv), n=cv.n, len=cv.L/n, hh=.65*cv.D-1.2, hl=.35*cv.D, prot=protRange(cv), hold=[], low=[];
-  for(let i=0;i<n;i++){ let vh=0, vl=0; const tps=i>=prot[0]&&i<=prot[1]?cv.tps:0;
+  for(let i=0;i<n;i++){ let vh=0, vl=0; const tps=i>=prot[0]&&i<=prot[1]&&tpsIn(cv)?cv.tps:0;
     for(let j=0;j<8;j++){ const x=(i+(j+.5)/8)*len, w=f(x)*cv.B; vh+=Math.max(0,w-2*tps)*len/8; vl+=Math.min(cv.B,w*1.15)*len/8; }
     hold.push(vh*hh*.9); low.push(vl*hl*.85); }
   return {hold,low,hh,hl,len};
@@ -1272,7 +1275,7 @@ function hullPower(L,B,T,disp,shafts,wave,V){ const vol=disp/1.025, Cb=Math.min(
   return (Rf+Rw)*V/.65/745.7; }
 function computeCV(cv){
   const n=cv.n, vol=cvVolumes(cv), need=cvNeeds(cv), prot=protRange(cv), len=vol.len;
-  const Bo=cvPart('boiler',cv.boiler), Tu=cvPart('turbine',cv.turbine), Sh=cvPart('shafts',cv.shafts), Bw=cvPart('bow',cv.bow), Is=cvPart('island',cv.island);
+  const Bo=cvPart('boiler',cv.boiler), Tu=cvPart('turbine',cv.turbine), Sh=cvPart('shafts',cv.shafts), Bo2=cvPart('bow',cv.bow), Is=cvPart('island',cv.island);
   const Ca=cvPart('cat',cv.cat), Wi=cvPart('wire',cv.wire), H=cvPart('aaH',cv.aaH), M=cvPart('aaM',cv.aaM), Lg=cvPart('aaL',cv.aaL), R=cvPart('radar',cv.radar), DC=cvPart('dc',cv.dc), AG=cvPart('avgas',cv.avgas);
   const have=k=>cv.hold.reduce((s,h,i)=>s+(h===k?vol.hold[i]:0),0)+cv.low.reduce((s,h,i)=>s+(h===k?vol.low[i]:0),0);
   const protL=prot[1]>=prot[0]?(prot[1]-prot[0]+1)*len:0;
@@ -1306,15 +1309,17 @@ function computeCV(cv){
   add('Aviation fuel',avgasM3*.72,vol.hh*.5);
   add('Crew, effects and stores',need.crew*.42,cv.D*.75);
   add('Equipment and outfit',.14*W[0].w,cv.D*.7);
+  if(cv.ballast) add('Permanent ballast',cv.ballast,.6);   // low in the hull: it steadies her
   const std=W.reduce((s,x)=>s+x.w,0), feed=cv.shp/1000*3, full=std+fuel+feed, trial=std+fuel*.5+feed;
-  const draught=d=>d/(1.025*cv.L*cv.B*cv.Cb), T=draught(full), Tstd=draught(std);
+  // bulges widen her at the waterline along the vitals: a little more buoyancy and stability, and more to push through the water
+  const Bw=tpsIn(cv)?cv.B:cv.B+2*cv.tps*protL/cv.L*.9, draught=d=>d/(1.025*cv.L*Bw*cv.Cb), T=draught(full), Tstd=draught(std);
   // stability at full load: centre of buoyancy, metacentre from the waterplane, and the weights' centre of gravity (fuel low in the hold)
   const KG=(W.reduce((s,x)=>s+x.w*x.z,0)+fuel*vol.hh*.35+feed*vol.hh*.3)/full, Cwp=(1+2*cv.Cb)/3;
-  const KB=.53*T, BM=Cwp*Cwp/(11.7*cv.Cb)*cv.B*cv.B/T, GM=KB+BM-KG;
+  const KB=.53*T, BM=Cwp*Cwp/(11.7*cv.Cb)*Bw*Bw/T, GM=KB+BM-KG;
   // speed on trial, and range at 15 knots (cruising machinery and the ship's electrical load as well)
   const P=cv.shp*Tu.eta; let lo=2,hi=22;   // the fit pairs trial displacement with the full-load draught
-  for(let i=0;i<40;i++){ const V=(lo+hi)/2; hullPower(cv.L,cv.B,T,trial,Sh.n,Bw.wave,V)>P?hi=V:lo=V; }
-  const speed=lo/KN, p15=hullPower(cv.L,cv.B,T,trial,Sh.n,Bw.wave,15*KN)+.02*cv.shp+1500, range=fuel/(p15*Bo.sfc/1000)*15;
+  for(let i=0;i<40;i++){ const V=(lo+hi)/2; hullPower(cv.L,Bw,T,trial,Sh.n,Bo2.wave,V)>P?hi=V:lo=V; }
+  const speed=lo/KN, p15=hullPower(cv.L,Bw,T,trial,Sh.n,Bo2.wave,15*KN)+.02*cv.shp+1500, range=fuel/(p15*Bo.sfc/1000)*15;
   const reqs=[
     {k:'boiler',label:'Boiler rooms',need:need.boiler,have:have('boiler')},{k:'engine',label:'Engine rooms',need:need.engine,have:have('engine')},
     {k:'mag',label:'Magazines',need:need.mag,have:have('mag')},{k:'avgas',label:'Aviation fuel tanks',need:need.avgas/AG.fill,have:have('avgas')},
@@ -1851,7 +1856,9 @@ function cvStats(cv){ const k=JSON.stringify(cv); let s=CVCACHE.get(k); if(!s){ 
 const clsTons=c=>cvStats(c.cv).std;
 const cvSel=()=>clsOf(S.cvSel)||S.classes[0];
 let cvBrush='boiler';
-const deckStart=cv=>(cv.L-cv.deckL)*.7;
+// Where the flight deck starts, from the bow: set by its length and how far it overhangs the stern (negative: it stops short of it).
+// Designs from before the overhang could be set put 70% of the difference at the bow.
+const deckOvOf=cv=>cv.deckOv??Math.round(-(cv.L-cv.deckL)*.3*10)/10, deckStart=cv=>cv.L+deckOvOf(cv)-cv.deckL;
 function cvChipHTML(cat,p,on){ const lock=p.from>techDate()+1e-6;
   return `<button class="chip${lock?' locked':''}" data-cvcat="${cat}" data-id="${p.id}" aria-pressed="${on}"${lock?' aria-disabled="true"':''}><span class="n">${p.name}</span>${p.note?`<span class="d">${p.note}</span>`:''}${lock?`<span class="r">From ${dateText(p.from)}</span>`:''}</button>`; }
 // A boiler that another one already available beats on weight, space and fuel alike is left off the list, unless she has it.
@@ -1889,25 +1896,24 @@ function cvControls(cv,cs){
   const lifts=cv.lifts.map((l,i)=>`<div class="liftrow"><div class="ltitle"><strong>Lift ${i+1}</strong><label class="toggle"><input type="checkbox" data-liftedge="${i}"${l.edge?' checked':''}${techDate()<1940&&!l.edge?' disabled':''}> Deck-edge${techDate()<1940?' (from 1940)':''}</label><button class="btn ghost" data-liftdel="${i}">Remove</button></div>
     <div class="dims">${cvSlider('lift'+i+'x','Position from the bow','m',0,Math.round(cv.L),1,l.x)}${cvSlider('lift'+i+'l','Length, fore and aft','m',6,20,.1,l.l)}${cvSlider('lift'+i+'w','Width, across','m',5,18,.1,l.w)}</div></div>`).join('');
   return [
-    `<section class="group"><h3>Hull</h3><div class="dims">${cvSlider('L','Waterline length','m',120,290,.5,cv.L,'Longer hulls are faster for their power and hold more.')}${cvSlider('B','Beam','m',15,36,.1,cv.B,'Width at the waterline. Wider is steadier, but pushes more water.')}
-      ${cvSlider('D','Hull depth','m',9,20,.1,cv.D,'Keel to the hangar deck. Sets the space below and the freeboard.')}${cvSlider('Cb','Fullness','',.4,.65,.01,cv.Cb,'Block coefficient: how much of the box the hull fills. Fuller carries more but is slower.')}</div>${cvChips('bow','Bow',cv)}${cvChips('fore','Bow above the waterline',cv)}</section>`,
+    `<section class="group"><h3>Hull</h3><div class="dims">${cvSlider('L','Waterline length','m',120,290,.5,cv.L,'Longer hulls are faster for their power and hold more.')}${cvSlider('B','Beam','m',15,40,.1,cv.B,'Width at the waterline. Wider is steadier, but pushes more water.')}
+      ${cvSlider('D','Hull depth','m',9,20,.1,cv.D,'Keel to the hangar deck. Sets the space below and the freeboard.')}${cvSlider('Cb','Fullness','',.4,.65,.01,cv.Cb,'Block coefficient: how much of the box the hull fills. Fuller carries more but is slower.')}${cvSlider('ballast','Permanent ballast','t',0,12000,50,cv.ballast||0,'Weight carried low in the hull to steady her. Conversions from battleships and liners, and some light carriers, carried thousands of tons.',fmtK)}</div>${cvChips('bow','Bow',cv)}${cvChips('fore','Bow above the waterline',cv)}</section>`,
     `<section class="group"><h3>Machinery</h3>${cvChips('boiler','Boilers',cv)}${cvChips('turbine','Turbines',cv)}${cvChips('shafts','Shafts',cv)}
-      <div class="dims">${cvSlider('shp','Shaft horsepower','shp',10000,200000,1000,cv.shp,'Boilers and engine rooms grow with power.',fmtK)}</div></section>`,
+      <div class="dims">${cvSlider('shp','Shaft horsepower','shp',5000,220000,500,cv.shp,'Boilers and engine rooms grow with power.',fmtK)}</div></section>`,
     `<section class="group" id="cvinside"><h3>Inside the hull</h3><p class="muted" style="margin:0;font-size:13.5px">Pick a space below, then click compartments in the drawing to fill them. The hold is below the waterline; the lower decks are between it and the hangar.</p>
       <div class="dims">${cvSlider('n','Watertight compartments','',8,30,1,cv.n,'More bulkheads contain flooding better, but each weighs, and boiler rooms need at least 8 m.')}</div>
       <div class="chips brushes">${brush}</div><div class="reqs">${req}</div><div><button class="btn ghost" id="cvauto">Lay out the compartments automatically</button></div></section>`,
     `<section class="group"><h3>Hangar</h3>${`<fieldset><legend class="label">Hangar decks</legend><div class="chips">${[1,2].map(n=>`<button class="chip" data-cvhang="${n}" aria-pressed="${cv.hangars===n}"><span class="n">${n===1?'One hangar deck':'Two hangar decks'}</span><span class="d">${n===1?'Simple and light, and the flight deck stays low.':'Twice the floor space, but the flight deck sits high and the lifts work harder.'}</span></button>`).join('')}</div></fieldset>`}
       ${cvChips('hside','Hangar sides',cv)}<div class="dims">${cvSlider('hH','Clear height','m',3.8,6.5,.05,cv.hH,'Aircraft taller than this, folded, cannot go below.')}${cvSlider('hFrom','Hangar starts','m from the bow',0,Math.round(cv.L),1,cv.hFrom)}${cvSlider('hTo','Hangar ends','m from the bow',0,Math.round(cv.L),1,cv.hTo)}</div></section>`,
-    `<section class="group"><h3>Flight deck</h3><div class="dims">${cvSlider('deckL','Length','m',100,300,1,cv.deckL,'May overhang the hull at bow and stern.')}${cvSlider('deckW','Width','m',14,40,.1,cv.deckW)}
-      ${cvSlider('deckArm','Armour','mm',0,100,1,cv.deckArm,'Over the hangar. Stops bombs bursting in the hangar, at a great weight high up.')}</div>${cvChips('island','Island',cv)}
+    `<section class="group"><h3>Flight deck</h3><div class="dims">${cvSlider('deckL','Length','m',100,300,1,cv.deckL,'Whatever the stern overhang leaves goes at the bow: a short deck stops short of it, a long one overhangs it.')}${cvSlider('deckOv','Overhang at the stern','m',-40,25,.5,deckOvOf(cv),'How far the flight deck runs past the stern. Below zero it stops short of it.')}${cvSlider('deckW','Width','m',14,40,.1,cv.deckW)}</div>${cvChips('island','Island',cv)}
       ${cv.island!=='none'?`${cvChips('istyle','Island layout',cv)}${cvChips('iside','Island side',cv)}<div class="dims">${cvSlider('islX','Island position','of the deck from the bow',.15,.7,.01,cv.islX??.42,'Where the island starts, measured back from the forward end of the flight deck.',v=>Math.round(v*100)+'%')}</div>`:''}${cvChips('funnel','Funnels',cv)}</section>`,
     `<section class="group"><h3>Lifts</h3><p class="muted" style="margin:0;font-size:13.5px">Aircraft must fit a lift, folded, to go between the hangar and the deck. A deck-edge lift sits outboard of the hangar, so wings can overhang it.</p>${lifts}
       <div>${cv.lifts.length<4?'<button class="btn ghost" id="cvaddlift">Add a lift</button>':''}</div></section>`,
     `<section class="group"><h3>Launch and recovery</h3>${cvChips('cat','Catapult',cv)}<div class="dims">${cvSlider('cats','Catapults','',0,2,1,cv.cats)}</div>
       ${cvChips('wire','Arrester gear',cv)}<div class="dims">${cvSlider('wires','Arrester wires','',0,16,1,cv.wires,'More wires catch more aircraft that touch down long.')}</div>
       <label class="toggle"><input type="checkbox" id="cvbarrier"${cv.barrier?' checked':''}> Crash barrier: aircraft can be parked forward while others land</label></section>`,
-    `<section class="group"><h3>Protection</h3><div class="dims">${cvSlider('belt','Side belt','mm',0,200,1,cv.belt,'Over the machinery, magazines and avgas.')}${cvSlider('hdArm','Armoured deck','mm',0,150,1,cv.hdArm,'At hangar-deck level over the same length. Keeps bombs out of the vitals.')}
-      ${cvSlider('tps','Torpedo protection','m',0,6,.1,cv.tps,'Layers of void and oil along the sides of the vitals that absorb a torpedo hit. Takes hold space.')}</div>${cvChips('avgas','Aviation fuel tanks',cv)}${cvChips('dc','Damage control',cv)}</section>`,
+    `<section class="group"><h3>Protection</h3><div class="dims">${cvSlider('deckArm','Flight deck armour','mm',0,100,1,cv.deckArm,'Over the hangar. Stops bombs bursting in the hangar, at a great weight high up.')}${cvSlider('belt','Side belt','mm',0,200,1,cv.belt,'Over the machinery, magazines and avgas.')}${cvSlider('hdArm','Armoured deck','mm',0,200,1,cv.hdArm,'At hangar-deck level over the same length. Keeps bombs out of the vitals.')}
+      ${cvSlider('tps','Torpedo protection','m',0,6,.1,cv.tps,cv.tpsk==='bulge'?'Bulges built onto the sides of the vitals, this deep, that absorb a torpedo hit. They leave the hold free but widen her at the waterline.':'Layers of void and oil inside the sides of the vitals that absorb a torpedo hit. They take hold space.')}</div>${cvChips('tpsk','Torpedo protection is',cv)}${cvChips('avgas','Aviation fuel tanks',cv)}${cvChips('dc','Damage control',cv)}</section>`,
     `<section class="group"><h3>Guns and radar</h3>${cvChips('aaH','Heavy anti-aircraft guns',cv)}<div class="dims">${cvSlider('nH','Heavy mounts','',0,16,1,cv.nH)}</div>
       ${cvChips('aaM','Close-range guns',cv)}<div class="dims">${cvSlider('nM','Close-range mounts','',0,30,1,cv.nM)}</div>
       ${cvChips('aaL','Light guns',cv)}<div class="dims">${cvSlider('nL','Light mounts','',0,80,1,cv.nL)}</div>${cvChips('radar','Radar',cv)}</section>`];
@@ -2098,6 +2104,36 @@ function renderCVSheet(){
   const reqBox=document.querySelector('#cvinside .reqs'); if(reqBox) reqBox.innerHTML=cs.reqs.map(r=>{ const pc=r.need>0?Math.min(100,r.have/r.need*100):100, ok=r.have>=r.need*.995;
     return `<div class="req${ok?'':' short'}"><span>${r.label}</span><span class="mono">${fmtK(r.have)} / ${fmtK(r.need)} m³</span><div class="g"><i style="width:${pc}%"></i></div></div>`; }).join('');
 }
+// Hovering over a carrier part: what fitting it would change, better in green and worse in red, as for aircraft parts.
+const CVROWS=[['Standard displacement',c=>c.std,' t','down',fmtK],['Top speed',c=>c.speed,' knots','up',f1],['Range at 15 knots',c=>c.range,' nm','up',fmtK],['Metacentric height',c=>c.GM,' m','gm',f2],
+  ['Hangar deck above the sea',c=>c.fbHangar,' m','up',f1],['Hangar floor',c=>c.hArea2,' m²','up',fmtK],['Aircraft, fighter-sized',c=>c.N,'','up',f0],['Aviation fuel',c=>c.avgasM3,' m³','up',fmtK],
+  ['Crew',c=>c.crew,'','down',fmtK],['Anti-aircraft fire',c=>c.aa,'','up',f1],['Design faults',c=>c.errs.length,'','down',f0]];
+const CVEFF={fore:{closed:[1,'Drier forward: more flying in a head sea.'],open:[0,'Seas break in under the flight deck: less flying in a head sea.']},
+  iside:{port:[0,'The island is in the landing circuit: landings are slower and a little riskier.'],stbd:[1,'The island is clear of the landing circuit.']},
+  hside:{open:[null,'Engines can be warmed up below and fumes blow away, but splinters and seas come in.'],closed:[0,'Petrol fumes collect inside: a hangar fire spreads further.'],box:[1,'An armoured hangar, very hard to burn out.']},
+  funnel:{island:[0,'Smoke trails over the after deck in light winds.'],down:[1,'Smoke is kept off the deck.'],stacks:[null,'Smoke drifts over the deck in a beam wind.']},
+  radar:{none:[0,'No radar: raids are seen late.'],r1:[1,'Sees raids coming 100 km out.'],r2:[1,'Sees raids 100 km out and steers the fighters onto them.']},
+  dc:{dc0:[0,'Basic damage control: fires and flooding are fought slowly.'],dc1:[1,'Better damage control: fires and flooding are fought faster.'],dc2:[1,'Full damage control: fires and flooding are fought fastest.']},
+  avgas:{plain:[0,'Fumes leak into the ship when the avgas tanks are hit.'],saddle:[1,'Safer avgas tanks: fumes rarely leak.']},
+  tpsk:{bulge:[null,'Bulges outside the hull: the hold is free, but she is wider at the waterline.'],internal:[null,'Inside the hull: takes hold space, keeps her lines clean.']},
+  bow:{bulb:[1,'Less wave drag at high speed.'],plain:[0,'More wave drag at high speed.']}};
+const cvTip=document.createElement('div'); cvTip.className='parttip'; cvTip.hidden=true; document.body.appendChild(cvTip);
+function showCvTip(btn){ const c=cvSel(); if(!c) return; const cv=c.cv, c2=JSON.parse(JSON.stringify(cv)), name=btn.querySelector('.n')?.textContent||'';
+  if(btn.dataset.cvhang){ if(+btn.dataset.cvhang===cv.hangars){ cvTip.hidden=true; return; } c2.hangars=+btn.dataset.cvhang; }
+  else { const cat=btn.dataset.cvcat, id=btn.dataset.id, p=cvPart(cat,id); if(cv[cat]===id){ cvTip.hidden=true; return; }
+    if(p.from>techDate()+1e-6){ cvTip.innerHTML=`<b>${esc(name)}</b><p class="n">Not available until ${dateText(p.from)}.</p>`; } c2[cat]=id; if(c2.island==='none'&&cvPart('funnel',c2.funnel).id==='island') c2.funnel='down'; }
+  const a=cvStats(cv), b=cvStats(c2), rows=[], notes=[];
+  for(const [lab,get,unit,dir,fmt] of CVROWS){ const v0=get(a), v1=get(b); if(fmt(v0)===fmt(v1)) continue; const dv=v1-v0, good=dir==='gm'?Math.abs(v1-2)<Math.abs(v0-2):dir==='down'?dv<0:dv>0;
+    rows.push(`<div class="r"><span>${lab}</span><span class="${good?'up':'down'}">${dv>0?'+':'−'}${fmt(Math.abs(dv))}${unit}</span></div>`); }
+  const cat=btn.dataset.cvcat, e=cat&&CVEFF[cat]&&CVEFF[cat][btn.dataset.id]; if(e) notes.push(`<p class="${e[0]==null?'n':e[0]?'up':'down'}">${e[1]}</p>`);
+  if(cat==='cat'||cat==='wire'){ const p0=cvPart(cat,cv[cat]), p1=cvPart(cat,btn.dataset.id), what=cat==='cat'?'Launches':'Stops';
+    notes.push(`<p class="${p1.kg>=p0.kg&&p1.v>=p0.v?'up':'down'}">${what} aircraft up to ${f1(p1.kg/1000)} t at up to ${p1.v} km/h (now ${f1(p0.kg/1000)} t, ${p0.v} km/h).</p>`); }
+  if(!rows.length&&!notes.length) notes.push('<p class="n">No change to her figures.</p>');
+  cvTip.innerHTML=`<b>${esc(name)}</b>`+rows.join('')+notes.join(''); cvTip.hidden=false;
+  const br=btn.getBoundingClientRect(), tw=cvTip.offsetWidth, th=cvTip.offsetHeight; let x=br.right+10; if(x+tw>innerWidth-8) x=Math.max(8,br.left-tw-10); cvTip.style.left=x+'px'; cvTip.style.top=Math.max(8,Math.min(br.top,innerHeight-th-8))+'px'; }
+for(const [ev,on] of [['mouseover',1],['focusin',1],['mouseout',0],['focusout',0]]) $('#cvcontrols').addEventListener(ev,e=>{ const b=e.target.closest('.chip[data-cvcat],[data-cvhang]');
+  if(on&&b) showCvTip(b); else if(!on&&b&&!b.contains(e.relatedTarget)) cvTip.hidden=true; });
+$('#cvcontrols').addEventListener('click',()=>{ cvTip.hidden=true; });
 function cvChanged(full){ save(); if(full) renderCV(); else renderCVSheet(); renderClassList(); }
 $('#cvcontrols').addEventListener('click',e=>{
   const c=cvSel(); if(!c) return; const cv=c.cv;
@@ -2863,7 +2899,7 @@ function meshFor(p,q=1,opt={}){
   else {
     if(radial){ const x=.12, a=yT(x), b=yB(x), yc=(a+b)/2, hh=(a-b)/2*.84, w=wF(x)*.84; disc(hh,black,X(x),yc,0,w/hh);
       if(q) for(let k=0;k<14;k++){ const t=k/14*TAU; add(new THREE.CylinderGeometry(.07,.08,.16,6),dark,X(x)+.06,yc+Math.sin(t)*hh*.78,Math.cos(t)*w*.78).rotation.z=Math.PI/2; }
-      const gap=spanXs(G.el-.015,G.el+.015,.03); if(q) add(loftGeo(gap,(x,u)=>{ const t=1.5*Math.PI+u*TAU, [y,z]=sec(x,t), c=(yT(x)+yB(x))/2; return [X(x),c+(y-c)*1.008,z*1.008]; },P,true,null),black); }
+      }
     else if(q) for(const sg of [-1,1]) for(let k=0;k<6;k++){ const x=.55+k*.22; add(new THREE.BoxGeometry(.13,.07,.1),black,X(x),.22,sg*(zAt(x,.22)+.02)); }
     // spinner, after the drawing's curve
     const rs=radial?.25:.28, sx=spanXs(-.4,0,q?.05:.1); revolve(sx,x=>{ const u=Math.max(0,(x+.4)/.4); return rs*Math.sqrt(Math.min(1,u*(2-u)))*(1-.06*(1-u)); },pd.nose?nose:dark,0,0,[false,true]);
@@ -2880,7 +2916,7 @@ function meshFor(p,q=1,opt={}){
   // guns: cowling guns along the top of the engine, a hub gun through the spinner, wing guns out of the leading edge
   const Ga=part('arm',d.arm), gr=k=>GUN[k].k==='cannon'?.045:.026;
   for(const b of Ga.banks){
-    if(b.at==='cowl') for(let k=0;k<b.n;k++){ const z=(k-(b.n-1)/2)*.22||0, y=topAt(.25,z)+.004; rod([.25,y,z],[G.el-.2,y,z],gr(b.g),black); }
+    if(b.at==='cowl') for(let k=0;k<b.n;k++){ const z=(k-(b.n-1)/2)*.22||0, y=topAt(.35,z)-.015; rod([.12,y,z],[.62,y,z],gr(b.g),black); }   // just the muzzles show, in troughs at the front of the cowling
     else if(b.at==='hub') rod([.3,0],[-.55,0],gr(b.g)+.008,black); }
   // wings, with a real cambered section
   const tcW=A0?A0.depth:.13, cam=.3*tcW, dih=(G.wings.length===1?d.dihedral||0:0)*DEG, tn=Math.tan(dih), PW=q===0?8:q===1?12:18;
@@ -2950,7 +2986,8 @@ function meshFor(p,q=1,opt={}){
       else { const cy=Ld.kind==='torp'?-1.15:-1.1; make(cx,cy); const top=yB(cx)+.04, bot=cy+dia/2; add(new THREE.BoxGeometry(.6,Math.max(.06,top-bot),.08),dark,X(cx),(top+bot)/2);
         for(const v of [-.3,.3]) rod([cx+v,top-.02],[cx+v,bot+.02],.025,dark); } }
     if(G.tank){ const t=G.tank, s2=store([[0,.05],[.15,.55],[.45,1],[.7,1],[.9,.7],[1,.1]],t.len,t.dia,M({color:0xb8bcb4},'metal'),t.x,t.y,-t.z,'droptank');
-      if(t.z) rod([t.x+.35,t.y+t.dia/2-.02,-t.z],[t.x+.35,t.y+t.dia/2+.16,-t.z],.03,dark); } }
+      // its pylon reaches from the top of the tank to the skin above it, wherever that is
+      const top=t.y+t.dia/2-.03, up=t.z?underZ(t.z)[3]+.04:yB(t.x)+.05; add(new THREE.BoxGeometry(Math.min(.9,t.len*.4),Math.max(.06,up-top),.07),dark,X(t.x+.1),(top+up)/2,-t.z); } }
   // tail: the fin and rudder are the drawing's outline, the tailplane its plan; both move on hinges
   { const tl=G.tl, fh=G.fh, pts=[]; for(let i=0;i<=12;i++){ const u=i/12, a=[Lf-tl-.2,.26], c=[Lf-.5,.28+fh], b=[Lf-.05,.22+fh]; pts.push([(1-u)**2*a[0]+2*u*(1-u)*c[0]+u*u*b[0],(1-u)**2*a[1]+2*u*(1-u)*c[1]+u*u*b[1]]); }
     pts.push([Lf+.08,-.12],[Lf,-.04]);
@@ -3582,6 +3619,18 @@ const DROPS=[
     'A new paint, three-tone sea blue. Guns are named by calibre (no maker’s names) and listed from the lightest weight of fire to the heaviest; structures from the weakest to the strongest. Parts are described as dearer or cheaper, not slower or quicker to build. Endurance is still worked out for test flights but no longer shown in the figures.',
     'Graphics always run at the highest setting, so the setting has gone. The Reset progress button and the other outline buttons in Settings no longer vanish on the light theme.',
   ]},
+  {at:'2026-11-23T22:42:00+13:00',items:[
+    'Drop tanks hang from a pylon that reaches the skin above them, under the belly or the wing, instead of floating. Synchronised guns show as muzzles in troughs at the front of the cowling, and the black ring round radial cowlings is gone.',
+    'Lifts: an aircraft already up that has to cross another lift to reach the range has that lift kept up for it, so it no longer waits while the other lift goes up and down. Aircraft are pushed off the lift and to their spot by the deck crew, and start their engines once spotted.',
+    'The zoom buttons in 3D stay where they are when the view changes between 3D and the chart.',
+    'The flight deck can be placed: a new Overhang at the stern setting says how far it runs past the stern (below zero it stops short of it), and the rest of the difference goes at the bow. A Shoho, with a deck that ends at the stern and stops well short of the bow, can now be built.',
+    'Bows: a plain stem rakes down and curves into the keel, and an open forecastle rises gently toward it, instead of ending in a spike. A bulbous bow is a rounded bulb set into the forefoot, without the line that ran up the stem.',
+    'With one or three shafts, the centre propeller sits under a cut-up counter, ahead of the rudder, where you can see it.',
+    'Torpedo protection can be inside the hull, taking hold space, or bulges built onto the outside, which show on the hull, leave the hold free, steady her and cost her some speed.',
+    'Carrier parts show the same hover boxes as aircraft parts: which of her figures change, better in green and worse in red, and what else changes.',
+    'The flight deck armour slider has moved to Protection, with the other three.',
+    'A Permanent ballast setting, for the weight low in the hull that conversions and some light carriers carried. Shaft horsepower now goes from 5,000 to 220,000, beam to 40 m and the armoured deck to 200 mm, so the smallest and the biggest carriers of the war can be built. Laying out the compartments automatically now always gives one engine room for every two shafts.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -3614,23 +3663,26 @@ function cgTexture(){
 // Built from the design itself: hull lines from the length, beam, depth, fullness and draught, then the hangar sides, flight deck,
 // island, funnels, lifts, guns and radar where the design puts them. Bow toward +x, starboard toward +z, waterline at y=0.
 function cvLines(cv,cs){
-  const L=cv.L, B=cv.B, D=cv.D, T=cs.T, fw=hullShape(cv), stem=-.015*L, foot=.045*L, aftK=.9*L;
+  const L=cv.L, B=cv.B, D=cv.D, T=cs.T, fw=hullShape(cv), stem=-.015*L, foot=.075*L, odd=cvPart('shafts',cv.shafts).n%2===1, aftK=(odd?.84:.9)*L, rise=odd?.5:.38;
   const Cp=Math.min(.75,cv.Cb/.98), pd=Cp/(1-Cp)*1.9, Bd=B*1.04;
   // the breadth at the upper deck is fuller than at the waterline: the sides flare out toward the bow, and the stern is a broad transom
   const fd=x=>{ if(x<L/2){ const xs=(x-stem)/(L/2-stem); return xs<=0?0:Math.max(0,1-Math.pow(1-xs,pd)); } return 1-.48*Math.pow(clamp((x-L/2)/(L/2),0,1),3); };
-  const zk0=x=>x<foot?Math.min(D+1.2,(foot-x)/(foot-stem)*(D+1.2)):x>aftK?(x-aftK)/(L-aftK)*D*.38:0;
-  // a bulbous bow: a rounded bulb low at the forefoot, its nose a little ahead of the forward perpendicular
-  const bulb=cv.bow==='bulb'?{x:.026*L,z:.36*T,rx:.036*L,ry:.3*T,rz:.1*B}:null;
-  const bulbW=(x,z)=>{ if(!bulb) return 0; const u=(x-bulb.x)/bulb.rx, v=(z-bulb.z)/bulb.ry, q=1-u*u-v*v; return q>0?bulb.rz*Math.sqrt(q):0; };
-  const zk=x=>{ let k=zk0(x); if(bulb){ const u=(x-bulb.x)/bulb.rx; if(Math.abs(u)<1) k=Math.min(k,bulb.z-bulb.ry*Math.sqrt(1-u*u)); } return k; };
-  const b=(x,z)=>Math.max(b1(x,z),bulbW(x,z));
-  const b1=(x,z)=>{ const k=zk0(x); if(z<k) return 0; const xc=clamp(x,0,L), b0=fw(xc)*B/2, bd=Math.max(b0,fd(x)*Bd/2);
-    if(k>=T-.3) return bd*Math.pow(clamp((z-k)/Math.max(.5,D-k),0,1),.55);
+  // the plating rises to the flight deck along an enclosed hangar, and over an enclosed bow; an open forecastle sheers up toward the stem
+  const top=x=>(cv.hside!=='open'&&x>=cv.hFrom&&x<=cv.hTo)||(cv.fore==='closed'&&x<cv.hFrom)?cs.hFD-.6:D+1.8*Math.pow(Math.max(0,1-x/(.16*L)),2);
+  // the stem rakes down from the deck and curves into the keel at the forefoot; aft, the keel rises to the stern (a cut-up counter over a
+  // centre propeller when there is one)
+  const zk0=x=>x<foot?top(x)*Math.pow(1-clamp((x-stem)/(foot-stem),0,1),2.2):x>aftK?(x-aftK)/(L-aftK)*D*rise:0;
+  // a bulbous bow: a rounded bulb low at the forefoot, its nose a little ahead of the stem (made as a shape of its own)
+  const bulb=cv.bow==='bulb'?(()=>{ const z=.36*T, u=1-Math.pow(z/top(0),1/2.2), xs=stem+u*(foot-stem), rx=.026*L; return {x:xs+rx*.3,z,rx,ry:.28*T,rz:.075*B}; })():null;
+  // bulges along the vitals, from below the turn of the bilge to just above the waterline
+  const pr=protRange(cv), seg=L/cv.n, bx0=pr[0]*seg, bx1=(pr[1]+1)*seg, bul=!tpsIn(cv)&&cv.tps>0&&pr[1]>=pr[0];
+  const bulge=(x,z)=>{ if(!bul) return 0; const ex=clamp((x-bx0)/8,0,1)*clamp((bx1-x)/8,0,1), z0=.15*T, z1=T+1.6; if(ex<=0||z<=z0||z>=z1) return 0; return cv.tps*ex*Math.pow(Math.sin(Math.PI*(z-z0)/(z1-z0)),.6); };
+  const zk=zk0, b=(x,z)=>{ const w=b1(x,z); return w>0?w+bulge(x,z):0; };
+  const b1=(x,z)=>{ const k=zk0(x); if(z<k) return 0; const xc=clamp(x,0,L), b0=fw(xc)*B/2, bd=Math.max(b0,fd(x)*Bd/2), tp=Math.min(top(x),D);
+    if(k>=T-.3) return bd*Math.pow(clamp((z-k)/Math.max(.5,tp-k),0,1),.55);
     if(z<=T){ const t=clamp((z-k)/(T-k),0,1), p=1.5+3*fw(xc)**2; return b0*Math.pow(1-Math.pow(1-t,p),1/p); }
     return b0+(bd-b0)*Math.pow(clamp((z-T)/(D-T),0,1),1.3); };
-  // the plating rises to the flight deck along an enclosed hangar, and over an enclosed bow
-  const top=x=>(cv.hside!=='open'&&x>=cv.hFrom&&x<=cv.hTo)||(cv.fore==='closed'&&x<cv.hFrom)?cs.hFD-.6:D;
-  return {L,B,D,T,stem,foot,aftK,zk,b,top,bulb};
+  return {L,B,D,T,stem,foot,aftK,zk,b,top,bulb,odd};
 }
 let CV3C=null;   // made on first use, so a browser without 3D never needs THREE
 function cvHullGeo(cv,cs,ln,holes){
@@ -3688,6 +3740,7 @@ function cvMesh(cv,cs,opt={}){
   // hull
   const hm=mat('#ffffff',{vertexColors:true,roughness:.78,side:THREE.DoubleSide}); const wells=opt.lifts?cv.lifts.filter(l=>!l.edge).map(l=>[l.x-l.l/2,l.x+l.l/2]):null; add(cvHullGeo(cv,cs,ln,wells),hm);
   const bAt=(m,z)=>ln.b(clamp(m,0,L),z);
+  if(ln.bulb){ const q=ln.bulb, o=add(new THREE.SphereGeometry(1,28,16),mat('#7B3329',{roughness:.78}),X(q.x),Yz(q.z),0); o.scale.set(q.rx,q.ry,q.rz); }
   // open hangar sides: dark bays between posts, under a deep band of plating
   const nh=cv.hangars, hTop=cs.hFD-.6;
   if(cv.hside==='open'){ const step=6; for(let m=cv.hFrom;m<cv.hTo-.5;m+=step){ const m2=Math.min(cv.hTo,m+step), mid=(m+m2)/2, w=Math.min(bAt(m,cv.D),bAt(m2,cv.D))-.6;
@@ -3774,8 +3827,8 @@ function cvMesh(cv,cs,opt={}){
   for(const s of [-1,1]){ const m=L*.05, z=cv.D-1.6, c=add(new THREE.CircleGeometry(.8,10),black,X(m),Yz(z),s*(bAt(m,z)+.05)); c.rotation.y=s>0?0:Math.PI; }
   { const m=L-3.5, z0=ln.zk(m); box(4.5,5.5,.6,X(m),Yz(z0-1.6),0,dark); }
   { const n=cvPart('shafts',cv.shafts).n, zs=n===1?[0]:n===2?[-.2,.2]:n===3?[-.25,0,.25]:[-.3,-.12,.12,.3], pr=1.6+cv.B*.02;
-    for(const f of zs){ const z=f*cv.B, yc=Yz(pr+.3); add(new THREE.CylinderGeometry(.35,.35,L*.2,8),steel,X(L*.78),yc,z).rotation.z=Math.PI/2;
-      const p=add(new THREE.CylinderGeometry(pr,pr,.35,18),bronze,X(L*.885),yc,z); p.rotation.z=Math.PI/2; } }
+    for(const f of zs){ const z=f*cv.B, yc=Yz(pr+.3), px=f===0?L-7.5:L*.885, sl=f===0?L*.24:L*.2; add(new THREE.CylinderGeometry(.35,.35,sl,8),steel,X(px-sl/2),yc,z).rotation.z=Math.PI/2;
+      const p=add(new THREE.CylinderGeometry(pr,pr,.35,18),bronze,X(px),yc,z); p.rotation.z=Math.PI/2; } }
   grp.traverse(o=>{ if(o.isMesh){ o.geometry.computeBoundingSphere(); o.castShadow=o.geometry.boundingSphere.radius>4.5; o.receiveShadow=true; } });
   // the compartments, seen through the hull: hold and lower decks in their colours, and the hangars
   const vol=cs.vol, len=vol.len;
@@ -4031,6 +4084,8 @@ const setLane=(p,a,b,t0,t1)=>{ p.lane={from:a,to:b,t0,t1}; };
 function trLiftOK(L,p,down){ const cv=TR.cv; if(L.busy>TR.t||L.broken) return false;
   if(L.hold&&L.hold.state==='deckq'&&L.hold.lift===L.i) return false;   // an aircraft is still standing on it
   if(laneBlocks(L,TR.t)) return false;
+  // an aircraft already up that has to cross this lift to reach the range has it kept up until it has gone by
+  if(!L.edge){ const front=TR.pack.length?trPackLayout(cv,TR.pack).front:cv.deckL-2; if(TR.planes.some(q=>q!==p&&q.state==='deckq'&&TR.lifts[q.lift]&&TR.lifts[q.lift]!==L&&laneOver(TR.lifts[q.lift].x,front,L,q.d.fusLen/2+1))) return false; }
   if(!L.edge){ if(TR.ops==='launch'&&TR.pack.length) return false;   // the deck run must stay whole while the range takes off
     // nor with an aircraft standing on it, parked or arriving at its spot (the one going down on it excepted)
     const over=q=>q!==p&&q.dx<L.x+L.l/2&&q.dx+q.d.fusLen>L.x-L.l/2&&Math.abs(q.dy)<L.w/2+(q.state==='ranged'||q.state==='spotting'?q.d.span:q.st.foldSpan)/2;
@@ -5444,12 +5499,12 @@ function tr3Frame(){
     if(s==='liftup'){ const L=R.lifts[p.lift], f=L&&L.t0!=null?(t-L.t0)/L.dur:1; if(L&&L.dir==='up'&&f<.2) return {vis:false}; const q=liftAt(p,p.lift,false); return {x:q.x,y:q.y+rec.h,z:q.z,yaw:Math.PI,fold:1,snap:true}; }
     if(s==='deckq'){ const q=liftAt(p,p.lift,false); return {x:q.x,y:q.y+rec.h,z:q.z,yaw:Math.PI,fold:1,snap:true}; }
     if(s==='spotting'){ const a=rec.from||(p.fromLift!=null||p.fx==null?{...liftAt(p,p.fromLift,true),yaw:Math.PI}:{x:CX(p,p.fx),z:-p.fy}), ft=foldTime(p), f=clamp((t-p.t0)/Math.max(1,p.dur-ft),0,1);
-      return {...taxi(a,{x:CX(p,p.dx),z:-p.dy},f),fold:p.t-t>ft?1:0,spin:true,snap:true}; }
+      return {...taxi(a,{x:CX(p,p.dx),z:-p.dy},f),fold:p.t-t>ft?1:0,spin:false,snap:true}; }   // pushed by the deck crew; the engine starts on the spot
     if(s==='ranged') return {x:CX(p,p.dx),z:-p.dy,fold:0,spin:true};
-    if(s==='spotfwd'){ const f=clamp((t-p.t0)/Math.max(1,p.dur),0,1); return {...taxi(rec.from||{x:CX(p,p.fx),z:-p.fy},{x:CX(p,p.dx),z:-p.dy},f),fold:1,spin:true,snap:true}; }
+    if(s==='spotfwd'){ const f=clamp((t-p.t0)/Math.max(1,p.dur),0,1); return {...taxi(rec.from||{x:CX(p,p.fx),z:-p.fy},{x:CX(p,p.dx),z:-p.dy},f),fold:1,spin:false,snap:true}; }
     if(s==='fwd'){ if(p.tdT!=null&&t-p.tdT<120){ const l=landing(p,rec); if(l) return l; } return {x:CX(p,p.dx),z:-p.dy,fold:1}; }
     if(s==='liftdown'){ const L=R.lifts[p.lift], f=L&&L.t0!=null?clamp((t-L.t0)/L.dur,0,1):1, ft=L?L.taxi/L.dur:.3, q=liftAt(p,p.lift,false);
-      if(f<ft) return {...taxi(rec.from||{x:CX(p,p.fx??8),z:-(p.fy??0)},{x:q.x,z:q.z},f/ft),fold:1,spin:true,snap:true}; return {x:q.x,y:q.y+rec.h,z:q.z,fold:1,snap:true}; }
+      if(f<ft) return {...taxi(rec.from||{x:CX(p,p.fx??8),z:-(p.fy??0)},{x:q.x,z:q.z},f/ft),fold:1,spin:false,snap:true}; return {x:q.x,y:q.y+rec.h,z:q.z,fold:1,snap:true}; }
     if(s==='air'){ if(p.launchT!=null&&t-p.launchT<30){ const o=takeoff(p,rec,t-p.launchT,false); if(o.vis!==false) return o; } return flightPose.get(p.id)||{vis:false}; }
     if(s==='circuit'){ if(p.woT!=null&&t-p.woT<28) return waveoff(p,rec); return circuit(p); }
     if(s==='lost'){ if(p.lostKind==='bow'&&t-p.lostT<15) return takeoff(p,rec,t-p.lostT,true); if(p.lostKind==='barrier') return barrier(p,rec); return {vis:false}; }
@@ -6244,7 +6299,7 @@ function numEdit(o){ if(o.querySelector('input')) return; const d=o.closest('.di
 document.addEventListener('click',e=>{ const o=e.target.closest('.dim output'); if(o) numEdit(o); });
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches&&e.target.matches('.dim output')){ e.preventDefault(); numEdit(e.target); } });
 // for testing only: ?debug exposes the inner state to the console
-if(/[?&]debug\b/.test(location.search)) window.FT={CVFIRE,tgtShaft,SPREAD,BOMBFX,hangarHere,hangarK,advFight,advAA,advAir,trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
+if(/[?&]debug\b/.test(location.search)) window.FT={newCV,autoLayout,cvVolumes,cvFaults,cvSea,CVP,cvPart,deckStart,clsOf,renderCV,cvChanged,CVCACHE,CVFIRE,tgtShaft,SPREAD,BOMBFX,hangarHere,hangarK,advFight,advAA,advAir,trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
 })();
 </script>
 
