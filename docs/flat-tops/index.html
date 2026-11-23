@@ -1192,6 +1192,9 @@ const CVP={
     {id:'stacks',name:'Small side stacks',note:'A row of small stacks along the starboard side, as in the Independence class. Lighter, but smoke drifts over the deck in a beam wind.',from:1920,w:.5}],
   tpsk:[{id:'internal',name:'Inside the hull',note:'Void and oil compartments behind the plating along the vitals. Keeps her lines clean, but takes space from the hold.',from:1920},
     {id:'bulge',name:'Bulges',note:'Blisters built onto the outside of the hull along the vitals, as on Akagi, Kaga and Courageous. The hold stays free and she is steadier, but she is wider at the waterline and slower for her power.',from:1920}],
+  fbridge:[{id:'front',name:'Across the hangar front',note:'The forward end of the hangar plated across the full width of the hull, with two rows of windows under the flight deck. Ryujo.',from:1920},
+    {id:'stepped',name:'Stepped bridge front',note:'Two levels across the hangar front, the upper one set back, each with its row of windows.',from:1920},
+    {id:'house',name:'Bridge house',note:'A narrower glazed house standing out from the front of the hangar, with windows on three sides.',from:1920}],
   avgas:[{id:'plain',name:'Plain avgas tanks',note:'Tanks in the hold. Fumes leak into the ship when they are hit or strained.',from:1920,fill:.7,w:.25},
     {id:'saddle',name:'Tanks inside water-filled saddles',note:'Each tank sits in a tank of sea water that takes the place of the petrol as it is used. Safer, holds less.',from:1939,fill:.45,w:.5}],
 };
@@ -1906,7 +1909,7 @@ function cvControls(cv,cs){
     `<section class="group"><h3>Hangar</h3>${`<fieldset><legend class="label">Hangar decks</legend><div class="chips">${[1,2].map(n=>`<button class="chip" data-cvhang="${n}" aria-pressed="${cv.hangars===n}"><span class="n">${n===1?'One hangar deck':'Two hangar decks'}</span><span class="d">${n===1?'Simple and light, and the flight deck stays low.':'Twice the floor space, but the flight deck sits high and the lifts work harder.'}</span></button>`).join('')}</div></fieldset>`}
       ${cvChips('hside','Hangar sides',cv)}<div class="dims">${cvSlider('hH','Clear height','m',3.8,6.5,.05,cv.hH,'Aircraft taller than this, folded, cannot go below.')}${cvSlider('hFrom','Hangar starts','m from the bow',0,Math.round(cv.L),1,cv.hFrom)}${cvSlider('hTo','Hangar ends','m from the bow',0,Math.round(cv.L),1,cv.hTo)}</div></section>`,
     `<section class="group"><h3>Flight deck</h3><div class="dims">${cvSlider('deckL','Length','m',100,300,1,cv.deckL,'Whatever the stern overhang leaves goes at the bow: a short deck stops short of it, a long one overhangs it.')}${cvSlider('deckOv','Overhang at the stern','m',-40,25,.5,deckOvOf(cv),'How far the flight deck runs past the stern. Below zero it stops short of it.')}${cvSlider('deckW','Width','m',14,40,.1,cv.deckW)}</div>${cvChips('island','Island',cv)}
-      ${cv.island!=='none'?`${cvChips('istyle','Island layout',cv)}${cvChips('iside','Island side',cv)}<div class="dims">${cvSlider('islX','Island position','of the deck from the bow',.15,.7,.01,cv.islX??.42,'Where the island starts, measured back from the forward end of the flight deck.',v=>Math.round(v*100)+'%')}</div>`:''}${cvChips('funnel','Funnels',cv)}</section>`,
+      ${cv.island==='none'?cvChips('fbridge','Bridge, with no island',cv):''}${cv.island!=='none'?`${cvChips('istyle','Island layout',cv)}${cvChips('iside','Island side',cv)}<div class="dims">${cvSlider('islX','Island position','of the deck from the bow',.15,.7,.01,cv.islX??.42,'Where the island starts, measured back from the forward end of the flight deck.',v=>Math.round(v*100)+'%')}</div>`:''}${cvChips('funnel','Funnels',cv)}</section>`,
     `<section class="group"><h3>Lifts</h3><p class="muted" style="margin:0;font-size:13.5px">Aircraft must fit a lift, folded, to go between the hangar and the deck. A deck-edge lift sits outboard of the hangar, so wings can overhang it.</p>${lifts}
       <div>${cv.lifts.length<4?'<button class="btn ghost" id="cvaddlift">Add a lift</button>':''}</div></section>`,
     `<section class="group"><h3>Launch and recovery</h3>${cvChips('cat','Catapult',cv)}<div class="dims">${cvSlider('cats','Catapults','',0,2,1,cv.cats)}</div>
@@ -3631,6 +3634,9 @@ const DROPS=[
     'The flight deck armour slider has moved to Protection, with the other three.',
     'A Permanent ballast setting, for the weight low in the hull that conversions and some light carriers carried. Shaft horsepower now goes from 5,000 to 220,000, beam to 40 m and the armoured deck to 200 mm, so the smallest and the biggest carriers of the war can be built. Laying out the compartments automatically now always gives one engine room for every two shafts.',
   ]},
+  {at:'2026-11-23T22:56:00+13:00',items:[
+    'A flush-decked carrier’s bridge closes the forward end of her hangar, under the flight deck, with rows of windows looking out ahead, as on Ryujo. Pick its style under Flight deck: across the hangar front, a stepped front on two levels, or a narrower bridge house standing out from the hangar.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -3804,7 +3810,16 @@ function cvMesh(cv,cs,opt={}){
     else for(const s2 of [-1,1]){ const leg=add(new THREE.CylinderGeometry(.14,.18,ml*.93,5),steel,mx+1.2,mb+ml*.46,zc+s2*1.1); leg.rotation.x=-s2*.13; leg.rotation.z=.14; }
     box(.25,.25,bw2*2,mx,mt-2.2,zc,steel);
     if(cv.radar!=='none'){ box(.3,2.6,4.2,mx,mt+1.2,zc,steel); if(cv.radar==='r2'){ const [rf,rh]=St.dish, d=add(new THREE.CylinderGeometry(1.1,1.1,.25,14),steel,X(ix+il*rf),yFD+H*rh+1.2,zc); d.rotation.z=Math.PI/2.4; } } }
-  else { box(1.2,1.4,cv.deckW*.6,X(dS+.8),yFD-1.7,0,glassM); }   // a flush deck: the bridge looks out from under the front of the flight deck
+  else {   // a flush deck: the bridge closes the forward end of the hangar, under the flight deck, and looks out ahead through rows of windows
+    const th=.5+cv.deckArm/120, xb=Math.max(cv.hFrom,dS+3), yb=Yz(Math.min(ln.top(xb),cv.D))+.02, yt=yFD-th, h=yt-yb, w=2*bAt(xb,cv.D)*.98, st=cvPart('fbridge',cv.fbridge).id;
+    // a row of windows across a face: glass with mullions, facing forward (side 0) or out to one side (side ±1)
+    const win=(xc,yc,len,side,zc)=>{ const n=Math.max(2,Math.round(len/1.3)); if(!side){ box(.08,.7,len,X(xc)+.05,yc,zc||0,glassM); for(let i=0;i<=n;i++) box(.12,.78,.14,X(xc)+.07,yc,(zc||0)-len/2+len*i/n,grey); }
+      else { box(len,.7,.08,X(xc),yc,side*(zc+.05),glassM); for(let i=0;i<=n;i++) box(.14,.78,.12,X(xc-len/2+len*i/n),yc,side*(zc+.07),grey); } };
+    if(st==='house'){ const d=3.4, hw=w*.28; box(d,h,2*hw,X(xb-d/2),yb+h/2,0,grey); win(xb-d,yt-.9,2*hw*.92,0); win(xb-d,yt-2.1,2*hw*.92,0); for(const sg of [-1,1]) win(xb-d/2,yt-.9,d*.8,sg,hw);
+      box(.4,h,w,X(xb+.2),yb+h/2,0,grey); }
+    else if(st==='stepped'){ const lh=h*.58, d1=2.2; box(d1,lh,w,X(xb-d1/2),yb+lh/2,0,grey); win(xb-d1,yb+lh-.8,w*.86,0);
+      box(.6,h-lh,w*.78,X(xb-.3),yb+lh+(h-lh)/2,0,grey); win(xb-.6,yt-.85,w*.7,0); box(d1-.6,.12,w,X(xb-d1/2-.3),yb+lh+.06,0,dark); }
+    else { box(1,h,w,X(xb-.5),yb+h/2,0,grey); win(xb-1,yt-.9,w*.9,0); win(xb-1,yt-2.1,w*.9,0); } }
   // side funnels: big downturned ones (Japanese practice), or a row of small stacks (Independence class), on the starboard side
   if(cv.funnel==='down'){ const fr=1.1+cv.shp/220000, k=cv.shp>=60000?2:1;
     for(let j=0;j<k;j++){ const m=L*.52+j*(2*fr+3), w=bAt(m,cv.D), x=X(m), y0=Yz(cv.D+2.4);
