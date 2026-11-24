@@ -3763,6 +3763,9 @@ const DROPS=[
     'Whitecaps break on the crests of the sea, more of them the harder it blows, and in a gale foam lies in long streaks along the wind.',
     'Torpedo tracks are realistic. A torpedo runs a few metres down, and its exhaust bubbles take time to rise, so the track breaks surface 150 to 250 m behind it, as lookouts had to allow for. The track shows as a narrow band of pale green water with white boils where the bubbles burst, widening and fading over a few minutes in a calm sea and far sooner in a rough one. A torpedo running deep leaves its track still further behind.',
   ]},
+  {at:'2026-11-24T23:05:00+13:00',items:[
+    'Carriers show on the trials chart at every zoom again. Zoomed out, a carrier too small to see at true size is drawn as a mark kept in proportion to her length, as other ships are; closer in she is the picture of her deck as before.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -5370,7 +5373,7 @@ function cvPlanImg(cv,cs){ if(!window.THREE) return null; const key=JSON.stringi
   if(PLANIMG.size>24) PLANIMG.clear(); PLANIMG.set(key,out); return out; }
 // The carrier drawn in place (the canvas already turned to her heading, centred on her): the picture when she is big enough to see,
 // otherwise a small mark kept in proportion to her length, so a light carrier stays smaller than a fleet carrier.
-function cvChartDraw(c,cv,cs,s,col,status,deck){ const len=cv.L/1000*s, P=cvPlanImg(cv,cs); if(!P){ shipGlyph(c,'CV',len,cv.B/1000*s,col,{deckW:cv.deckW/1000*s,port:cv.iside==='port',Lm:cv.L,isl:cv.island!=='none'}); return; }
+function cvChartDraw(c,cv,cs,s,col,status,deck){ const len=cv.L/1000*s, P=len>=Math.max(9,SHIPMIN.CV[0]*cv.L/250)?cvPlanImg(cv,cs):null; if(!P){ shipGlyph(c,'CV',len,cv.B/1000*s,col,{deckW:cv.deckW/1000*s,port:cv.iside==='port',Lm:cv.L,isl:cv.island!=='none'}); return; }
   const k=s/1000; c.save(); c.imageSmoothingQuality='high'; if(status==='burnt') c.filter='brightness(.3)'; else if(status&&status!=='afloat') c.filter='sepia(1) saturate(3) hue-rotate(-25deg)';
   c.drawImage(P.img,-P.wh*k,-P.ex*k,2*P.wh*k,2*P.ex*k); c.restore();
   if(deck&&len>=24) deck(k); }
