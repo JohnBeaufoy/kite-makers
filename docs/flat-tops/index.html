@@ -3777,6 +3777,7 @@ const DROPS=[
   ]},
   {at:'2026-11-24T23:05:00+13:00',items:[
     'Carriers show on the trials chart at every zoom again. Zoomed out, a carrier too small to see at true size is drawn as a mark kept in proportion to her length, as other ships are; closer in she is the picture of her deck as before.',
+    'Ships at sea lists your own carrier first, with her class, displacement, course and speed and how many aircraft she has, and a View button that follows her in 3D.',
   ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -5401,11 +5402,17 @@ function deckPlanesDraw(c,k){ const R=TR, cv=R.cv, dS=deckStart(cv), port=cv.isi
 function burstGlyph(c,x,y,r,col,op){ if(!(op>.02)||!(r>0)) return; op=Math.min(1,op); c.save(); c.translate(x,y); c.fillStyle=`rgba(${col},${op})`; c.beginPath();
   for(let i=0;i<16;i++){ const a=i/16*2*Math.PI, q=i%2?r*.5:r; c.lineTo(Math.cos(a)*q,Math.sin(a)*q); } c.closePath(); c.fill();
   c.fillStyle=`rgba(255,255,255,${op*.6})`; c.beginPath(); c.arc(0,0,r*.22,0,2*Math.PI); c.fill(); c.restore(); }
-function tgtRowsHTML(){ const R=TR; if(!R.tgts.length) return '<p class="muted" style="margin:0;font-size:13px">None anchored. Pick a type above the chart, then click the chart where she should be.</p>';
+// Your own carriers first: on plain trials a carrier is not one of the ships at sea (those are the targets), so she gets a row of her own.
+function ownRowsHTML(){ const R=TR; return R.cvs.filter(C=>C.side!=='red'&&!C.gone&&C.ship&&!R.tgts.includes(C.ship)).map(C=>{ const sh=C.ship, cs=C.cs||cvStats(C.cv), d=Math.hypot(sh.x-R.ship.x,sh.y-R.ship.y);
+    const at=sh===R.ship?'flagship':`${f0(d)} km, ${String(Math.round(bearing(sh.x-R.ship.x,sh.y-R.ship.y))).padStart(3,'0')}°`;
+    return `<div class="trfl"><div><strong>CV ${esc(C.name)}</strong> <span class="st">yours · ${fmtK(cs.std)} t carrier, ${esc(C.cls.name)} class · ${at} · ${String(Math.round(sh.hdg)).padStart(3,'0')}° at ${f0(sh.kn)} kn</span>
+      <div class="st">${C.planes.length} aircraft aboard or in the air</div></div>
+      <span class="trbtns"><button class="btn ghost" data-tgview="own" data-tgcv="${R.cvs.indexOf(C)}">View</button></span></div>`; }).join(''); }
+function tgtRowsHTML(){ const R=TR, own=ownRowsHTML(); if(!R.tgts.length) return own+'<p class="muted" style="margin:0;font-size:13px">No targets anchored. Pick a type above the chart, then click the chart where she should be.</p>';
   // only ships you can see: your own, anchored targets, and enemy ships in sight of your ships or aircraft (or all of them with sighting off)
   const eyes=sightOn()?sideEyes('blue'):null, vis=R.tgts.filter(T=>T.side!=='red'||!eyes||T.vis);
-  if(!vis.length) return '<p class="muted" style="margin:0;font-size:13px">No ships in sight.</p>';
-  return vis.map(T=>{ const d=Math.hypot(T.x-R.ship.x,T.y-R.ship.y), h=T.hits, hit=[h.bomb&&`${h.bomb} bomb${h.bomb>1?'s':''}`,h.torp&&`${h.torp} torpedo${h.torp>1?'es':''}`,h.near&&`${h.near} near miss${h.near>1?'es':''}`,h.dud&&`${h.dud} dud${h.dud>1?'s':''}`,h.col&&`${h.col} collision${h.col>1?'s':''}`].filter(Boolean).join(', ');
+  if(!vis.length) return own+'<p class="muted" style="margin:0;font-size:13px">No other ships in sight.</p>';
+  return own+vis.map(T=>{ const d=Math.hypot(T.x-R.ship.x,T.y-R.ship.y), h=T.hits, hit=[h.bomb&&`${h.bomb} bomb${h.bomb>1?'s':''}`,h.torp&&`${h.torp} torpedo${h.torp>1?'es':''}`,h.near&&`${h.near} near miss${h.near>1?'es':''}`,h.dud&&`${h.dud} dud${h.dud>1?'s':''}`,h.col&&`${h.col} collision${h.col>1?'s':''}`].filter(Boolean).join(', ');
     const st=T.status==='sunk'?'sunk':T.status==='afloat'?(T.flood>1||T.fires?'damaged':'undamaged')+(T.ev&&T.ev.until>R.t?', evading':'')+(T.firing?', firing':''):{sinking:'sinking',capsizing:'rolling over',blown:'blown up',burnt:'consumed by fire, ship abandoned'}[T.status];
     return `<div class="trfl"><div><strong>${esc(T.type)} ${esc(T.name)}</strong> <span class="st">${T.side==='blue'?'yours':T.side==='red'?'enemy':'target'} · ${fmtK(T.disp)} t ${T.spec.name.toLowerCase()} · ${f0(d)} km, ${String(Math.round(bearing(T.x-R.ship.x,T.y-R.ship.y))).padStart(3,'0')}° · ${st}</span>
       <div class="st">${hit?`Hit by ${hit}`:'Not hit'}${T.status==='afloat'&&T.flood>1?` · ${fmtK(T.flood)} t of water in her (${f0(T.flood/T.reserve*100)}% of what she can take) · list ${listText(Math.abs(T.list))}${Math.abs(T.list)>.5?(T.list>0?' to starboard':' to port'):''}`:''}${T.status==='afloat'&&T.fires?` · ${T.fires} fire${T.fires>1?'s':''}`:''}${shipSys(T)?` · ${shipSys(T)}`:''}</div>
@@ -6787,6 +6794,8 @@ $('#tab-trials').addEventListener('click',e=>{
   if(b.id==='tfplace'){ TR.spawn='TF'; TR.pick=null; trSpawnBtns(); $('#trtf').hidden=true; toast('Click the chart where the enemy task force should be.'); return; }
   if(b.dataset.etfcls){ etfOf().cls=+b.dataset.etfcls; save(); $('#trtf').innerHTML=etfHTML(); return; }
   if(b.dataset.etf){ const e=etfOf(), v=b.dataset.etf, k=v[0], id=v.slice(2), d=+b.dataset.d; if(k==='s') e[id]=clamp((e[id]||0)+d,0,id==='CV'?4:12); else e.air[id]=clamp((e.air[id]||0)+d,0,120); save(); $('#trtf').innerHTML=etfHTML(); return; }
+  if(b.dataset.tgview==='own'){ const C=TR.cvs[+b.dataset.tgcv]; if(!C) return; if(C!==TR.cur){ trKeep(); trUse(C); TR3.key=null; renderTrials(); }
+    const v=TR.view; v.chase=null; v.follow=true; v.lock=null; v.x=TR.ship.x; v.y=TR.ship.y; v.km=KM3D*.95; trEnter3D(); TR3.dist=TR.cv.L*3.2; return; }
   if(b.dataset.tgview){ const T=TR.tgts.find(q=>q.id===+b.dataset.tgview); if(T){ const v=TR.view; v.chase=null; v.follow=T===TR.ship; v.lock=T===TR.ship?null:T.id; v.x=T.x; v.y=T.y; v.km=KM3D*.95; trEnter3D(); TR3.dist=T.L*3.2; } return; }
   if(b.dataset.tgdel){ const T=TR.tgts.find(q=>q.id===+b.dataset.tgdel); if(T){ if(T.cvC) T.cvC.gone=true; if(T.tf) T.tf.ships=T.tf.ships.filter(q=>q!==T); } TR.tgts=TR.tgts.filter(q=>q!==T); trPanels(true); return; }
   if(b.dataset.trturn){ const sh=TR.ship; if(b.dataset.trturn==='wind') trOrder(TR.wind.from,Math.max(sh.ordKn,clamp(26-TR.wind.kn,8,Math.floor(TR.cs.speed)))); else trOrder(sh.ordHdg+ +b.dataset.trturn); trPanels(true); return; }
