@@ -799,6 +799,24 @@ PARTS2.engine.push(
   {id:'homare',price:3000,name:'Nakajima Homare 21',type:'radial',hp:1990,mass:830,from:1944.5,rel:.65,eta:0.9,note:'Small, light eighteen-cylinder. Powerful when it runs.'},
   {id:'r2800w',price:3400,name:'P&W R-2800-34W Double Wasp',type:'radial',hp:2100,mass:1080,from:1945.0,rel:.94,eta:0.91,note:'Water injection for bursts of extra power. Bearcat-style.'});
 PARTS2.engine.sort((a,b)=>a.from-b.from);
+// How each engine sits in the nose. A radial: its diameter (m) and how many cylinders, in one row of up to nine or two staggered rows;
+// its cowling is round and a little larger than the engine, so a small Sakae makes a slimmer nose than a big Cyclone 14. A V12 hangs
+// from its propeller shaft differently: an upright one (Merlin, Allison, Griffon, Klimov) has its cylinder banks above the crankshaft
+// and the reduction gear raising the shaft, so the cowling runs close over the spinner and deepens below it; an inverted one (Daimler-
+// Benz, Jumo) carries the shaft higher still, the cylinders hanging below, so the top of the nose is almost flat (the Bf 109's nose)
+// and its exhausts come out low on the sides. The Sabre is an H-24: a tall, deep block with two rows of exhausts a side.
+const ENGFORM={mer9:{dia:1.31,cyl:9},peg:{dia:1.40,cyl:9},kotobuki:{dia:1.28,cyl:9},r1535:{dia:1.12,cyl:14},r1820:{dia:1.38,cyl:9},perseus:{dia:1.27,cyl:9},
+  kinsei:{dia:1.22,cyl:14},r1830:{dia:1.22,cyl:14},taurus:{dia:1.17,cyl:14},sakae12:{dia:1.15,cyl:14},r1820g:{dia:1.38,cyl:9},bmw801:{dia:1.29,cyl:14},
+  r2600:{dia:1.40,cyl:14},sakae21:{dia:1.15,cyl:14},ash82:{dia:1.26,cyl:14},kinsei54:{dia:1.22,cyl:14},r2800n:{dia:1.34,cyl:18},r2800:{dia:1.34,cyl:18},
+  r2600w:{dia:1.40,cyl:14},homare:{dia:1.18,cyl:18},r2800w:{dia:1.34,cyl:18},j210:{inv:true},db601:{inv:true},db605:{inv:true},j213:{inv:true},sabre:{h:true}};
+// The nose, as half-heights above and below the propeller shaft (y 0) at the front (nose, nbot) and at the back of the engine (top, bot),
+// half-widths there (nw, fw), the spinner's radius, the heights of the exhaust rows, and a radial's cylinders.
+function noseOf(E){ const f=(E&&ENGFORM[E.id])||{};
+  if(E&&E.type==='radial'){ const R=((f.dia||1.3)+.14)/2; return {top:R,nose:R*.96,bot:-R,nbot:-R*.96,nw:R*.96,fw:R,rs:.25,ex:[],cyl:f.cyl||14}; }
+  if(E&&E.type==='jet') return {top:.55,nose:.36,bot:-.6,nbot:-.36,nw:.34,fw:.5,rs:.28,ex:[]};
+  if(f.h) return {top:.5,nose:.33,bot:-.82,nbot:-.46,nw:.36,fw:.54,rs:.3,ex:[.1,-.14]};
+  if(f.inv) return {top:.44,nose:.3,bot:-.76,nbot:-.44,nw:.34,fw:.5,rs:.28,ex:[-.2]};
+  return {top:.48,nose:.32,bot:-.7,nbot:-.42,nw:.34,fw:.5,rs:.28,ex:[.2]}; }
 // Height (m) at which each piston engine gives full power: its supercharger's rated altitude. Top speeds are reached about there.
 const RATED={bmw3a:2000,mer9:4500,j210:3000,mer2:5000,db601:4500,v1710:3500,mer45:5800,bmw801:5500,ash82:4000,db605:5800,vk105:3000,mer61:8500,r2800:9000,sabre:4500,v1650:8000,grif65:7500,j213:6000,
   peg:1100,kotobuki:3000,r1535:2700,r1820:2300,perseus:2000,kinsei:2800,r1830:5800,taurus:1500,sakae12:4200,r1820g:4200,r2600:3700,sakae21:6000,merlin32:900,kinsei54:3000,r2800n:6400,r2600w:3800,homare:6000,r2800w:5600};
@@ -1574,7 +1592,7 @@ function paintGA2(c,d,opt){
   if(Ld.mass&&!G2.bay){ c.strokeStyle=ink; c.lineWidth=1.4; c.fillStyle=T.muted; loadShape(Ld.kind==='torp'?-1.15:-1.1); c.fill(); c.stroke();
     c.lineWidth=1.2; c.beginPath(); c.moveTo(X(st.loadX-.3),Y(-.82)); c.lineTo(X(st.loadX-.3),Y(-.95)); c.moveTo(X(st.loadX+.3),Y(-.82)); c.lineTo(X(st.loadX+.3),Y(-.95)); c.stroke(); }
   // fuselage
-  const top=radial?.76:.55, nose=radial?.74:.36;
+  const NZ=noseOf(E), top=NZ.top, nose=NZ.nose;
   const outline=()=>{ c.beginPath(); c.moveTo(X(0),Y(nose)); c.lineTo(X(el),Y(top)); c.lineTo(X(ck-.8),Y(.62)); c.lineTo(X(ck+.9+(nC-1)*.95),Y(d.canopy==='bubble'?.5:.62)); c.lineTo(X(len-.4),Y(.28)); c.lineTo(X(len),Y(.22));
     for(const [x,y] of G2.botL.slice().reverse()) c.lineTo(X(x),Y(y)); if(radial) c.quadraticCurveTo(X(-.08),Y(0),X(0),Y(nose)); c.closePath(); };
   outline(); c.fillStyle=body; c.fill(); c.strokeStyle=ink; c.lineWidth=1.8; c.stroke();
@@ -1588,11 +1606,11 @@ function paintGA2(c,d,opt){
   c.strokeStyle=ink; c.lineWidth=1.8; outline(); c.stroke();
   // engine details
   if(jetE){}
-  else   if(radial){ c.strokeStyle=ink; c.lineWidth=1.2; c.beginPath(); c.moveTo(X(.12),Y(.72)); c.lineTo(X(.12),Y(-.72)); c.moveTo(X(el),Y(.76)); c.lineTo(X(el),Y(-.76)); c.stroke(); }
-  else { c.fillStyle=ink; for(let i=0;i<6;i++) c.fillRect(X(.55+i*.22),Y(.22),4,3); }
+  else   if(radial){ c.strokeStyle=ink; c.lineWidth=1.2; c.beginPath(); c.moveTo(X(.12),Y(nose*.97)); c.lineTo(X(.12),Y(-nose*.97)); c.moveTo(X(el),Y(top)); c.lineTo(X(el),Y(-top)); c.stroke(); }
+  else { c.fillStyle=ink; for(const ey of NZ.ex) for(let i=0;i<6;i++) c.fillRect(X(.55+i*.22),Y(ey),4,3); }
   // propeller and spinner
   if(!jetE){   c.globalAlpha=.22; c.fillStyle=ink; c.beginPath(); c.ellipse(X(-.12),Y(0),3,1.5*s,0,0,TAU); c.fill(); c.globalAlpha=1;
-  c.fillStyle=opt.nose||T.muted; c.strokeStyle=ink; c.lineWidth=1.4; c.beginPath(); c.moveTo(X(0),Y(radial?.25:.28)); c.quadraticCurveTo(X(-.38),Y(.08),X(-.4),Y(0)); c.quadraticCurveTo(X(-.38),Y(-.08),X(0),Y(radial?-.25:-.28)); c.closePath(); c.fill(); c.stroke(); }
+  c.fillStyle=opt.nose||T.muted; c.strokeStyle=ink; c.lineWidth=1.4; c.beginPath(); c.moveTo(X(0),Y(NZ.rs)); c.quadraticCurveTo(X(-.38),Y(.08),X(-.4),Y(0)); c.quadraticCurveTo(X(-.38),Y(-.08),X(0),Y(-NZ.rs)); c.closePath(); c.fill(); c.stroke(); }
   // fuel tank (hidden detail, dashed)
   const fx=st.fuelX, tw=.4+d.fuelL/1400;
   const tank=d.fuelPos==='wing'?[fx-tw/2,-.66,tw,.14]:[fx-tw/2,.4,tw,.8];
@@ -1673,13 +1691,13 @@ function paintGA2(c,d,opt){
       for(const sg of [-1,1]){ c.beginPath(); c.moveTo(PX(sg*x),PY(wl+w.le+.25)); c.lineTo(PX(sg*x),PY(wl+w.le-(cannon?.5:.2))); c.stroke(); } } }
   if(d.fuelPos==='wing'){ c.setLineDash([4,3]); c.strokeStyle=T.accent; c.lineWidth=1.4; for(const sg of [-1,1]) c.strokeRect(PX(sg>0?.55:-1.55),PY(wl+.25),1*s,rootC*.5*s); c.setLineDash([]); }
   // fuselage
-  const nw=radial?.62:.34, fw=radial?.62:.5;
+  const nw=NZ.nw, fw=NZ.fw;
   const fus=()=>{ c.beginPath(); c.moveTo(PX(-nw),PY(0)); c.lineTo(PX(nw),PY(0)); c.lineTo(PX(fw),PY(el)); c.lineTo(PX(.5),PY(ck+.6)); c.lineTo(PX(.12),PY(len)); c.lineTo(PX(-.12),PY(len)); c.lineTo(PX(-.5),PY(ck+.6)); c.lineTo(PX(-fw),PY(el)); c.closePath(); };
   fus(); c.fillStyle=body; c.fill(); c.strokeStyle=ink; c.lineWidth=1.6; c.stroke();
   if(Ld.mass){ const r=(Ld.dia||.4)/2; c.setLineDash([3,3]); c.strokeStyle=ink; c.lineWidth=1.2; c.beginPath(); c.ellipse(PX(0),PY(st.loadX),r*s,Ld.len/2*s,0,0,TAU); c.stroke(); c.setLineDash([]); }
   if(opt.nose){ c.save(); fus(); c.clip(); c.fillStyle=opt.nose; c.fillRect(PX(-.7),PY(0),1.4*s,el*.7*s); c.restore(); fus(); c.stroke(); }
   if(jetE){ c.fillStyle=body; c.strokeStyle=ink; c.lineWidth=1.4; for(const sg of [-1,1]){ c.beginPath(); c.ellipse(PX(sg*d.span*.22),PY(d.wingPos+d.chord*.3),.4*s,1.7*s,0,0,TAU); c.fill(); c.stroke(); } }
-    c.fillStyle=opt.nose||T.muted; c.beginPath(); c.moveTo(PX(-(radial?.3:.28)),PY(0)); c.quadraticCurveTo(PX(0),PY(-.55),PX(radial?.3:.28),PY(0)); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle=opt.nose||T.muted; c.beginPath(); c.moveTo(PX(-(radial?.3:NZ.rs)),PY(0)); c.quadraticCurveTo(PX(0),PY(-.55),PX(radial?.3:NZ.rs),PY(0)); c.closePath(); c.fill(); c.stroke();
   c.fillStyle=d.canopy==='open'?ink:T.water; c.globalAlpha=d.canopy==='open'?1:.7; c.beginPath(); c.ellipse(PX(0),PY(ck),.3*s,(d.canopy==='open'?.35:.7)*s,0,0,TAU); c.fill(); c.globalAlpha=1; c.strokeStyle=ink; c.lineWidth=1.2; c.stroke();
   if(am.pilot) hatch(PX(-.4),PY(ck+.38),.8*s,.12*s);
   if(am.engine) hatch(PX(-.45),PY(.15),.9*s,(el-.3)*s);
@@ -2709,7 +2727,7 @@ function drawPlaneTop2(c,p){
   c.fillStyle=col; c.strokeStyle=dk; c.lineWidth=1; c.beginPath(); c.ellipse(X(d.fusLen-tch*.55),0,tch/2*k,tsp/2*k,0,0,TAU); c.fill(); c.stroke();
   wing(le,d.chord); c.fillStyle=col; c.fill(); c.stroke();
   c.fillStyle=dk; for(const sg of [-1,1]){ const w=chordAt(pf,d.chord,.7); c.beginPath(); c.arc(X(le+w.le+w.c/2),sg*.35*d.span*k,Math.min(w.c*.32,.5)*k,0,TAU); c.fill(); }
-  const fw=(radial?.65:.5)*k;
+  const fw=(radial?noseOf(part('engine',d.engine)).fw*1.05:.5)*k;
   c.fillStyle=dk; c.beginPath(); c.ellipse(X(d.fusLen/2),0,d.fusLen/2*k,fw,0,0,TAU); c.fill();
   c.fillStyle=col; c.beginPath(); c.ellipse(X(d.fusLen*.52),0,d.fusLen*.4*k,fw*.62,0,0,TAU); c.fill();
   if(p.paint.nose){ c.fillStyle=p.paint.nose; c.beginPath(); c.ellipse(X(st.engLen*.4),0,st.engLen*.45*k,fw*.95,0,0,TAU); c.fill(); }
@@ -2834,7 +2852,7 @@ const bayFits=(d,load)=>{ const b=bayOf(d,load); return !b||b.fits; };
 function gaShape(d,st){
   const E=part('engine',d.engine), L=part('layout',d.layout), jet=E.type==='jet', radial=E.type==='radial', bi=L.wings===2;
   const len=d.fusLen, ck=st.cockpit, el=st.engLen, nC=(part('crew',d.crew)||{n:1}).n, Rg=part('rear',d.rear)||{n:0}, turret=Rg.id==='t50'&&nC>1;
-  const top=radial?.76:.55, nose=radial?.74:.36, nw=radial?.62:.34, fw=radial?.62:.5;
+  const NZ=noseOf(E), {top,nose,nw,fw}=NZ;
   const planL=[[0,nw],[el,fw],[ck+.6,.5],[len,.12]], PSs=sortPts(planL), closed=d.canopy!=='open';
   // the pilot and the seats behind; a turret, if there is one, is the last seat
   const nG=nC-(turret?1:0), seats=[{x:ck,y:.85,r:.15}];
@@ -2853,7 +2871,7 @@ function gaShape(d,st){
   const crewEnd=Math.max(ck+.9+(nC-1)*.95,tur?tur.x+tur.r+.1:0);
   const topL=[[0,nose],[el,top],[ck-.8,.62],[crewEnd,d.canopy==='bubble'?.5:.62],[len-.4,.28],[len,.22]];
   if(tur){ tur.y=lerpPts(sortPts(topL),tur.x); seats.push({x:tur.x,y:tur.y+.23,r:.13,turret:true}); }
-  let botL=[[0,-nose],[el,-(radial?.76:.6)],[d.wingPos,radial?-.86:-.8],[d.wingPos+d.chord,-.76],[len*.62,-.5],[len,-.1]];
+  let botL=[[0,NZ.nbot],[el,NZ.bot],[d.wingPos,radial?-.86:-.8],[d.wingPos+d.chord,-.76],[len*.62,-.5],[len,-.1]];
   const bay=d.stow==='bay'?bayOf(d):null;
   if(bay&&bay.belly>.01){ const base=sortPts(botL), bz=x=>x<bay.x0-.5||x>bay.x1+1.2?0:x<bay.x0?(x-bay.x0+.5)/.5:x>bay.x1?1-(x-bay.x1)/1.2:1;
     const xs=[...new Set([...base.map(p=>p[0]),bay.x0-.5,bay.x0,bay.x1,bay.x1+1.2])].filter(x=>x>=0&&x<=len).sort((a,b)=>a-b);
@@ -2957,13 +2975,23 @@ function meshFor(p,q=1,opt={}){
     const cx=d.wingPos+d.chord*.3, nr=x=>{ const u=(x-cx)/1.7; return .4*Math.sqrt(Math.max(.3,1-u*u*u*u)); };
     for(const sg of [-1,1]){ const z=sg*d.span*.22; revolve(spanXs(cx-1.7,cx+1.7,.2),nr,body,-.95,z); disc(nr(cx-1.7)*.9,black,X(cx-1.7)+.02,-.95,z); glow(X(cx+1.7),-.95,z,.3,E.ab); } }
   else {
-    if(radial){ const x=.12, a=yT(x), b=yB(x), yc=(a+b)/2, hh=(a-b)/2*.84, w=wF(x)*.84, bk2=black.clone(); bk2.side=THREE.DoubleSide; disc(hh,bk2,X(x),yc,0,w/hh);
-      { const x2=.3, a2=yT(x2), b2=yB(x2), h2=(a2-b2)/2*.99; disc(h2,bk2,X(x2),(a2+b2)/2,0,wF(x2)*.99/h2); }   // the engine's back wall closes the cowling, so it cannot be seen through
-      if(q) for(let k=0;k<14;k++){ const t=k/14*TAU; add(new THREE.CylinderGeometry(.07,.08,.16,6),dark,X(x)+.06,yc+Math.sin(t)*hh*.78,Math.cos(t)*w*.78).rotation.z=Math.PI/2; }
+    if(radial){ const x=.2, a=yT(x), b=yB(x), yc=(a+b)/2, hh=(a-b)/2*.84, w=wF(x)*.84, bk2=black.clone(); bk2.side=THREE.DoubleSide;
+      // The cowling has thickness: its skin turns in over a lip about 5 cm deep and runs back inside to the engine. Every face here follows
+      // the fuselage's own cross-section (a little fuller than an ellipse), so the lip, the engine's face and its back wall meet the cowling
+      // all the way round and leave no gap to see through.
+      const LIP=.07, cs=(xx,k,t)=>{ const [y,z]=sec(xx,t), c=(yT(xx)+yB(xx))/2; return [c+(y-c)*k,z*k]; };
+      add(loftGeo([0,1],(sv,u)=>{ const [y,z]=cs(0,1-LIP*sv,1.5*Math.PI+u*TAU); return [X(0),y,z]; },P,true,null),xn>0?nose:body);   // the lip
+      add(loftGeo(spanXs(0,.3,.05),(xx,u)=>{ const [y,z]=cs(xx,1-LIP,1.5*Math.PI+u*TAU); return [X(xx),y,z]; },P,true,null),dark);   // the inside of the cowling
+      const fan=(xx,k,m)=>{ const g=new THREE.BufferGeometry(), c=(yT(xx)+yB(xx))/2, pts=[X(xx),c,0], idx=[]; for(let i=0;i<=P;i++){ const [y,z]=cs(xx,k,i/P*TAU); pts.push(X(xx),y,z); if(i) idx.push(0,i,i+1); }
+        g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3)); g.setIndex(idx); g.computeVertexNormals(); return add(g,m); };
+      fan(x,.84,bk2);   // the engine's face, dark behind its cylinders
+      fan(.3,1-LIP+.005,bk2);   // the engine's back wall closes the cowling, so it cannot be seen through
+      if(q){ const NZ=noseOf(E), rows=NZ.cyl>9?2:1, per=NZ.cyl/rows;   // the front row, and the back row showing between its cylinders
+        for(let rw=0;rw<rows;rw++) for(let k=0;k<per;k++){ const t=(k+rw*.5)/per*TAU, rr=rw?(per>7?.66:.7):.78; add(new THREE.CylinderGeometry(rw?.06:.07,rw?.07:.08,.16,6),dark,X(.09+rw*.07),yc+Math.sin(t)*hh*rr,Math.cos(t)*w*rr).rotation.z=Math.PI/2; } }   // all behind the lip (x 0), the back row behind the front
       }
-    else if(q) for(const sg of [-1,1]) for(let k=0;k<6;k++){ const x=.55+k*.22; add(new THREE.BoxGeometry(.13,.07,.1),black,X(x),.22,sg*(zAt(x,.22)+.02)); }
+    else if(q) for(const ey of noseOf(E).ex) for(const sg of [-1,1]) for(let k=0;k<6;k++){ const x=.55+k*.22; add(new THREE.BoxGeometry(.13,.07,.1),black,X(x),ey,sg*(zAt(x,ey)+.02)); }
     // spinner, after the drawing's curve
-    const rs=radial?.25:.28, sx=spanXs(-.4,0,q?.05:.1); revolve(sx,x=>{ const u=Math.max(0,(x+.4)/.4); return rs*Math.sqrt(Math.min(1,u*(2-u)))*(1-.06*(1-u)); },pd.nose?nose:dark,0,0,[false,true]);
+    const rs=noseOf(E).rs, sx=spanXs(-.4,0,q?.05:.1); revolve(sx,x=>{ const u=Math.max(0,(x+.4)/.4); return rs*Math.sqrt(Math.min(1,u*(2-u)))*(1-.06*(1-u)); },pd.nose?nose:dark,0,0,[false,true]);
     const pr=1.5, dg=new THREE.CircleGeometry(pr,28); dg.rotateY(Math.PI/2); let dm;
     if(q===0) dm=new THREE.MeshBasicMaterial({color:0x222222,transparent:true,opacity:.16,side:THREE.DoubleSide,depthWrite:false});
     else { const o=document.createElement('canvas'); o.width=o.height=64; const g=o.getContext('2d'), gr=g.createRadialGradient(32,32,2,32,32,32);
@@ -3078,13 +3106,11 @@ function meshFor(p,q=1,opt={}){
   else for(const s of G.seats) if(!s.turret){ const p=s===G.seats[0], ws=new THREE.PlaneGeometry(p?.46:.4,p?.34:.26), m=add(ws,glass,X(s.x+(p?-.47:-.23)),p?.77:.74,0); m.rotation.set(0,Math.PI/2,0); m.rotateOnWorldAxis(Z,.5);
     const op=new THREE.CircleGeometry(p?.5:.45,16); op.rotateX(-Math.PI/2); add(op,black,X(s.x+(p?.05:0)),yT(s.x)+.005,0).scale.set(1,1,.6); }
   if(d.canopy==='hood'&&G.nC===1) glassOver([[ck+.85,.72],[ck+2.4,.56]],body,null,x=>.3*(1-.5*clamp((x-ck-.85)/1.55,0,1)));
-  const face0=M({color:0xc69a7a},'matte'), lens=M({color:0x8fa4ae},'metal');
+  const face0=M({color:0xc69a7a},'matte');
   G.seats.forEach((s,i)=>{ const face=i>0&&(s.turret||(G.gun&&i===G.seats.length-1))?-1:1, cx=X(s.x), r=s.r, hs=q?12:8;   // +1 looks forward, -1 aft
     add(new THREE.SphereGeometry(r*.93,hs,q?9:6),face0,cx,s.y-.005);
     const gap=TAU*.32, cap=new THREE.SphereGeometry(r*1.05,hs,q?9:6,(face>0?Math.PI:0)+gap/2,TAU-gap,0,Math.PI*.7); add(cap,helmet,cx,s.y);   // the leather helmet, open at the face
-    if(q){ for(const z of [-1,1]){ const e=new THREE.CylinderGeometry(r*.32,r*.32,r*.16,10); e.rotateX(Math.PI/2); add(e,helmet,cx,s.y-r*.28,z*r*1.0); }   // ear pieces
-      const band=new THREE.TorusGeometry(r*1.02,r*.07,5,16,Math.PI); band.rotateX(Math.PI/2); band.rotateY(face>0?-Math.PI/2:Math.PI/2); add(band,black,cx,s.y+r*.42);   // goggle strap
-      for(const z of [-1,1]){ const g=new THREE.CylinderGeometry(r*.25,r*.25,r*.22,12); g.rotateZ(Math.PI/2); add(g,black,cx+face*r*.82,s.y+r*.5,z*r*.36); const l=new THREE.CircleGeometry(r*.19,12); l.rotateY(face>0?Math.PI/2:-Math.PI/2); add(l,lens,cx+face*r*.94,s.y+r*.5,z*r*.36); } }
+    if(q) for(const z of [-1,1]){ const e=new THREE.CylinderGeometry(r*.32,r*.32,r*.16,10); e.rotateX(Math.PI/2); add(e,helmet,cx,s.y-r*.28,z*r*1.0); }   // ear pieces
     add(new THREE.CylinderGeometry(.15,.19,.4,q?10:6),suit,X(s.x+.04*face),s.y-.36); });
   if(G.tur){ const t=G.tur, ty=yT(t.x); add(new THREE.CylinderGeometry(t.r+.02,t.r+.04,.12,q?20:10),dark,X(t.x),ty-.01);
     add(new THREE.SphereGeometry(t.r,q?20:10,q?10:5,0,TAU,0,Math.PI/2),glass,X(t.x),ty+.05);
@@ -3779,8 +3805,13 @@ const DROPS=[
     'Carriers show on the trials chart at every zoom again. Zoomed out, a carrier too small to see at true size is drawn as a mark kept in proportion to her length, as other ships are; closer in she is the picture of her deck as before.',
     'Ships at sea lists your own carrier first, with her class, displacement, course and speed and how many aircraft she has, and a View button that follows her in 3D.',
   ]},
-  {at:'2026-11-24T23:40:00+13:00',items:[
+  {at:'2026-11-24T23:15:00+13:00',items:[
     'Battleships, battlecruisers and cruisers in 3D: a superfiring turret stands high enough on its barbette that its guns clear the roof of the turret in front, instead of lying on it. The battlecruiser’s bridge no longer overhangs the end of the deckhouse it stands on, and her tripod legs end at the director. Their superstructure deck now runs nearly the full beam amidships, with a slimmer bridge and after superstructure, so the twin 5-inch mounts stand in a row along each side, trained a little outboard, with the light AA tubs between them, and the boats are stowed on the centreline between the funnels: nothing passes through anything else.',
+  ]},
+  {at:'2026-11-24T23:25:00+13:00',items:[
+    'Aircrew no longer wear goggles; they keep their leather helmets.',
+    'Engines look like the engines they are. A radial’s cowling is round, sized to that engine (a Sakae or Twin Wasp Junior makes a slim nose, a Pegasus or Cyclone 14 a fat one), and shows its cylinders as they are: nine in one row, or fourteen or eighteen in two staggered rows. A V12 sits high in the nose: an upright Merlin, Allison, Griffon or Klimov with the cowling running close over the spinner and deepening below it, an inverted Daimler-Benz or Jumo with an almost flat top and its exhausts low on the sides, and the Sabre deeper still with two rows of exhausts. In 2D and 3D alike.',
+    'A radial’s cowling has a real lip: its skin turns in at the front and runs back inside to the engine, so it is no longer a paper-thin edge, and the engine’s face and back wall now fill the cowling all the way round, so it can no longer be seen through from some angles. Its cylinder heads sit inside the cowling behind the lip, the back row behind the front one, instead of poking out into the propeller.',
   ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
