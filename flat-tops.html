@@ -3767,6 +3767,9 @@ const DROPS=[
     'Carriers show on the trials chart at every zoom again. Zoomed out, a carrier too small to see at true size is drawn as a mark kept in proportion to her length, as other ships are; closer in she is the picture of her deck as before.',
     'Ships at sea lists your own carrier first, with her class, displacement, course and speed and how many aircraft she has, and a View button that follows her in 3D.',
   ]},
+  {at:'2026-11-24T23:40:00+13:00',items:[
+    'Battleships, battlecruisers and cruisers in 3D: a superfiring turret stands high enough on its barbette that its guns clear the roof of the turret in front, instead of lying on it. The battlecruiser’s bridge no longer overhangs the end of the deckhouse it stands on, and her tripod legs end at the director. Their superstructure deck now runs nearly the full beam amidships, with a slimmer bridge and after superstructure, so the twin 5-inch mounts stand in a row along each side, trained a little outboard, with the light AA tubs between them, and the boats are stowed on the centreline between the funnels: nothing passes through anything else.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -6155,13 +6158,13 @@ const gunVis=cal=>cal*(cal>=.4?50:cal>=.37?42:cal>=.19?55:cal>=.14?47:38)*.82;
 const gunR=cal=>Math.max(.08,cal*.78);
 const WARLOOK={
   BB:{sf:.34,sa:.72,tr:.5,rake:.035,shF:.7,shA:.08,flare:.22,fun:[.43,.53],funR:.105,funH:11,br:.345,brLv:5,brL:.075,tower:12,cT:true,deckHs:[.30,.72],
-      dirs:[.63],aft:[.59,.7],sec:[.35,.41,.47,.53,.59],secMid:[],aa:[.27,.37,.44,.5,.56,.66,.74],cat:[[.95,-.27],[.95,.27]],crane:.985,main:.585,rf:true},
+      dirs:[.63],aft:[.59,.7],sec:[.35,.41,.47,.53,.59],secMid:[],aa:[.27,.375,.435,.495,.555,.66,.74],cat:[[.95,-.27],[.95,.27]],crane:.985,main:.585,rf:true},
   BC:{sf:.33,sa:.74,tr:.48,rake:.03,shF:.45,shA:.05,flare:.18,fun:[.41,.5],funR:.085,funH:10,br:.31,brLv:5,brL:.07,tower:9,cT:true,tripod:true,deckHs:[.3,.71],
-      dirs:[.66],aft:[.6,.69],sec:[.37,.45,.53],secMid:[],aa:[.34,.42,.48,.56,.64],cat:[],crane:0,main:.6,rf:true},
+      dirs:[.66],aft:[.6,.69],sec:[.37,.45,.53],secMid:[],aa:[.335,.415,.48,.56,.64],cat:[],crane:0,main:.6,rf:true},
   CA:{sf:.38,sa:.72,tr:.58,rake:.03,shF:.6,shA:.1,flare:.24,fun:[.43,.53],funR:.088,funH:8,br:.34,brLv:4,brL:.07,tower:8,cT:false,deckHs:[.265,.71],
       dirs:[.65],aft:[.6,.7],sec:[.4,.5],secMid:[.285,.685],aa:[.33,.45,.56,.63,.72],cat:[[.94,-.2],[.94,.2]],crane:.985,main:.585,rf:true},
   CL:{sf:.38,sa:.72,tr:.6,rake:.03,shF:.6,shA:.1,flare:.24,fun:[.43,.53],funR:.085,funH:7.5,br:.325,brLv:4,brL:.07,tower:7,cT:false,deckHs:[.25,.69],
-      dirs:[.64],aft:[.59,.69],sec:[.39,.49],secMid:[.27,.675],aa:[.34,.46,.56,.62],cat:[[.95,-.2],[.95,.2]],crane:.99,main:.58,rf:false}};
+      dirs:[.64],aft:[.59,.69],sec:[.39,.49],secMid:[.27,.675],aa:[.34,.445,.56,.62],cat:[[.95,-.2],[.95,.2]],crane:.99,main:.58,rf:false}};
 // Her lines: waterline half-breadth b(u), deck height zD(u) and keel height zK(u) above the base line, u from bow (0) to stern (1).
 const WARLN=new Map();
 function warLines(s,ty){ if(WARLN.has(ty)) return WARLN.get(ty); const lk=WARLOOK[ty]||WARLOOK.CA, L=s.L, B=s.B, T=s.T, D=s.D, F=D-T;
@@ -6224,39 +6227,41 @@ function bigShipMesh(T){ const s=T.spec, lk=WARLOOK[T.type], ln=warLines(s,T.typ
   // the hull and her deck
   const hg=warHullGeo(s,T.type); const hull=new THREE.Mesh(hg.hull,mat('#ffffff',{vertexColors:true,side:THREE.DoubleSide})); hull.castShadow=true; hull.receiveShadow=false; hull.userData.noRecv=true;
   const deck=new THREE.Mesh(hg.deck,M.deck); deck.receiveShadow=true;
-  // main battery: the turret nearer the end fires over the deck, the next one superfires over it
-  const tur=s.tur.map(([f,n,cal])=>({f,n,cal,fwd:f<.5})); let hA=0;
-  for(const q of tur.filter(q=>q.fwd).sort((a,b)=>a.f-b.f)){ const h=turret(q.f,q.n,q.cal,true,hA?hA*.8:0); hA=hA?hA+h*.8:h; }
-  hA=0; for(const q of tur.filter(q=>!q.fwd).sort((a,b)=>b.f-a.f)){ const h=turret(q.f,q.n,q.cal,false,hA?hA*.8:0); hA=hA?hA+h*.8:h; }
+  // main battery: the turret nearer the end fires over the deck, the next one superfires over it, its barbette raised until the
+  // underside of its guns clears the roof and rangefinder of the turret in front by a metre or so
+  const tur=s.tur.map(([f,n,cal])=>({f,n,cal,fwd:f<.5}));
+  for(const fwd of [true,false]){ let top=null;   // the height of the roof (and rangefinder) of the turret just fired over
+    for(const q of tur.filter(q=>q.fwd===fwd).sort((a,b)=>fwd?a.f-b.f:b.f-a.f)){ const h=1.5+q.cal*5.2, axis=.35+h*.45, lift=top==null?0:Math.max(0,top+gunR(q.cal)*1.6+1-(dY(q.f)+axis));
+      const roof=turret(q.f,q.n,q.cal,fwd,lift); top=dY(q.f)+lift+roof+(lk.rf&&q.cal>.15?.45:0); } }
   // the superstructure deck (01 level) from the bridge to the after superstructure
-  const [h0,h1]=lk.deckHs, hw=B*.62, lv=2.6, yH=dY((h0+h1)/2); house(L*(h1-h0),lv,hw,M.side,X((h0+h1)/2),yH,0); box(L*(h1-h0)+.4,.25,hw+.4,M.top,X((h0+h1)/2),yH+lv,0);
+  const [h0,h1]=lk.deckHs, hw=B*.82, lv=2.6, yH=dY((h0+h1)/2); house(L*(h1-h0),lv,hw,M.side,X((h0+h1)/2),yH,0); box(L*(h1-h0)+.4,.25,hw+.4,M.top,X((h0+h1)/2),yH+lv,0);
   const y1=yH+lv;
   // the bridge: tiers with rounded fronts, the navigating bridge with its windows and wings, then the tower and the director
-  const bx=X(lk.br); let y=y1; if(lk.cT) cyl(B*.07,B*.075,lv*1.6,M.side,bx+L*.012,y1,0,20);
-  const l0=L*lk.brL, xF=bx+l0/2; let lt=l0; for(let i=0;i<lk.brLv;i++){ const l=l0*(1-i*.16), w=B*.44*(1-i*.05), x=xF-l/2; lt=l; house(l,lv,w,M.side,x,y,1);
+  const bx=X(lk.br), l0=L*lk.brL, xF=Math.min(bx+l0/2,X(h0)-1); let y=y1; if(lk.cT) cyl(B*.07,B*.075,lv*1.6,M.side,Math.min(bx+L*.012,X(h0)-B*.075-1),y1,0,20);
+  let lt=l0; for(let i=0;i<lk.brLv;i++){ const l=l0*(1-i*.16), w=B*.36*(1-i*.05), x=xF-l/2; lt=l; house(l,lv,w,M.side,x,y,1);
     if(i===lk.brLv-2){ const gw=new THREE.Mesh(new THREE.CylinderGeometry(w/2+.06,w/2+.06,.8,20,1,true,0,Math.PI),M.glass); gw.scale.set(Math.min(1,(l*.45)/(w/2)),1,1); gw.position.set(x+l/2-Math.min(w/2,l*.45),y+lv*.62,0); G.add(gw); { const r=Math.min(w/2,l*.45), ls=(l-r)*.5; for(const sg of [-1,1]){ const sw=new THREE.Mesh(new THREE.BoxGeometry(ls,.8,.06),M.glass); sw.position.set(x+l/2-r-ls/2,y+lv*.62,sg*(w/2+.03)); G.add(sw); } }   // and the windows run back along both sides
       box(2.2,.3,B*.64,M.top,x+l*.3,y+lv*.9,0); } y+=lv; }
   // the tower stands on the back of the top tier, the director on the tower, and the foremast with its radar behind the director
   const xT=xF-lt*.7, tw=B*.15; if(lk.tower>8){ const to=add(new THREE.CylinderGeometry(tw*.55,tw*.75,lk.tower,8),M.side,xT,y+lk.tower/2,0); to.scale.set(1.25,1,1); } else box(tw*1.3,lk.tower,tw,M.side,xT,y,0); y+=lk.tower;
   box(4.5,2.6,3.6,M.top,xT,y,0); box(1,1,Math.min(B*.3,8),M.side,xT-1,y+1.4,0); y+=2.6;   // the director, its rangefinder arms
-  if(lk.tripod){ for(const [dx,dz] of [[2.5,0],[-2,1.6],[-2,-1.6]]) add(new THREE.CylinderGeometry(.18,.25,lk.tower+8,6),M.dark,xT+dx*.5,y-lk.tower/2,dz*.5); }
+  if(lk.tripod){ for(const [dx,dz] of [[2.5,0],[-2,1.6],[-2,-1.6]]) add(new THREE.CylinderGeometry(.18,.25,lk.tower,6),M.dark,xT+dx*.5,y-2.6-lk.tower/2,dz*.5); }   // the tripod legs, from the bridge up to the director
   cyl(.18,.24,11,M.dark,xT-.4,y,0,6); box(.25,2.6,3.6,M.dark,xT-.8,y+6,0); box(.2,.2,Math.min(B*.32,9),M.dark,xT-.4,y+8.5,0);   // pole mast, the radar mattress on its after side, and the yard
   // funnels: raked, oval, capped
   for(const f of lk.fun){ const x=X(f*L/L), r=B*lk.funR, h=lk.funH+(T.type==='BB'?2:0), o=cyl(r*.92,r,h,M.side,x,y1,0,20,1.55); o.rotation.z=.07; o.position.x-=h*.035;
     const cp=cyl(r*.97,r*.95,.9,M.dark,x-h*.07,y1+h-.2,0,20,1.55); cp.rotation.z=.07; }
   // after superstructure and its director
-  { const [a0,a1]=lk.aft, x=X((a0+a1)/2); house(L*(a1-a0),lv,B*.4,M.side,x,y1,-1); house(L*(a1-a0)*.55,lv,B*.3,M.side,x+L*(a1-a0)*.1,y1+lv,-1);
+  { const [a0,a1]=lk.aft, x=X((a0+a1)/2); house(L*(a1-a0),lv,B*.34,M.side,x,y1,-1); house(L*(a1-a0)*.55,lv,B*.26,M.side,x+L*(a1-a0)*.1,y1+lv,-1);
     for(const d of lk.dirs){ box(3.6,2.2,3,M.top,X(d),y1+lv*2,0); box(.8,.8,Math.min(B*.25,6.5),M.side,X(d)-.8,y1+lv*2+1.2,0); } }
   // mainmast
   { const x=X(lk.main); if(lk.tripod){ for(const dz of [-1.4,1.4]){ const o=add(new THREE.CylinderGeometry(.16,.22,20,6),M.dark,x-1.8,y1+9.5,dz); o.rotation.x=-Math.sign(dz)*.07; o.rotation.z=-.1; } }
     cyl(.18,.26,22,M.dark,x,y1,0,6); box(.2,.2,B*.28,M.dark,x,y1+17,0); }
   // dual-purpose twin mounts: along each side of the superstructure deck, and on the centreline fore and aft of it
-  for(const u of lk.sec) for(const sg of [-1,1]) turret(u,2,.127,true,0,sg*(hw/2-1.6),true,y1,sg>0?-.6:.6);   // the side mounts stand on the 01 deck, trained out
+  for(const u of lk.sec) for(const sg of [-1,1]) turret(u,2,.127,true,0,sg*(hw/2-3),true,y1,sg>0?-.15:.15);   // the side mounts stand on the 01 deck, trained a little outboard
   for(const u of lk.secMid) turret(u,2,.127,u<.5,0,0,true,u>=lk.aft[0]-.01?y1+lv:y1);   // the after one stands on the after superstructure
   // light AA: quadruple 40 mm in open tubs on the superstructure edges
-  for(const u of lk.aa) for(const sg of [-1,1]){ const x=X(u), z=sg*(hw/2+.4); cyl(1.5,1.5,1.1,M.side,x,y1,z,14); for(let k=0;k<4;k++){ const g=new THREE.CylinderGeometry(.06,.07,3,6); g.rotateZ(-Math.PI/2+.35); /* elevated, not into the deck */ add(g,M.gun,x+1.2,y1+1.6,z+(k-1.5)*.35); } }
-  // boats beside the funnels
-  for(const sg of [-1,1]){ const o=add(new THREE.SphereGeometry(1,12,8),M.boat,X((lk.fun[0]+lk.fun[1])/2),y1+.7,sg*(hw/2-1.2)); o.scale.set(4.2,.8,1.1); }
+  for(const u of lk.aa) for(const sg of [-1,1]){ const x=X(u), on=u>=h0&&u<=h1, z=sg*(on?hw/2-1.7:Math.min(B*.3,ln.bW(u)-2)), yb=on?y1:dY(u); cyl(1.5,1.5,1.1,M.side,x,yb,z,14); for(let k=0;k<4;k++){ const g=new THREE.CylinderGeometry(.06,.07,3,6); g.rotateZ(-Math.PI/2+.35); /* elevated, not into the deck */ add(g,M.gun,x+1.2,yb+1.6,z+(k-1.5)*.35); } }
+  // boats stowed side by side on the centreline between the funnels
+  for(const sg of [-1,1]){ const o=add(new THREE.SphereGeometry(1,12,8),M.boat,X((lk.fun[0]+lk.fun[1])/2),y1+.7,sg*1.3); o.scale.set(4.2,.8,1.1); }
   // aircraft: catapults on the quarterdeck, a floatplane on each, and the crane to recover them
   for(const [u,zf] of lk.cat){ const x=X(u), z=zf*B, yy=dY(u); cyl(.7,.9,1.4,M.dark,x,yy,z,10); const c=box(18,.5,1.1,M.dark,x,yy+1.4,z); c.rotation.y=zf>0?.35:-.35;
     // the floatplane sits on the catapult: float on the rail, struts up to the fuselage, wing, tail
