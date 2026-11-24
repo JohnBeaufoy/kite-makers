@@ -3753,6 +3753,16 @@ const DROPS=[
   {at:'2026-11-24T22:10:00+13:00',items:[
     'Ships on the chart no longer leave wakes.',
   ]},
+  {at:'2026-11-24T22:40:00+13:00',items:[
+    'Wakes in 3D are new. The sea remembers what passed through it: white water churned up by a ship breaks down into lacy foam that drains away over a minute or two, the bubbles she drives down leave the water a pale green, and her turbulent wake leaves a smooth slick that spreads and lasts longest of all. So a wake follows the track she actually steamed, curving through her turns, and slowly drifts downwind. A rough sea breaks it all up far sooner than a calm one.',
+    'Ships throw white water as real ones do: the breaking crest of the bow wave running out from the stem, white water along the sides, the propeller wash astern, and, for a fast ship, breaking quarter waves off the stern. All of it grows with speed for her length.',
+    'Spray: drops and sheets of water fly off the bow at speed. Fine spray is caught by the wind; big drops fall back into the sea.',
+    'Ships ride the actual waves, heaving and pitching to the sea along their length, with the weight of a real ship, so they lag the sea and meet it. Driving into a heavy sea, the bow slams: water bursts up around the forefoot and spray blows back over the forecastle and flight deck.',
+    'The water around a ship is no longer smoothed flat: waves run right up to her sides, and her Kelvin wave pattern shows behind her in a calm sea.',
+    'The Kelvin waves spreading from a ship follow the track she actually steamed, so through a turn the whole V bends round after her instead of swinging with her bow.',
+    'Whitecaps break on the crests of the sea, more of them the harder it blows, and in a gale foam lies in long streaks along the wind.',
+    'Torpedo tracks are realistic. A torpedo runs a few metres down, and its exhaust bubbles take time to rise, so the track breaks surface 150 to 250 m behind it, as lookouts had to allow for. The track shows as a narrow band of pale green water with white boils where the bubbles burst, widening and fading over a few minutes in a calm sea and far sooner in a rough one. A torpedo running deep leaves its track still further behind.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -4015,19 +4025,38 @@ function seaTexture(){
 // Churning foam: tileable value noise in four octaves, contrast stretched, so a threshold on it gives patches of white water that
 // range from scattered flecks to solid as the threshold falls. Made once and shared.
 let FOAMN=null;
-// Torpedo tracks. A torpedo runs a few metres down, so its exhaust bubbles take a few seconds to reach the surface: the track shows
-// a little way behind it, a narrow broken streak of foam over a paler band, spreading and fading over a minute or so. Each track is
-// a ribbon of TW points along its run; uv.x is the distance along it (for the bubble pattern), uv.y the side, aAge seconds since the
-// torpedo passed.
-const TW=56, TWN=24;
+// Torpedo tracks. An aerial torpedo of the war ran on steam from burning fuel in air, a few metres down, and its exhaust left a stream of
+// bubbles. They take time to rise (TBUB metres a second), so the track breaks surface well behind the torpedo: 150 to 250 m behind at
+// 40 knots, the lag every lookout had to allow for. The big bubbles come up first, then the rest; the track shows as a narrow band of
+// pale green water over the bubbles with white boils where clusters of them burst, widening and fading over a few minutes in a calm
+// sea, far sooner in a rough one, where the breaking seas hide it. Each track is a ribbon of TW points along its run; uv is metres along
+// it and across it, aAge seconds since the torpedo passed, aRise the seconds its bubbles take to come up.
+const TW=56, TWN=24, TBUB=.3;
+function torpTrack(sea){ const k=clamp((sea.hs-.3)/5,0,1), tau=120-90*k; return {tau,vis:1-.6*k,life:tau*3,w:(a,r)=>Math.min(9,.7+2*Math.sqrt(Math.max(0,a-r*.4)/8))}; }
 function torpWakeMesh(){ const nv=TWN*TW*2, g=new THREE.BufferGeometry(), idx=[];
   for(let k=0;k<TWN;k++) for(let i=0;i<TW-1;i++){ const a=(k*TW+i)*2; idx.push(a,a+2,a+1,a+1,a+2,a+3); }
-  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(nv*3),3)); g.setAttribute('uv',new THREE.BufferAttribute(new Float32Array(nv*2),2)); g.setAttribute('aAge',new THREE.BufferAttribute(new Float32Array(nv),1)); g.setIndex(idx); g.setDrawRange(0,0);
-  const m=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:Object.assign({uFN:{value:foamNoise()}},seaUniRefs()),
-    vertexShader:SEA_ON_HEAD()+'attribute float aAge; varying vec2 vUv; varying float vAge; void main(){ vUv=uv; vAge=aAge; '+SEA_GLSL+' gl_Position=projectionMatrix*modelViewMatrix*vec4(position+gd+vec3(0.0,0.16,0.0),1.0); }',
-    fragmentShader:'uniform sampler2D uFN; varying vec2 vUv; varying float vAge; void main(){ float a=vAge, rise=smoothstep(1.5,5.0,a), fade=1.0-smoothstep(20.0,75.0,a), x=abs(vUv.y), prof=exp(-x*x*3.2);'+
-      ' float n=texture2D(uFN,vec2(vUv.x/11.0,vUv.y*0.3+0.5)).r*0.6+texture2D(uFN,vec2(vUv.x/3.3+0.37,vUv.y*0.55)).r*0.4; float core=smoothstep(0.36,0.72,n*prof+0.32*prof*(1.0-smoothstep(10.0,45.0,a)));'+
-      ' float al=(0.18*prof+0.78*core)*rise*fade; if(al<0.01) discard; gl_FragColor=vec4(mix(vec3(0.70,0.83,0.86),vec3(0.97,0.99,1.0),core),al); }'});
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(nv*3),3)); g.setAttribute('uv',new THREE.BufferAttribute(new Float32Array(nv*2),2)); g.setAttribute('aAge',new THREE.BufferAttribute(new Float32Array(nv),1)); g.setAttribute('aRise',new THREE.BufferAttribute(new Float32Array(nv),1)); g.setIndex(idx); g.setDrawRange(0,0);
+  const m=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,fog:true,uniforms:Object.assign(THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{uTau:{value:90},uVis:{value:1}}]),seaUniRefs()),
+    vertexShader:SEA_ON_HEAD()+'attribute float aAge; attribute float aRise; varying vec2 vUv; varying float vAge; varying float vRise;\n#include <fog_pars_vertex>\nvoid main(){ vUv=uv; vAge=aAge; vRise=aRise; '+SEA_GLSL+' vec4 mvPosition=modelViewMatrix*vec4(position+gd+vec3(0.0,0.16,0.0),1.0); gl_Position=projectionMatrix*mvPosition;\n#include <fog_vertex>\n}',
+    fragmentShader:`uniform sampler2D uFN;
+uniform vec3 uFo;
+uniform float uTau, uVis;
+varying vec2 vUv;
+varying float vAge, vRise;
+#include <fog_pars_fragment>
+void main(){ float a=vAge, r=vRise, w=min(9.0,0.7+2.0*sqrt(max(0.0,a-r*0.4)/8.0)), x=vUv.y/w;
+  float vis=smoothstep(r*0.4,r*1.15,a)*exp(-max(0.0,a-r*1.15)/uTau)*uVis, fresh=exp(-max(0.0,a-r)/18.0);
+  if(vis<0.004) discard;
+  float prof=exp(-x*x*2.6), core=exp(-x*x*9.0), tt=uFo.z;
+  float n1=texture2D(uFN,vUv/vec2(7.0,5.0)+vec2(0.0,tt*0.01)).r, n2=texture2D(uFN,vUv/vec2(2.3,1.8)+vec2(0.37,-tt*0.03)).r, n=n1*0.65+n2*0.35;
+  // boils: clusters of bubbles bursting in round patches that pop and renew, most of them while the track is fresh
+  float pop=texture2D(uFN,vec2(vUv.x/4.3+0.21,tt*0.03)).r, boil=smoothstep(0.6,0.84,n*core+0.3*core*fresh+0.25*(pop-0.5))*(0.35+0.65*fresh);
+  // the band: water made pale and green by the bubbles in it, broken at the edges
+  float band=prof*(0.55+0.45*smoothstep(0.3,0.7,n1))*(0.6+0.4*fresh);
+  gl_FragColor=vec4(mix(vec3(0.46,0.74,0.72),vec3(0.95,0.98,1.0),boil),clamp(band*0.55+boil*0.75,0.0,0.92)*vis);
+#include <fog_fragment>
+}`});
+  m.uniforms.uFN={value:foamNoise()};   // set after the merge, which would otherwise copy the texture
   const o=new THREE.Mesh(g,m); o.frustumCulled=false; o.renderOrder=2; return o; }
 function foamNoise(){ if(FOAMN) return FOAMN; const N=256, c=document.createElement('canvas'); c.width=c.height=N; const g=c.getContext('2d'), im=g.createImageData(N,N); let r=11; const rnd=()=>(r=(r*9301+49297)%233280)/233280;
   const oct=[8,16,32,64].map(G=>{ const a=new Float32Array(G*G); for(let i=0;i<a.length;i++) a[i]=rnd(); return {G,a}; }), sm=x=>x*x*(3-2*x);
@@ -4673,12 +4702,13 @@ function shipCollide(dt){ const R=TR, B=shipBodies(), t=R.t; R.contacts=R.contac
 /* ---------- Attacks on target ships: each aircraft flies its own run ---------- */
 // Torpedoes: warhead in kg of TNT, running speed, the fastest and highest they can be dropped, the usual dropping range, and how often
 // they failed: sank on entry, ran off course, ran too deep, or hit and did not go off. The Mk 13 was notorious until late 1943.
-const TORPS={t18:{wh:176,kn:40,dropKn:120,dropH:20,rd:900,fail:{sank:.05,erratic:.04,dud:.03}},
-  t91:{wh:225,kn:42,dropKn:180,dropH:100,rd:1000,fail:{sank:.03,erratic:.03,dud:.02}},
-  t13:{wh:300,kn:33.5,dropKn:110,dropH:15,rd:800,fail:{sank:.08,erratic:.06,deep:.16,dud:.14}},
-  t13t:{wh:360,kn:33.5,dropKn:280,dropH:240,rd:900,fail:{sank:.02,erratic:.02,deep:.02,dud:.02}},
-  t91m3:{wh:240,kn:42,dropKn:260,dropH:150,rd:1000,fail:{sank:.02,erratic:.03,dud:.02}},
-  t91m7:{wh:420,kn:41,dropKn:260,dropH:150,rd:1000,fail:{sank:.02,erratic:.03,dud:.02}}};
+// dep: the depth each runs at (m); its exhaust bubbles take longer to reach the surface from deeper, so its track shows further behind it
+const TORPS={t18:{dep:3.5,wh:176,kn:40,dropKn:120,dropH:20,rd:900,fail:{sank:.05,erratic:.04,dud:.03}},
+  t91:{dep:4,wh:225,kn:42,dropKn:180,dropH:100,rd:1000,fail:{sank:.03,erratic:.03,dud:.02}},
+  t13:{dep:4,wh:300,kn:33.5,dropKn:110,dropH:15,rd:800,fail:{sank:.08,erratic:.06,deep:.16,dud:.14}},
+  t13t:{dep:4.5,wh:360,kn:33.5,dropKn:280,dropH:240,rd:900,fail:{sank:.02,erratic:.02,deep:.02,dud:.02}},
+  t91m3:{dep:4,wh:240,kn:42,dropKn:260,dropH:150,rd:1000,fail:{sank:.02,erratic:.03,dud:.02}},
+  t91m7:{dep:5,wh:420,kn:41,dropKn:260,dropH:150,rd:1000,fail:{sank:.02,erratic:.03,dud:.02}}};
 const torpOf=d=>{ const k=part('load',d.load).id, b=TORPS[k]; if(!b) return null; return b; };
 const loadKind=p=>(part('load',p.d.load)||{}).kind||'';
 // How far through deck armour a bomb goes, in mm, from its weight, how hard-nosed it is, and how fast it is falling when it arrives.
@@ -4781,7 +4811,7 @@ function atkPlane(p,a,f,dt){ const R=TR, t=R.t, st=p.st, cru=st.cruise/3.6, vmax
         let fail=null, r=Math.random(); const fl=Object.assign({},tp.fail); if(over) fl.sank=(fl.sank||0)+.3;
         for(const [k,q] of Object.entries(fl)){ if(r<q){ fail=k; break; } r-=q; }
         const [hx,hy]=hdgV(p.ahdg), ex=p.ax+hx*.12, ey=p.ay+hy*.12;
-        R.torps.push({id:R.torps.length+1,x0:ex,y0:ey,x:ex,y:ey,hdg:(lb+err+360)%360,v:tp.kn*KN,run:0,max:tp.kn>38?4500:5500,wh:tp.wh,fail,t0:t,by:name,tgt:a.tgt,done:false,ewob:(Math.random()-.5)*6});
+        R.torps.push({id:R.torps.length+1,x0:ex,y0:ey,x:ex,y:ey,hdg:(lb+err+360)%360,v:tp.kn*KN,run:0,max:tp.kn>38?4500:5500,wh:tp.wh,dep:(tp.dep||4)+(fail==='deep'?3:0),fail,t0:t,by:name,tgt:a.tgt,done:false,ewob:(Math.random()-.5)*6});
         R.fx.push({kind:'tsplash',x:ex,y:ey,t}); p.dropped=true; p.armed=false; f.stats.torps++; if(over) trWarn('over'+p.d.name,`${p.d.name} of ${f.name} dropped its torpedo ${vr>lim*1.05?`at ${f0(vr/KN)} knots, faster than the ${tp.dropKn} it can take`:`from ${f0(p.alt)} m, higher than the ${tp.dropH} m it can take`}: dropped like that, a torpedo often breaks up or dives to the bottom.`,600);
         a.ph='escape'; a.te=t; }
       return; }
@@ -5505,18 +5535,33 @@ const waveH=(x,z,t)=>{ let h=0; for(const w of (TR3.waves||[]).slice(0,6)) h+=w.
 // A moving ship's Kelvin wake, worked out where it is seen. Behind her bow, inside a wedge of 19.5 degrees either side of her track,
 // two sets of waves: transverse ones across her track, a wavelength 2 pi U^2/g apart, and diverging ones angling out from her bow, both
 // strongest along the edges of the wedge (the cusps). For a point at angle a off her track, the waves there are those travelling at the
-// angle th where tan a = tan th / (1 + 2 tan^2 th), and their phase is k0 (s + |v| tan th) sec th. Foam: the breaking crests of the bow
-// wave, white water along her sides from the bow, and (for ships other than your own, whose wake follows her track) the wake astern.
+// angle th where tan a = tan th / (1 + 2 tan^2 th), and their phase is k0 (s + |v| tan th) sec th. Only the shape of the water is
+// worked out here: the white water, the foam she leaves and the slick are kept in the water itself (wkFrame) and read by the sea.
+// The waves stay where she made them, so abaft her bow s and v are measured along the track her bow actually followed (uKT, laid by
+// seaUpdate), not along her present heading: through a turn the whole pattern bends round after her, as a real wake does.
+const KTN=64;
+let KTTEX=null; const ktTex=()=>{ if(!KTTEX){ KTTEX=new THREE.DataTexture(new Float32Array(KTN*8*4),KTN,8,THREE.RGBAFormat,THREE.FloatType); KTTEX.minFilter=KTTEX.magFilter=THREE.NearestFilter; KTTEX.generateMipmaps=false; } return KTTEX; };
 const SEA_KELV=`uniform vec4 uKel[8];
 uniform vec3 uFo;
+uniform sampler2D uKT;
+// Her bow's track, KTN points for each ship evenly spaced dl metres apart back from where it is now: x, z, and the way she was heading.
+vec4 ktAt(float i,float sg,float dl){ float f=sg/dl, j=min(floor(f),${KTN-2}.0), y=(i+0.5)/8.0;
+  vec4 a=texture2D(uKT,vec2((j+0.5)/${KTN}.0,y)), b=texture2D(uKT,vec2((j+1.5)/${KTN}.0,y)), r=mix(a,b,f-j);
+  r.zw=normalize(r.zw+vec2(1e-6,0.0)); return r; }
 // A gentle unevenness laid in the water itself (world position, slowly changing), so wake crests waver, break into lengths and are
 // never ruled straight, and the ship moves on through it.
 float wn(vec2 p,float t){ vec2 q=p+uFo.xy; return sin(dot(q,vec2(.071,.033))+t*.31)*.5+sin(dot(q,vec2(-.043,.061))*1.7-t*.23)*.3+sin(dot(q,vec2(.027,-.089))*2.9+t*.17)*.2; }
-float kelv(vec2 p,float px,out float foam){ float h=0.0; foam=0.0; float tt=uFo.z;
+float kelv(vec2 p,float px){ float h=0.0; float tt=uFo.z;
   for(int i=0;i<8;i++){ vec4 c=uCalm[i], k=uKel[i]; if(c.w<=0.0||k.x<0.8) continue;
     vec2 d=p-c.xy; float cs=cos(c.z), sn=sin(c.z); float u=d.x*cs-d.y*sn, v=d.x*sn+d.y*cs;
-    float L=c.w, B=k.y, s=L*0.5-u; float av=abs(v);
+    float L=c.w, B=k.y, s=L*0.5-u;
     float k0=9.81/(k.x*k.x), lam=6.2832/k0, reach=min(30.0*lam+2.0*L,5000.0);
+    if(dot(d,d)>(reach+L)*(reach+L)) continue;
+    // abaft her bow: find the point on her track this is abreast of (a few steps, each moving along the track by how far ahead of or
+    // behind that point it lies), and measure from there
+    if(s>0.0&&k.w>0.0){ float sg=s; for(int it=0;it<3;it++){ vec4 T=ktAt(float(i),sg,k.w); sg=max(0.0,sg-dot(p-T.xy,T.zw)); }
+      vec4 T=ktAt(float(i),sg,k.w); vec2 dd=p-T.xy; s=sg; v=dd.y*T.z-dd.x*T.w; }
+    float av=abs(v);
     if(s<-L*0.08||s>reach||av>s*0.45+B) continue;
     float sp=max(s,0.5), w1=wn(p,tt), w2=wn(p*1.9+vec2(37.0,11.0),tt*1.3), mv=(sin(s*0.011+w1*1.7)*0.05+sin(s*0.0041+w2*1.3)*0.045)*smoothstep(0.0,L,s);
     av=abs(v+mv*s); float q=av/sp/0.35355, a=min(q,1.0)*0.35355, disc=sqrt(max(0.0,1.0-8.0*a*a));
@@ -5525,62 +5570,276 @@ float kelv(vec2 p,float px,out float foam){ float h=0.0; foam=0.0; float tt=uFo.
     float A=clamp(0.035*k.x,0.0,0.7)*sqrt(B/20.0)*sqrt(L/(L+s))*smoothstep(-L*0.08,L*0.1,s);
     float brk=0.5+0.5*sin(s*0.021+w2*2.6+w1*1.4), edge=1.0-smoothstep(0.82,1.32,q+0.14*w1), cusp=1.0+0.5*smoothstep(0.72,1.0,q)*edge*brk, feather=0.7+0.3*w2, tfade=exp(-s/(12.0*lam+1.5*L));
     float f1=1.0-smoothstep(0.12,0.35,px*k0*(1.0+t1*t1)/6.2832), f2=(1.0-smoothstep(0.06,0.2,px*k0*(1.0+t2*t2)/6.2832))*smoothstep(0.3,0.85,min(q,1.0));
-    float c2=cos(ph2); h+=A*edge*cusp*(0.6*cos(ph1)*f1*tfade+0.32*c2*f2*feather);
-    float fr=clamp((k.x-2.5)/9.0,0.0,1.0);
-    foam+=fr*edge*f2*feather*smoothstep(0.55,0.95,c2)*exp(-s/(3.0*lam+L*0.5))*0.7;
-    foam+=fr*exp(-pow((av-B*0.5)/(B*0.35+s*0.02),2.0))*(1.0-smoothstep(L*0.2,L*0.9,s))*smoothstep(-L*0.05,L*0.02,s)*0.8;
-    if(k.z>0.5) foam+=fr*exp(-pow(av/(B*0.45+(s-L)*0.035),2.0))*exp(-(s-L)/(L*3.5))*smoothstep(L*0.85,L,s)*0.5; }
+    h+=A*edge*cusp*(0.6*cos(ph1)*f1*tfade+0.32*cos(ph2)*f2*feather); }
   return h; }
-// The slick: astern of a moving ship her turbulent wake smooths the small waves into a glassy, paler path that widens and fades.
-float wakeSlick(vec2 p){ float m=0.0;
-  for(int i=0;i<8;i++){ vec4 c=uCalm[i], k=uKel[i]; if(c.w<=0.0||k.x<0.8) continue;
-    vec2 d=p-c.xy; float cs=cos(c.z), sn=sin(c.z); float u=d.x*cs-d.y*sn, v=d.x*sn+d.y*cs; float L=c.w, B=k.y, s=L*0.5-u;
-    if(s<L*0.85||s>L*12.0) continue; float w=B*0.6+(s-L)*0.04;
-    m=max(m,exp(-(v*v)/(w*w))*exp(-(s-L)/(L*5.0))*smoothstep(L*0.85,L*1.05,s)*clamp((k.x-1.0)/5.0,0.0,1.0)); }
-  return m; }
+// The water inside each hull is kept down so the sea never shows through her; outside it the waves run right up to her side.
+float hullCalm(vec2 p){ float calm=1.0;
+  for(int i=0;i<8;i++){ vec4 c=uCalm[i]; if(c.w<=0.0) continue; vec2 d=p-c.xy; float cs=cos(c.z), sn=sin(c.z); float u=d.x*cs-d.y*sn, v=d.x*sn+d.y*cs;
+    float B=max(uKel[i].y,4.0), r=sqrt(pow(abs(u)/(c.w*0.5),6.0)+pow(abs(v)/(B*0.5),2.0)); calm*=smoothstep(0.72,1.0,r); }
+  return calm; }
 `;
-const SEA_GLSL=`vec3 gp=position; float rr=length(gp.xz), calm=1.0;
-for(int i=0;i<8;i++){ vec4 c=uCalm[i]; if(c.w>0.0){ vec2 d=gp.xz-c.xy; float cs=cos(c.z), sn=sin(c.z); float u=d.x*cs-d.y*sn, v=d.x*sn+d.y*cs; calm*=smoothstep(1.0,2.4,length(vec2(u/(c.w*.6),v/(c.w*.13)))); } }
+const SEA_GLSL=`vec3 gp=position; float rr=length(gp.xz), calm=hullCalm(gp.xz);
 vec3 gd=vec3(0.0), gn=vec3(0.0,1.0,0.0);
 vWP=gp.xz;
 for(int i=0;i<6;i++){ vec4 w=uW[i]; float lam=6.2832/max(w.z,1e-4); float a=w.w*calm*(1.0-smoothstep(lam*.1,lam*.22,rr*uSp)); float ph=w.z*dot(w.xy,gp.xz)+uQ[i].x; float C=cos(ph), S=sin(ph), q=uQ[i].y, wa=w.z*a;
   gd+=vec3(q*a*w.x*C,a*S,q*a*w.y*C); gn-=vec3(w.x*wa*C,q*wa*S,w.y*wa*C); }
-{ float kf; gd.y+=kelv(gp.xz,rr*uSp*1.2,kf); }
+gd.y+=kelv(gp.xz,rr*uSp*1.2);
 vec3 objectNormal=normalize(gn);
 #ifdef USE_TANGENT
 vec3 objectTangent=vec3(tangent.xyz);
 #endif
 `;
-const SEA_FRAG=`{ float calm=1.0;
-  for(int i=0;i<8;i++){ vec4 c=uCalm[i]; if(c.w>0.0){ vec2 d=vWP-c.xy; float cs=cos(c.z), sn=sin(c.z); float u=d.x*cs-d.y*sn, v=d.x*sn+d.y*cs; calm*=smoothstep(1.0,2.4,length(vec2(u/(c.w*.6),v/(c.w*.13)))); } }
+const SEA_FRAG=`{ float calm=hullCalm(vWP);
   vec2 fw=fwidth(vWP); float px=max(fw.x,fw.y); vec3 gn=vec3(0.0,1.0,0.0);
   for(int i=0;i<10;i++){ vec4 w=uW[i]; float lam=6.2832/max(w.z,1e-4); float a=w.w*(i<6?calm:max(calm,.35))*(1.0-smoothstep(lam*.08,lam*.3,px))*(1.0-(i<6?0.3:0.85)*kSlk); float ph=w.z*dot(w.xy,vWP)+uQ[i].x; float C=cos(ph), S=sin(ph), wa=w.z*a;
     gn-=vec3(w.x*wa*C,uQ[i].y*wa*S,w.y*wa*C); }
   gn-=vec3((kHx-kH)/0.3,0.0,(kHz-kH)/0.3);
   normal=normalize((viewMatrix*vec4(normalize(gn),0.0)).xyz); }
 `;
+// What the sea reads of the water's memory (wkFrame): two squares of it laid on the water, a fine one close in and a coarse one out to
+// the horizon, each fading out at its edges. r: fresh white water; g: the foam left behind; b: the slick; a: bubbles under the surface.
+const WK_HEAD=`uniform sampler2D uWk0, uWk1;
+uniform vec4 uWkO0, uWkO1, uWind;
+float wkEdge(vec2 u){ vec2 e=smoothstep(0.0,0.06,u)*smoothstep(1.0,0.94,u); return e.x*e.y; }
+vec4 wkAt(vec2 wp){ vec2 en=vec2(wp.x,-wp.y), u0=(en+uWkO0.xy)*uWkO0.z, u1=(en+uWkO1.xy)*uWkO1.z;
+  vec4 f=texture2D(uWk1,u1)*wkEdge(u1)*uWkO1.w, g=texture2D(uWk0,u0); return mix(f,g,wkEdge(u0)*uWkO0.w); }
+`;
+let WKBLANK=null; const wkBlank=()=>WKBLANK||(WKBLANK=new THREE.DataTexture(new Uint8Array(4),1,1,THREE.RGBAFormat));
 function seaMesh(tex){ const P=[], U=[], N=[], I=[], NA=320, rs=[0]; for(let r=1.2;r<30000;r*=1.03) rs.push(r); rs.push(30000);
   for(const r of rs) for(let j=0;j<NA;j++){ const a=j/NA*2*Math.PI, x=r*Math.cos(a), z=r*Math.sin(a); P.push(x,0,z); U.push(x/SEATILE,-z/SEATILE); N.push(0,1,0); }
   for(let i=0;i<rs.length-1;i++) for(let j=0;j<NA;j++){ const a=i*NA+j, b=i*NA+(j+1)%NA, c=a+NA, d=b+NA; I.push(a,b,c,b,d,c); }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2)); g.setAttribute('normal',new THREE.Float32BufferAttribute(N,3)); g.setIndex(I);
-  const u=TR3.seaU={uW:{value:Array.from({length:10},()=>new THREE.Vector4())},uQ:{value:Array.from({length:10},()=>new THREE.Vector2())},uCalm:{value:Array.from({length:8},()=>new THREE.Vector4())},uKel:{value:Array.from({length:8},()=>new THREE.Vector4())},uSp:{value:.03},uFN:{value:foamNoise()},uFo:{value:new THREE.Vector3()}};
+  const u=TR3.seaU={uW:{value:Array.from({length:10},()=>new THREE.Vector4())},uQ:{value:Array.from({length:10},()=>new THREE.Vector2())},uCalm:{value:Array.from({length:8},()=>new THREE.Vector4())},uKel:{value:Array.from({length:8},()=>new THREE.Vector4())},uSp:{value:.03},uFN:{value:foamNoise()},uFo:{value:new THREE.Vector3()},uKT:{value:ktTex()},
+    uWk0:{value:wkBlank()},uWk1:{value:wkBlank()},uWkO0:{value:new THREE.Vector4()},uWkO1:{value:new THREE.Vector4()},uWind:{value:new THREE.Vector4(1,0,0,9)}};
   tex.repeat.set(1,1); const m=new THREE.MeshStandardMaterial({map:tex,roughness:.32,metalness:0,envMapIntensity:.7}); m.extensions={derivatives:true};
   const head='uniform vec4 uW[10];\nuniform vec2 uQ[10];\nuniform vec4 uCalm[8];\nvarying vec2 vWP;\n'+SEA_KELV;
-  const KF='#include <map_fragment>\nvec2 kfw=fwidth(vWP); float kPx=max(kfw.x,kfw.y), kFo, kF2, kH=kelv(vWP,kPx,kFo), kHx=kelv(vWP+vec2(0.3,0.0),kPx,kF2), kHz=kelv(vWP+vec2(0.0,0.3),kPx,kF2);\n'+
-    // the foam is broken up by churning noise fixed in the water, not the ship: thin foam is scattered patches, thick foam nearly solid
-    'vec2 kwp=vWP+uFo.xy; float kN=texture2D(uFN,kwp/64.0+vec2(uFo.z*0.004,uFo.z*0.0015)).r*0.6+texture2D(uFN,kwp/16.0+vec2(-uFo.z*0.006,uFo.z*0.01)).r*0.4;\n'+
-    'float kf=clamp(kFo,0.0,1.0), kA=smoothstep(1.0-kf,1.0-kf+0.25,kN)*(0.5+0.5*kf);\nfloat kSlk=wakeSlick(vWP); diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*1.08+vec3(0.03,0.05,0.055),kSlk*0.6);\ndiffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.93,0.96,0.98),clamp(kA,0.0,0.9));\n';
+  const KF=`#include <map_fragment>
+vec2 kfw=fwidth(vWP); float kPx=max(kfw.x,kfw.y), kH=kelv(vWP,kPx), kHx=kelv(vWP+vec2(0.3,0.0),kPx), kHz=kelv(vWP+vec2(0.0,0.3),kPx);
+vec4 kW=wkAt(vWP); float kSlk=kW.b;
+// white water is broken up by churning noise fixed in the water, not the ship: thick, it is nearly solid with ragged edges; thin, it is
+// scattered patches and the lace that foam leaves as it drains
+vec2 kwp=vWP+uFo.xy;
+float kN=texture2D(uFN,kwp/48.0+vec2(uFo.z*0.004,uFo.z*0.0015)).r*0.55+texture2D(uFN,kwp/13.0+vec2(-uFo.z*0.006,uFo.z*0.01)).r*0.3+texture2D(uFN,kwp/4.0+vec2(uFo.z*0.02,0.0)).r*0.15;
+float kA=smoothstep(1.0-kW.r,1.0-kW.r+0.18,kN*0.85+0.15)*(0.55+0.45*kW.r);
+float kL=texture2D(uFN,kwp/9.0+vec2(0.31,0.17)).r, kLace=1.0-smoothstep(0.0,0.09,abs(kL-0.5));
+kA=max(kA,smoothstep(1.0-kW.g*0.7,1.0-kW.g*0.7+0.25,kN)*0.7*kW.g+kLace*kW.g*0.4);
+// whitecaps: crests of the sea breaking, more of them the harder it blows; and in a gale, foam blown into streaks along the wind
+float kC=0.0, kCn=0.0;
+for(int i=0;i<6;i++){ vec4 w=uW[i]; float lam=6.2832/max(w.z,1e-4); float a=w.w*(1.0-smoothstep(lam*.08,lam*.3,kPx)); float ph=w.z*dot(w.xy,vWP)+uQ[i].x, s=uQ[i].y*w.z; kC+=s*a*(sin(ph)+0.45*cos(ph)); kCn+=s*w.w; }
+float kNb=texture2D(uFN,kwp/37.0+vec2(uFo.z*0.003,-uFo.z*0.002)).r*0.7+texture2D(uFN,kwp/11.0-vec2(uFo.z*0.008,0.0)).r*0.3;
+float kWc=smoothstep(uWind.w,uWind.w+0.1,kC/max(kCn,1e-5)+0.6*(kNb-0.5))*(0.6+0.4*smoothstep(0.3,0.6,kN));
+vec2 kwq=vec2(dot(kwp,uWind.xy),dot(kwp,vec2(-uWind.y,uWind.x)));
+float kSt=smoothstep(0.75,0.85,texture2D(uFN,vec2(kwq.x/1200.0,kwq.y/60.0)+vec2(-uFo.z*0.0004,0.0)).r)*smoothstep(0.45,0.75,texture2D(uFN,kwp/53.0+vec2(0.13,0.71)).r)*uWind.z;
+kA=max(kA,max(kWc*0.85,kSt*0.45));
+// bubbles under the surface turn the water a pale, bright green; the slick is smoother and a little paler
+diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.26,0.52,0.52),clamp(kW.a,0.0,1.0)*0.55);
+diffuseColor.rgb=mix(diffuseColor.rgb,diffuseColor.rgb*1.06+vec3(0.02,0.035,0.04),kSlk*0.5);
+diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.92,0.95,0.97),clamp(kA,0.0,0.95));
+`;
+  const RF='#include <roughnessmap_fragment>\nroughnessFactor=mix(roughnessFactor,0.14,kSlk*0.5); roughnessFactor=mix(roughnessFactor,0.8,clamp(kA,0.0,1.0));\n';
   m.onBeforeCompile=sh=>{ Object.assign(sh.uniforms,u); sh.vertexShader=head+'uniform float uSp;\n'+sh.vertexShader.replace('#include <beginnormal_vertex>',SEA_GLSL).replace('#include <begin_vertex>','vec3 transformed=position+gd;');
-    sh.fragmentShader=head+'uniform sampler2D uFN;\n'+sh.fragmentShader.replace('#include <map_fragment>',KF).replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n'+SEA_FRAG); };
+    sh.fragmentShader=head+'uniform sampler2D uFN;\n'+WK_HEAD+sh.fragmentShader.replace('#include <map_fragment>',KF).replace('#include <roughnessmap_fragment>',RF).replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\n'+SEA_FRAG); };
   const o=new THREE.Mesh(g,m); o.receiveShadow=true; o.frustumCulled=false; return o; }
 // Each frame: the phase of every wave at the focus, and the hulls to calm the water around (x, z of the centre, her yaw, her length).
 function seaUpdate(t,FE,FN,calm){ const u=TR3.seaU, W=TR3.waves; if(!u||!W) return;
   W.forEach((w,i)=>{ u.uW.value[i].set(w.dx,w.dz,w.k,w.a); u.uQ.value[i].set((w.k*(w.dx*FE-w.dz*FN)-w.w*t)%(2*Math.PI),w.q); });
-  for(let i=0;i<8;i++){ const c=calm[i]; u.uCalm.value[i].set(c?c.x:0,c?c.z:0,c?c.th:0,c?c.L:0); u.uKel.value[i].set(c?(c.kn||0)*KN:0,c?c.B||20:20,c&&c.wake?1:0,0); }
+  const KT=ktTex();
+  for(let i=0;i<8;i++){ const c=calm[i]; u.uCalm.value[i].set(c?c.x:0,c?c.z:0,c?c.th:0,c?c.L:0); u.uKel.value[i].set(c?(c.kn||0)*KN:0,c?c.B||20:20,0,c?ktRow(KT.image.data,i,c,FE,FN):0); }
+  KT.needsUpdate=true;
   u.uFo.value.set(foamOrg(FE),foamOrg(-FN),t%20000);
-  for(const o of [TR3.wake,TR3.twake]) if(o&&o.material.uniforms) Object.assign(o.material.uniforms,seaUniRefs()); }   // the wakes always share this sea's waves
+  if(TR3.twake&&TR3.twake.material.uniforms) Object.assign(TR3.twake.material.uniforms,seaUniRefs()); }   // torpedo tracks always share this sea's waves
+// One ship's row of the bow-track texture: KTN points back along the track her bow has followed (shipMotion keeps it), evenly spaced
+// over as far as her Kelvin waves reach; past the oldest point she is taken to have come on straight. Returns the spacing (0: no wake).
+function ktRow(A,i,c,FE,FN){ const U=(c.kn||0)*KN; if(U<.8) return 0;
+  const lam=2*Math.PI*U*U/9.81, dl=Math.min(30*lam+2*c.L,5000)/(KTN-1), cs=Math.cos(c.th), sn=Math.sin(c.th);
+  const st=TR3.mo&&TR3.mo.get(c.o), pts=[[c.x+cs*c.L/2,c.z-sn*c.L/2]];
+  for(const q of (st&&st.trk)||[]){ const x=q.E-FE, z=-(q.N-FN), l=pts[pts.length-1]; if(Math.hypot(x-l[0],z-l[1])>.5) pts.push([x,z]); }
+  let k=0, at=0;   // the segment pts[k] to pts[k+1], which begins at distance at back along the track
+  for(let j=0;j<KTN;j++){ const sg=j*dl;
+    while(k<pts.length-1&&at+Math.hypot(pts[k+1][0]-pts[k][0],pts[k+1][1]-pts[k][1])<sg){ at+=Math.hypot(pts[k+1][0]-pts[k][0],pts[k+1][1]-pts[k][1]); k++; }
+    let x, z, fx, fz;
+    if(k<pts.length-1){ const a=pts[k], b=pts[k+1], l=Math.hypot(b[0]-a[0],b[1]-a[1]), w=(sg-at)/l; fx=(a[0]-b[0])/l; fz=(a[1]-b[1])/l; x=a[0]-fx*(sg-at); z=a[1]-fz*(sg-at); }
+    else { const a=pts[k], b=pts[k-1]; if(b){ const l=Math.hypot(a[0]-b[0],a[1]-b[1]); fx=(b[0]-a[0])/l; fz=(b[1]-a[1])/l; } else { fx=cs; fz=-sn; } x=a[0]-fx*(sg-at); z=a[1]-fz*(sg-at); }
+    A.set([x,z,fx,fz],(i*KTN+j)*4); }
+  return dl; }
 // Foam noise is laid in the water: the focus east and south, wrapped to 1024 m (a whole number of noise tiles) so it stays precise.
 const foamOrg=v=>((v%1024)+1024)%1024;
+// ---------- Ships in a seaway: how they ride the sea, the water they leave behind them, and the spray they throw up ----------
+// How a ship rides the sea: the water under her, averaged along her length, pushes her up and down and tips her bow and stern, so seas
+// much shorter than she is largely cancel out and long ones lift her bodily. She answers it as a heavy, well-damped body with a natural
+// period of a few seconds (more for a deeper ship), so she lags the sea and meets it rather than following it exactly, worst when she
+// meets the seas about as often as her own period. Her bow is what matters for spray: when the sea climbs her stem fast (a sea met head
+// on, or her bow coming down into the next one) water is thrown up and out, and hard enough, she slams. What is found is kept for
+// her wake and spray this frame: where she is and was last frame, her heading, length, beam and speed (m/s), and how hard she slams.
+const MO_X=[-.45,-.25,0,.25,.45];
+function shipMotion(o,L,B,E,N,hdg,U,t,dt,jump){
+  const fx=Math.sin(hdg*DEG), fy=Math.cos(hdg*DEG); let hs=0, sx=0, sxx=0;
+  for(const x of MO_X){ const h=waveH(E+fx*x*L,-(N+fy*x*L),t); hs+=h; sx+=x*L*h; sxx+=(x*L)**2; }
+  const hq=hs/MO_X.length, pq=Math.atan(sx/sxx), Tn=2.4*Math.sqrt(Math.max(2,B*.33)), w=2*Math.PI/Tn, ze=.3;
+  let st=TR3.mo.get(o); if(!st||jump||dt>3){ st=Object.assign(st||{},{h:hq,vh:0,p:pq,vp:0,imm:null,vr:0,E,N,fx,fy}); TR3.mo.set(o,st); }
+  // her bow's track, newest first, a point every 4 m, back about 5.5 km (for her Kelvin waves to follow: ktRow)
+  { const bE=E+fx*L/2, bN=N+fy*L/2; if(!st.trk||jump) st.trk=[]; const q=st.trk[0]; if(!q||Math.hypot(bE-q.E,bN-q.N)>=4){ st.trk.unshift({E:bE,N:bN}); if(st.trk.length>1400) st.trk.length=1400; } }
+  for(let rem=Math.max(0,dt);rem>1e-6;){ const h=Math.min(.05,rem); rem-=h; st.vh+=(w*w*(hq-st.h)-2*ze*w*st.vh)*h; st.h+=st.vh*h; st.vp+=(w*w*(pq-st.p)-2*ze*w*st.vp)*h; st.p+=st.vp*h; }
+  const heave=st.h, pitch=clamp(st.p,-.14,.14);
+  // the bow: how far the sea stands up her stem, and how fast that is changing
+  const bx=L*.48, imm=waveH(E+fx*bx,-(N+fy*bx),t)-(heave+Math.sin(pitch)*bx);
+  if(st.imm==null) st.imm=imm; if(dt>0){ st.vr=dt<.5?(imm-st.imm)/dt:0; st.imm=imm; }
+  // a slam: the sea rising up her bow fast (about 2.5 m/s for a 150 m ship, more for a bigger one), harder the faster she drives into it
+  const slam=clamp((st.vr-1.5-L/150)/4,0,1)*clamp(.4+U/12,0,1.6)*clamp((imm+1.5)/2,0,1);
+  const r={o,E,N,fx,fy,L,B,U,heave,pitch,imm,vr:st.vr,slam,pE:st.E,pN:st.N,pfx:st.fx,pfy:st.fy};
+  Object.assign(st,{E,N,fx,fy}); return r; }
+// The water's memory of what has passed through it: two squares of sea held on the graphics card, a fine one (1 m to a cell) about the
+// focus and a coarse one (8 m) out towards the horizon, each fixed to the water as the view moves. Every frame each cell ages. Fresh
+// white water (r) breaks down within seconds into the foam left behind (g), lacy patches that drain away over a minute or so; the
+// bubbles carried down (a) keep the water a pale green for a few minutes; and the slick (b), the smoothed water of a turbulent wake,
+// lasts longest of all, spreading as it goes. All of it drifts slowly downwind, and a rougher sea breaks it up sooner. Then each ship
+// adds to it where she is now, swept along the way she came since the last frame so nothing is missed at speed: the breaking crest of
+// her bow wave, white water along her sides, her propellers' wash, the quarter waves of a fast ship, and the white water of a slam;
+// and each torpedo adds its exhaust bubbles where they are coming up.
+const WK_N=8, WK_T=16;
+const WK_SIM=`uniform sampler2D uPrev;
+uniform vec2 uShift, uNo;
+uniform float uSize, uDt, uTx, uClear, uSeed, uTime, uNS, uNT;
+uniform vec4 uTau, uDiff;
+uniform vec4 uSa[${WK_N}], uSb[${WK_N}], uSc[${WK_N}], uTa[${WK_T}];
+varying vec2 vUv;
+float hsh(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(hsh(i),hsh(i+vec2(1.0,0.0)),f.x),mix(hsh(i+vec2(0.0,1.0)),hsh(i+vec2(1.0,1.0)),f.x),f.y); }
+vec4 at(vec2 u){ return texture2D(uPrev,u)*step(0.0,u.x)*step(u.x,1.0)*step(0.0,u.y)*step(u.y,1.0); }
+// one ship's white water at a point s metres aft of her stem and av metres out from her centreline (L, B in m, U in m/s)
+vec4 shipW(float s,float av,float L,float B,float U,float slam,float nz){
+  vec4 a=vec4(0.0); float x=s/L, Fn=U/sqrt(9.81*L), cw=uSize*uTx*0.75;   // cw: the narrowest a feature may be on this square
+  float hb=x<0.0||x>1.0?0.0:0.5*B*(x<0.32?pow(sin(1.5708*x/0.32),0.85):x<0.78?1.0:mix(1.0,0.78,(x-0.78)/0.22));
+  float bw=pow(smoothstep(3.5,12.0,U),1.5);
+  // the breaking crest of her bow wave, running out and aft from her stem, longer the faster she goes for her length
+  float sEnd=L*clamp(0.1+0.9*(Fn-0.12),0.06,0.5);
+  if(s>-3.0&&s<sEnd){ float vc=hb+0.4+max(s,0.0)*0.34, th=max(cw,0.9+0.03*max(s,0.0)+0.04*B), cr=exp(-pow((av-vc)/th,2.0))*exp(-max(s,0.0)/(sEnd*0.6))*smoothstep(-3.0,0.5,s);
+    a.r=max(a.r,cr*bw*(0.8+0.4*nz)); a.a=max(a.a,cr*bw*0.4); }
+  // white water torn along her sides, heaviest forward
+  if(s>0.0&&s<L){ float ww=max(cw,0.6+0.01*s), sd=exp(-pow((av-hb-ww)/ww,2.0))*(1.0-0.75*x)*smoothstep(4.0,11.0,U);
+    a.r=max(a.r,sd*(0.5+0.5*nz)); a.a=max(a.a,sd*0.35); a.b=max(a.b,sd*0.3); }
+  // her propellers' wash, and the turbulent wake it starts
+  if(s>L*0.85&&s<L+B*3.0){ float q=max(0.0,(s-L)/(B*3.0)), ww=max(cw,B*(0.42+0.3*q)), ramp=smoothstep(L*0.85,L*0.98,s), k=exp(-pow(av/ww,2.0))*ramp, kb=exp(-pow(av/(ww*1.6),2.0))*ramp, pw=smoothstep(1.0,7.0,U);
+    a.r=max(a.r,k*pw*smoothstep(2.5,9.0,U)*(0.75+0.35*nz)*(1.0-0.5*q)); a.a=max(a.a,kb*pw*0.85); a.b=max(a.b,kb*pw); a.g=max(a.g,k*pw*0.35*smoothstep(4.0,9.0,U)); }
+  // the quarter waves of a fast ship, breaking off her stern
+  float qb=smoothstep(0.3,0.48,Fn);
+  if(qb>0.0&&s>L*0.8&&s<L*1.7){ float vq=hb*0.9+B*0.15+(s-L*0.85)*0.45, k=exp(-pow((av-vq)/max(cw,1.0+0.03*(s-L*0.8)),2.0))*exp(-(s-L*0.85)/(L*0.35));
+    a.r=max(a.r,k*qb*(0.6+0.4*nz)); }
+  // her bow slamming into a sea: white water all round her forefoot
+  if(slam>0.0&&s>-B&&s<L*0.25){ float k=exp(-pow(av/(hb+B*0.7),4.0))*exp(-pow((s-L*0.06)/(L*0.1),2.0)); a.r=max(a.r,k*slam*(0.7+0.5*nz)); a.a=max(a.a,k*slam*0.6); }
+  return a; }
+void main(){
+  vec2 u=vUv+uShift; vec4 c=at(u);
+  vec4 nb=at(u+vec2(uTx,0.0))+at(u-vec2(uTx,0.0))+at(u+vec2(0.0,uTx))+at(u-vec2(0.0,uTx));
+  c+=uDiff*(nb-4.0*c);
+  vec4 k=exp(-uDt/uTau); float lost=c.r*(1.0-k.r); c*=k; c.g+=lost*0.55; c.a+=lost*0.25;   // white water breaks down into foam and bubbles
+  vec2 p=vUv*uSize;   // metres east and north of the square's corner
+  float nz=vn((p+uNo)/3.0+vec2(uTime*0.7,0.0))*0.6+vn((p+uNo)/1.1-vec2(0.0,uTime))*0.4;
+  for(int i=0;i<${WK_N};i++){ if(float(i)>=uNS) break; vec4 A=uSa[i], P=uSb[i], C=uSc[i];
+    vec2 ab=A.xy-P.xy; float l2=dot(ab,ab), h=l2>0.0?clamp(dot(p-P.xy,ab)/l2,0.0,1.0):0.0; if(length(p-P.xy-ab*h)>C.x*0.75+C.y*3.0+30.0) continue;
+    float ns=clamp(ceil(sqrt(l2)/2.5),1.0,6.0);
+    for(int j=0;j<6;j++){ if(float(j)>=ns) break; float f=(float(j)+1.0)/ns; vec2 o=mix(P.xy,A.xy,f), fw=normalize(mix(P.zw,A.zw,f)+vec2(1e-6,0.0)), d=p-o;
+      c=max(c,shipW(C.x*0.5-dot(d,fw),abs(d.x*fw.y-d.y*fw.x),C.x,C.y,C.z,C.w,nz)); } }
+  // torpedo tracks: the stretch where the bubbles are breaking surface now; at least a cell wide, so the coarse square keeps a trace
+  for(int i=0;i<${WK_T};i++){ if(float(i)>=uNT) break; vec4 T=uTa[i]; vec2 ab=T.zw-T.xy; float l2=max(dot(ab,ab),1e-4), h=clamp(dot(p-T.xy,ab)/l2,0.0,1.0);
+    float d=length(p-T.xy-ab*h), w=max(1.2,uSize*uTx*0.8), g=exp(-d*d/(w*w))*1.2/w;
+    c.b=max(c.b,0.7*g); c.a=max(c.a,0.6*g); c.g=max(c.g,0.3*g*nz); }
+  float e=min(min(vUv.x,1.0-vUv.x),min(vUv.y,1.0-vUv.y)); c*=smoothstep(0.0,0.01,e);
+  c+=(hsh(vUv*917.0+uSeed)-0.5)*c*0.0012;   // rounds at random, so slow fading is not lost to the stored precision
+  gl_FragColor=uClear>0.5?vec4(0.0):clamp(c,0.0,1.0); }`;
+function wkMake(r){ const ext=n=>!!r.extensions.get(n);
+  const half=r.capabilities.isWebGL2?ext('EXT_color_buffer_float')||ext('EXT_color_buffer_half_float'):ext('OES_texture_half_float')&&ext('OES_texture_half_float_linear');
+  const opt={type:half?THREE.HalfFloatType:THREE.UnsignedByteType,format:THREE.RGBAFormat,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,depthBuffer:false,stencilBuffer:false,wrapS:THREE.ClampToEdgeWrapping,wrapT:THREE.ClampToEdgeWrapping};
+  const res=1024, cas=[1024,8192].map(size=>({size,res,rt:[0,1].map(()=>new THREE.WebGLRenderTarget(res,res,opt)),i:0,oE:null,oN:null}));
+  const V=n=>({value:Array.from({length:n},()=>new THREE.Vector4())});
+  const mat=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,uniforms:{uPrev:{value:null},uShift:{value:new THREE.Vector2()},uNo:{value:new THREE.Vector2()},uSize:{value:1},uDt:{value:0},uTx:{value:1/res},uClear:{value:1},uSeed:{value:0},uTime:{value:0},uNS:{value:0},uNT:{value:0},
+      uTau:{value:new THREE.Vector4(5,60,300,120)},uDiff:{value:new THREE.Vector4()},uSa:V(WK_N),uSb:V(WK_N),uSc:V(WK_N),uTa:V(WK_T)},
+    vertexShader:'varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.0,1.0); }',fragmentShader:WK_SIM});
+  const scene=new THREE.Scene(), quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),mat); quad.frustumCulled=false; scene.add(quad);
+  return {cas,mat,scene,cam:new THREE.Camera(),clear:true,half}; }
+function wkFrame(r,FE,FN,t,dt,jump){
+  if(TR3.wk===undefined) TR3.wk=wkMake(r); const W=TR3.wk, u=TR3.seaU; if(!W||!u) return;
+  const R=TR, k=clamp((R.sea.hs-.3)/7.2,0,1)**.7, [wdx,wdy]=hdgV(R.wind.from+180), wkn=R.wind.kn, M=W.mat.uniforms;
+  // whitecaps for the wind (none below about 9 knots, more and more above), and streaks of foam along it in a gale
+  u.uWind.value.set(wdx,-wdy,clamp((wkn-24)/10,0,1)*.9,wkn<9?9:1.28-.019*(wkn-8));
+  if(jump) W.clear=true;
+  M.uTau.value.set(5-1.5*k,70-50*k,560-430*k,130-90*k);   // seconds each lasts: white water, foam, slick, bubbles
+  const S=(TR3.wkShips||[]).filter(s=>s.U>.3).map(s=>({s,d:Math.hypot(s.E-FE,s.N-FN)})).sort((a,b)=>a.d-b.d).slice(0,WK_N).map(q=>q.s), T=(TR3.wkTorps||[]).slice(0,WK_T);
+  const drift=.02*wkn*KN*Math.max(0,dt);   // m the surface has moved downwind
+  for(const C of W.cas){ const dx=C.size/C.res, oE=Math.floor((FE-C.size/2)/dx)*dx, oN=Math.floor((FN-C.size/2)/dx)*dx;
+    const moved=C.oE==null?Infinity:Math.hypot(oE-C.oE,oN-C.oN), clear=W.clear||moved>C.size*.4;
+    if(!clear&&!(dt>0)&&moved===0) continue;
+    M.uShift.value.set(clear?0:(oE-C.oE-wdx*drift)/C.size,clear?0:(oN-C.oN-wdy*drift)/C.size);
+    M.uPrev.value=C.rt[C.i].texture; M.uSize.value=C.size; M.uTx.value=1/C.res; M.uDt.value=Math.max(0,dt); M.uClear.value=clear?1:0; M.uSeed.value=Math.random()*100; M.uTime.value=t%1000;
+    M.uNo.value.set(((oE%1024)+1024)%1024,((oN%1024)+1024)%1024);
+    const D=Math.max(0,dt)/(dx*dx); M.uDiff.value.set(0,Math.min(.2,.6*D),Math.min(.2,2*D),Math.min(.2,D));
+    S.forEach((s,n)=>{ M.uSa.value[n].set(s.E-oE,s.N-oN,s.fx,s.fy); M.uSb.value[n].set(s.pE-oE,s.pN-oN,s.pfx,s.pfy); M.uSc.value[n].set(s.L,s.B,s.U,s.slam); }); M.uNS.value=S.length;
+    T.forEach((q,n)=>M.uTa.value[n].set(q.e0-oE,q.n0-oN,q.e1-oE,q.n1-oN)); M.uNT.value=T.length;
+    r.setRenderTarget(C.rt[1-C.i]); r.render(W.scene,W.cam); C.i=1-C.i; C.oE=oE; C.oN=oN; }
+  r.setRenderTarget(null); W.clear=false;
+  // where the two squares lie, for the sea
+  const [c0,c1]=W.cas; if(c0.oE==null) return;
+  u.uWk0.value=c0.rt[c0.i].texture; u.uWkO0.value.set(FE-c0.oE,FN-c0.oN,1/c0.size,1);
+  u.uWk1.value=c1.rt[c1.i].texture; u.uWkO1.value.set(FE-c1.oE,FN-c1.oN,1/c1.size,1); }
+// Spray: drops and sheets of water thrown up at the bow, in a slam and in the wash, each flying on its own until it falls back into the
+// sea. Big drops fly almost ballistic; fine spray is caught by the wind and carried off, so a ship driving into a sea streams it back
+// over her bow. Each particle: east, north, up, their velocities, age, life, size at birth and at death, opacity and how much the air
+// takes it.
+const SPR_N=6000, SPR_K=12;
+function sprayMake(wx){
+  const g=new THREE.BufferGeometry(), P=new Float32Array(SPR_N*3), Sz=new Float32Array(SPR_N), Al=new Float32Array(SPR_N);
+  g.setAttribute('position',new THREE.BufferAttribute(P,3)); g.setAttribute('aSz',new THREE.BufferAttribute(Sz,1)); g.setAttribute('aAl',new THREE.BufferAttribute(Al,1)); g.setDrawRange(0,0);
+  const lit=(1-.35*wx.cloud)*(wx.rain?.8:1);
+  const m=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:true,uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{uPx:{value:600},uCol:{value:new THREE.Color(.3+.7*lit,.31+.7*lit,.32+.7*lit)}}]),
+    vertexShader:`attribute float aSz;
+attribute float aAl;
+uniform float uPx;
+varying float vAl;
+#include <fog_pars_vertex>
+void main(){ vec4 mvPosition=modelViewMatrix*vec4(position,1.0); gl_Position=projectionMatrix*mvPosition; float px=aSz*uPx/max(1.0,-mvPosition.z);
+  gl_PointSize=clamp(px,1.0,160.0); vAl=aAl*min(1.0,px*px/4.0);
+#include <fog_vertex>
+}`,
+    fragmentShader:`uniform vec3 uCol;
+varying float vAl;
+#include <fog_pars_fragment>
+void main(){ vec2 q=gl_PointCoord*2.0-1.0; float d=dot(q,q); if(d>1.0) discard;
+  gl_FragColor=vec4(uCol*(0.92+0.08*(1.0-gl_PointCoord.y)),vAl*(1.0-d*d));
+#include <fog_fragment>
+}`});
+  const o=new THREE.Points(g,m); o.frustumCulled=false; o.renderOrder=3;
+  return {o,P,Sz,Al,n:0,p:new Float32Array(SPR_N*SPR_K),acc:new WeakMap()}; }
+function sprayFrame(FE,FN,t,dt,jump,cam){ const S=TR3.spray; if(!S) return; const R=TR, p=S.p, G=S.o.geometry;
+  if(jump||dt>.5){ S.n=0; G.setDrawRange(0,0); return; }   // time running too fast to follow spray
+  const [wdx,wdy]=hdgV(R.wind.from+180), ws=R.wind.kn*KN, wE=wdx*ws, wN=wdy*ws, rnd=Math.random;
+  const emit=(E,N,U,vE,vN,vU,life,s0,s1,al,dr)=>{ if(S.n>=SPR_N) return; p.set([E,N,U,vE,vN,vU,0,life,s0,s1,al,dr],S.n++*SPR_K); };
+  const cE=FE+cam.position.x, cN=FN-cam.position.z;
+  if(dt>0) for(const s of TR3.wkShips||[]){ if(s.U<.5&&s.slam<=0||Math.hypot(s.E-cE,s.N-cN)>6000) continue;
+    const {L,B,U,fx,fy}=s, rx=fy, ry=-fx, vE=fx*U, vN=fy*U;
+    let acc=S.acc.get(s.o)||{b:0,s:0,w:0}; S.acc.set(s.o,acc);
+    const at=(aft,side,h)=>{ const x=L/2-aft; return [s.E+fx*x+rx*side,s.N+fy*x+ry*side,s.heave+Math.sin(s.pitch)*x+h]; };
+    const hb=aft=>B*.5*Math.pow(Math.min(1,Math.max(0,aft)/(L*.32)),.85);
+    // the bow wave thrown off her stem, more as she drives into a sea
+    acc.b+=10*Math.sqrt(L/150)*Math.max(0,U-4)**1.4*(.6+1.2*clamp(s.imm/2,0,1))*dt;
+    for(;acc.b>=1;acc.b--){ const sd=rnd()<.5?-1:1, aft=rnd()*L*.06, [E,N,U0]=at(aft,sd*(hb(aft)+.3),.5+rnd()*1.5), out=U*(.15+.25*rnd()), mist=rnd()<.3;
+      emit(E,N,U0,vE+rx*sd*out,vN+ry*sd*out,U*(.12+.2*rnd()),.8+1.4*rnd(),mist?.8:.2+.4*rnd(),mist?4+3*rnd():.9+1.8*rnd(),mist?.16:.75,mist?1.4:.5); }
+    // a slam: sheets of water thrown up and out all round her forefoot, the finer part blown back over her
+    acc.s+=500*Math.sqrt(L/150)*s.slam*dt;
+    for(;acc.s>=1;acc.s--){ const sd=rnd()<.5?-1:1, aft=rnd()*L*.12, [E,N,U0]=at(aft,sd*(hb(aft)+.2),rnd()*2), out=2+5*rnd(), fine=rnd()<.45;
+      emit(E,N,U0,vE*.9+rx*sd*out,vN*.9+ry*sd*out,s.vr*(1.2+1.6*rnd())+U*.08,2.5+2.5*rnd(),fine?.8+rnd():.4+.8*rnd(),fine?6+6*rnd():2+3*rnd(),fine?.3:.85,fine?1.6:.35); }
+    // mist and spray kicked up in her propellers' wash
+    acc.w+=3*(B/20)*Math.max(0,U-6)**1.3*dt;
+    for(;acc.w>=1;acc.w--){ const [E,N,U0]=at(L*(.98+.1*rnd()),(rnd()-.5)*B*.6,.2); emit(E,N,U0,vE*.6+(rnd()-.5)*2,vN*.6+(rnd()-.5)*2,1+2*rnd(),1+rnd(),.8,3.5,.22,1); } }
+  // every particle: gravity, the air, and the sea it falls back into
+  for(let i=0;i<S.n;){ const j=i*SPR_K, age=p[j+6]+dt; if(age<p[j+7]){ const a=Math.min(1,p[j+11]*dt);
+      p[j+3]+=(wE-p[j+3])*a; p[j+4]+=(wN-p[j+4])*a; p[j+5]+=-9.81*dt-p[j+5]*a*.3;
+      p[j]+=p[j+3]*dt; p[j+1]+=p[j+4]*dt; p[j+2]+=p[j+5]*dt; p[j+6]=age;
+      if(!(p[j+5]<0&&p[j+2]<waveH(p[j],-p[j+1],t))){ i++; continue; } }
+    S.n--; if(i<S.n) p.copyWithin(j,S.n*SPR_K,S.n*SPR_K+SPR_K); }
+  for(let i=0;i<S.n;i++){ const j=i*SPR_K, f=p[j+6]/p[j+7];
+    S.P[i*3]=p[j]-FE; S.P[i*3+1]=p[j+2]; S.P[i*3+2]=-(p[j+1]-FN); S.Sz[i]=p[j+8]+(p[j+9]-p[j+8])*Math.sqrt(f); S.Al[i]=p[j+10]*Math.min(1,p[j+6]/.15)*(1-f)**1.5; }
+  const v=TR3.r.getDrawingBufferSize(new THREE.Vector2()); S.o.material.uniforms.uPx.value=v.y/(2*Math.tan(cam.fov*DEG/2));
+  G.setDrawRange(0,S.n); for(const a of ['position','aSz','aAl']) G.attributes[a].needsUpdate=true; }
 // Moving the 3D view: zooming out past the limit goes back to the chart; panning moves the focus over the sea.
 function tr3Dist(d){ if(TR.view.chase){ TR3.cdist=clamp(d*(TR3.cdist||45)/TR3.dist,12,900); return; } if(d>DIST2D){ trLeave3D(); return; } TR3.dist=Math.max(40,d); }
 function tr3Yaw(){ const L=TR.view.follow?TR.ship:trLockT(), th=L?(90-L.hdg)*DEG:0; return TR3.follow&&L?TR3.yaw-th:TR3.yaw; }
@@ -5592,44 +5851,9 @@ function tr3Click(e){ const r=$('#tr3').getBoundingClientRect(), nd=new THREE.Ve
   const o=rc.ray.origin, d=rc.ray.direction; if(d.y>=-1e-4) return; const k=-o.y/d.y; trMapClick((TR3.FE+o.x+d.x*k)/1000,(TR3.FN-(o.z+d.z*k))/1000); }
 function smokeTexture(){ const o=document.createElement('canvas'); o.width=o.height=64; const g=o.getContext('2d'), gr=g.createRadialGradient(32,32,2,32,32,31);
   gr.addColorStop(0,'rgba(255,255,255,.9)'); gr.addColorStop(.55,'rgba(255,255,255,.4)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(o); }
-// Her wake astern, on the ribbon laid along her track (u: its age, 0 at her stern to 1 at the end; v: across it). White water churned
-// up by her propellers, solid close astern, then spreading and breaking into patches and streaks that thin out and die away. The
-// churning is laid in the water (the same noise as the sea's foam), so she draws away from it rather than towing a picture behind her.
 // The sea's wave motion, for anything laid on the water (wakes): uniforms shared with the sea, and the vertex code that lifts a point with it.
 const SEA_ON_HEAD=()=>'uniform vec4 uW[10];\nuniform vec2 uQ[10];\nuniform vec4 uCalm[8];\nuniform float uSp;\nvarying vec2 vWP;\n'+SEA_KELV;
-function seaUniRefs(){ const u=TR3.seaU; return u?{uW:u.uW,uQ:u.uQ,uCalm:u.uCalm,uKel:u.uKel,uSp:u.uSp,uFo:u.uFo}:{uW:{value:Array.from({length:10},()=>new THREE.Vector4())},uQ:{value:Array.from({length:10},()=>new THREE.Vector2())},uCalm:{value:Array.from({length:8},()=>new THREE.Vector4())},uKel:{value:Array.from({length:8},()=>new THREE.Vector4())},uSp:{value:.03},uFo:{value:new THREE.Vector3()}}; }
-function wakeMaterial(){
-  const m=new THREE.ShaderMaterial({uniforms:Object.assign(THREE.UniformsUtils.merge([THREE.UniformsLib.fog,{uOp:{value:.6}}]),seaUniRefs()),
-    vertexShader:SEA_ON_HEAD()+`varying vec2 vUv;
-varying vec2 vW;
-#include <fog_pars_vertex>
-void main(){ vUv=uv; vW=position.xz; `+SEA_GLSL+` vec4 mvPosition=modelViewMatrix*vec4(position+gd+vec3(0.0,0.14,0.0),1.0); gl_Position=projectionMatrix*mvPosition;
-#include <fog_vertex>
-}`,
-    fragmentShader:`uniform sampler2D uFN;
-uniform vec3 uFo;
-uniform float uOp;
-varying vec2 vUv;
-varying vec2 vW;
-#include <fog_pars_fragment>
-void main(){ float age=vUv.x, v=abs(vUv.y*2.0-1.0);
-  vec2 wp=vW+uFo.xy;
-  float n=texture2D(uFN,wp/64.0+vec2(uFo.z*0.003,-uFo.z*0.002)).r*0.55+texture2D(uFN,wp/16.0+vec2(-uFo.z*0.008,uFo.z*0.012)).r*0.3+texture2D(uFN,wp/5.0).r*0.15;
-  float core=exp(-v*v*mix(1.5,4.5,age));
-  float dens=clamp(core*exp(-age*6.0)*uOp+core*(1.0-smoothstep(0.0,0.03,age))*0.6,0.0,1.0);   // solid only close astern, patchy within a few hundred metres
-  float edge=1.0-smoothstep(0.7,1.0,v+0.25*(n-0.5));
-  float th=1.0-dens*0.9, a=smoothstep(th,th+0.28,n)*(0.35+0.65*dens);
-  float slick=0.16*core*(1.0-age)*uOp*edge;   // the smoothed, paler water of the wake after the foam has gone
-  a*=edge; vec3 col=mix(vec3(0.62,0.80,0.88),vec3(0.94,0.97,0.99),clamp(a*3.0,0.0,1.0));
-  gl_FragColor=vec4(col,max(a*0.95,slick));
-#include <fog_fragment>
-}`,transparent:true,depthWrite:false,side:THREE.DoubleSide,fog:true});
-  m.uniforms.uFN={value:foamNoise()}; return m; }   // set after the merge, which would otherwise copy the texture
-// Foam along the waterline, heaviest at the bow.
-function foamRibbon(cv,cs){ const L=cv.L, ln=cvLines(cv,cs), fm=new THREE.MeshBasicMaterial({map:foamTexture(),transparent:true,depthWrite:false,side:THREE.DoubleSide}), P=[], U=[], I=[];
-  for(const s of [1,-1]){ const base=P.length/3; for(let i=0;i<=60;i++){ const m=ln.foot+(L-ln.foot)*i/60, w=ln.b(m,cs.T), wide=1.2+5*Math.exp(-(((m-ln.foot)/(L*.08))**2));
-      P.push(L/2-m,.06,s*(w+.15),L/2-m,.06,s*(w+wide)); U.push(i/60,.5,i/60,s>0?1:0); if(i) I.push(base+2*i-2,base+2*i-1,base+2*i+1,base+2*i-2,base+2*i+1,base+2*i); } }
-  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2)); g.setIndex(I); return new THREE.Mesh(g,fm); }
+function seaUniRefs(){ const u=TR3.seaU; return u?{uW:u.uW,uQ:u.uQ,uCalm:u.uCalm,uKel:u.uKel,uSp:u.uSp,uFo:u.uFo,uKT:u.uKT}:{uKT:{value:ktTex()},uW:{value:Array.from({length:10},()=>new THREE.Vector4())},uQ:{value:Array.from({length:10},()=>new THREE.Vector2())},uCalm:{value:Array.from({length:8},()=>new THREE.Vector4())},uKel:{value:Array.from({length:8},()=>new THREE.Vector4())},uSp:{value:.03},uFo:{value:new THREE.Vector3()}}; }
 // The sky: a dome shaded from the horizon (the colour of the haze, so the sea fades into it) up to the zenith, greyer as cloud
 // thickens and darker in rain, with the sun's glow when it shows. It moves with the camera.
 function skyDome(wx){ const g=new THREE.SphereGeometry(50000,32,16), m=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,
@@ -5672,12 +5896,10 @@ function tr3Build(){
   const sca=sun.shadow.camera; sca.left=sca.bottom=-L*.65; sca.right=sca.top=L*.65; sca.far=L*3; sun.shadow.bias=-.0006; sun.shadow.normalBias=.12; sc.add(sun);
   TR3.flash=new THREE.PointLight(0xffc27a,0,9000,1.4); sc.add(TR3.flash);   // dark until a magazine goes up
   const seaT=seaTexture(), sea=seaMesh(seaT); sc.add(sea); TR3.waves=seaWaves(R.sea,R.wind.from);
-  const yawG=new THREE.Group(), ship=new THREE.Group(), mesh=cvMesh(cv,cs,{lifts:true}), foam=foamRibbon(cv,cs);
-  try{ const keep=new Set([...mesh.lifts.filter(Boolean).map(v=>v.o),...mesh.wires.flatMap(w=>[w.a,w.b]),mesh.barrier].filter(Boolean)); mergeStatic(mesh.grp,keep); }catch(e){ console.error(e); } ship.add(mesh.grp); yawG.add(ship); yawG.add(foam); sc.add(yawG);
-  // her wake: a ribbon laid along the track her stern has followed, widening and fading astern
-  const NW=120, wpos=new Float32Array(NW*6), wuv=new Float32Array(NW*4), wi=[]; for(let i=0;i<NW-1;i++){ const a=2*i; wi.push(a,a+1,a+3,a,a+3,a+2); }
-  const wg=new THREE.BufferGeometry(); wg.setAttribute('position',new THREE.BufferAttribute(wpos,3)); wg.setAttribute('uv',new THREE.BufferAttribute(wuv,2)); wg.setIndex(wi); wg.setDrawRange(0,0);
-  const wake=new THREE.Mesh(wg,wakeMaterial()); wake.frustumCulled=false; sc.add(wake);
+  const yawG=new THREE.Group(), ship=new THREE.Group(), mesh=cvMesh(cv,cs,{lifts:true});
+  try{ const keep=new Set([...mesh.lifts.filter(Boolean).map(v=>v.o),...mesh.wires.flatMap(w=>[w.a,w.b]),mesh.barrier].filter(Boolean)); mergeStatic(mesh.grp,keep); }catch(e){ console.error(e); } ship.add(mesh.grp); yawG.add(ship); sc.add(yawG);
+  // white water, wakes and spray: worked out in the water itself (see wkFrame) and thrown up as spray (see sprayFrame)
+  TR3.wx=wx; TR3.mo=new WeakMap(); if(TR3.wk) TR3.wk.clear=true; TR3.spray=sprayMake(wx); sc.add(TR3.spray.o);
   // funnel smoke: puffs that drift away on the true wind as she steams on
   const stx=smokeTexture(), puffs=[]; for(let i=0;i<70;i++){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:stx,color:0x5d6266,transparent:true,depthWrite:false,opacity:0,fog:true})); s.visible=false; sc.add(s); puffs.push({s,t0:-1e9}); }
   // aircraft: one model per design, cloned for each aircraft, gear down, and the height that puts its wheels on the deck
@@ -5697,7 +5919,7 @@ function tr3Build(){
   { const want=[...new Map(cvAll().flatMap(C=>C.planes).map(p=>[p.d.name,p.d])).values()], idle=window.requestIdleCallback?f=>requestIdleCallback(f,{timeout:400}):f=>setTimeout(f,40);
     const next=()=>{ if(TR3.key!==R) return; const d=want.shift(); if(!d) return; if(!tpl.has(d.name)) try{ TR3.planeTpl(d); TR3.planeLow&&TR3.planeLow(d); }catch(e){} idle(next); }; idle(next); }
   const th0=(90-R.ship.hdg)*DEG;
-  Object.assign(TR3,{scene:sc,yawG,ship,sea,seaT,tile:SEATILE,foam,wake,wpos,wuv,NW,trail:[],puffs,smokeAt:mesh.smoke,nextPuff:R.t,key:R,lastT:null,fails:0,planes:new Map(),fprev:new Map(),
+  Object.assign(TR3,{scene:sc,yawG,ship,sea,seaT,tile:SEATILE,trail:[],puffs,smokeAt:mesh.smoke,nextPuff:R.t,key:R,lastT:null,fails:0,planes:new Map(),fprev:new Map(),
     lifts:mesh.lifts.map(v=>v&&Object.assign(v,{pos:0,t0:null,start:0})),wires:mesh.wires,barrier:mesh.barrier,barUp:0});
   TR3.yaw=TR3.follow?.9:.9-th0; TR3.pitch=TR3.pitch??.28; TR3.dist=TR3.dist||1300;
   if(!TR3.bound){ TR3.bound=true; const cvs=$('#tr3'), pts=new Map(); let dr=null, pan=false, pinch=null, moved=false;
@@ -5711,8 +5933,8 @@ function tr3Build(){
     cvs.addEventListener('pointerup',up); cvs.addEventListener('pointercancel',e=>{ pts.delete(e.pointerId); dr=null; pinch=null; });
     cvs.addEventListener('wheel',e=>{ e.preventDefault(); if(TR) tr3Dist(TR3.dist*Math.exp(e.deltaY*.0012)); },{passive:false}); }
 }
-function tr3Calm(x,z,th){ const sh=TR.ship, out=[{x,z,th,L:TR.cv.L,kn:sh.status==='afloat'||!sh.status?sh.kn:0,B:TR.cv.B}], o=[];
-  for(const T of TR.tgts){ if(T.status==='sunk'||T===TR.ship) continue; const tx=T.x*1000-TR3.FE, tz=-(T.y*1000-TR3.FN), d=Math.hypot(tx,tz); if(d<20000) o.push({x:tx,z:tz,th:(90-T.hdg)*DEG,L:T.L,kn:T.status==='afloat'?T.kn||0:0,B:T.B,wake:true,d}); }
+function tr3Calm(x,z,th){ const sh=TR.ship, out=[{o:sh,x,z,th,L:TR.cv.L,kn:sh.status==='afloat'||!sh.status?sh.kn:0,B:TR.cv.B}], o=[];
+  for(const T of TR.tgts){ if(T.status==='sunk'||T===TR.ship) continue; const tx=T.x*1000-TR3.FE, tz=-(T.y*1000-TR3.FN), d=Math.hypot(tx,tz); if(d<20000) o.push({o:T,x:tx,z:tz,th:(90-T.hdg)*DEG,L:T.L,kn:T.status==='afloat'?T.kn||0:0,B:T.B,wake:true,d}); }
   return out.concat(o.sort((a,b)=>a.d-b.d).slice(0,7)); }
 const ease3=u=>{ u=clamp(u,0,1); return u*u*(3-2*u); };
 // Starting an engine: a pause while the starter is made ready, a few slow turns on the starter, then she fires and runs up to speed.
@@ -5733,18 +5955,12 @@ function tr3Frame(){
   // her heading, and the sea going past
   const th=(90-sh.hdg)*DEG, E=sh.x*1000, N=sh.y*1000, FC=trFocus(), FE=FC.x*1000, FN=FC.y*1000; TR3.FE=FE; TR3.FN=FN; TR3.yawG.rotation.y=th; TR3.yawG.position.set(E-FE,0,-(N-FN));
   TR3.seaT.offset.set((FE/SEATILE)%1,(FN/SEATILE)%1); seaUpdate(t,FE,FN,tr3Calm(E-FE,-(N-FN),th));
-  // her motion: roll and pitch at their natural periods with the significant amplitudes for this sea, varying a little like real swell
+  // her motion: she rides the actual waves, heaving and pitching to the sea along her length (so short seas average out and long ones lift
+  // her), and rolls at her natural period with the significant amplitude for this sea, varying a little like real swell
   const wav=(f,ph)=>Math.sin(t*2*Math.PI/f+ph)*.75+Math.sin(t*2*Math.PI/(f*1.37)+ph*2.1)*.25;
-  TR3.ship.rotation.set(wav(m.Tr,0)*m.roll*DEG*.7,0,wav(m.Tq,1.3)*m.pitch*DEG*.7); TR3.ship.position.y=wav(m.Tq*1.1,2.2)*m.stern*.15;
-  TR3.foam.material.opacity=clamp(sh.kn/18,0,1)*.95; TR3.scene.updateMatrixWorld();
-  // the wake, from the stern back along her track
-  const hs=Math.sin(sh.hdg*DEG), hc=Math.cos(sh.hdg*DEG), se=E-hs*cv.L*.46, sn=N-hc*cv.L*.46, life=150, tr=(R.track||[]).filter(p=>t-p.t<=life).slice(0,TR3.NW-1);
-  { const pts=[{e:se,n:sn,t},...tr.filter((p,i)=>i||Math.hypot(p.e-se,p.n-sn)>1)], P=TR3.wpos, U=TR3.wuv, n=pts.length;
-    for(let i=0;i<n;i++){ const a=pts[Math.max(0,i-1)], b=pts[Math.min(n-1,i+1)]; let de=a.e-b.e, dn=a.n-b.n; const l=Math.hypot(de,dn); if(l<1e-3){ de=hs; dn=hc; } else { de/=l; dn/=l; }
-      const p=pts[i], age=t-p.t, hw2=Math.min(cv.B*1.2,cv.B*.45+age*.3), x=p.e-FE, z=-(p.n-FN), px=-dn*hw2, pz=-de*hw2, wy=.12+Math.min(1,age/25)*waveH(p.e,-p.n,t);
-      P.set([x+px,wy,z+pz,x-px,wy,z-pz],i*6); const u=Math.min(1,(age/life)**1.6); U.set([u,0,u,1],i*4); }
-    TR3.wake.geometry.setDrawRange(0,Math.max(0,n-1)*6); TR3.wake.geometry.attributes.position.needsUpdate=true; TR3.wake.geometry.attributes.uv.needsUpdate=true;
-    TR3.wake.material.uniforms.uOp.value=clamp(.1+sh.kn/18,.1,.95); }
+  TR3.wkShips=[]; const afl=sh.status==='afloat'||!sh.status, mo=shipMotion(sh,cv.L,cv.B,E,N,sh.hdg,afl?sh.kn*KN:0,t,dt,jump);
+  TR3.ship.rotation.set(wav(m.Tr,0)*m.roll*DEG*.7,0,mo.pitch); TR3.ship.position.y=mo.heave; TR3.scene.updateMatrixWorld();
+  if(afl) TR3.wkShips.push(mo);
   // smoke from the funnels, carried off by the true wind
   { const [wx,wy]=hdgV(R.wind.from+180), ws=R.wind.kn*KN, P=TR3.puffs; if(jump) for(const q of P){ q.t0=-1e9; q.s.visible=false; } TR3.nextPuff=Math.max(TR3.nextPuff,t-12);
     while(TR3.nextPuff<=t){ for(const v of TR3.smokeAt){ const wv=TR3.ship.localToWorld(v.clone()), q=P.reduce((a,b)=>a.t0<b.t0?a:b); q.t0=TR3.nextPuff; q.e=FE+wv.x; q.n=FN-wv.z; q.y=wv.y; } TR3.nextPuff+=1.6; }
@@ -5882,6 +6098,8 @@ function tr3Frame(){
   if(!chased){ cam.position.set(tg.x+D*Math.cos(TR3.pitch)*Math.cos(yc),tg.y+D*Math.sin(TR3.pitch),tg.z+D*Math.cos(TR3.pitch)*Math.sin(yc));
   cam.position.y=Math.max(cam.position.y,waveH(FE+cam.position.x,cam.position.z-FN,t)+3); cam.lookAt(tg); }
   if(typeof tgt3Frame==='function') tgt3Frame(FE,FN,t,dt,jump);
+  if(!TR3.wkOff) try{ wkFrame(TR3.r,FE,FN,t,dt,jump); }catch(e){ console.error(e); TR3.wkOff=true; }
+  sprayFrame(FE,FN,t,dt,jump,cam);
   { const P=[], wp=new THREE.Vector3(); for(const rec of TR3.planes.values()){ if(!rec.o.visible||!(rec.rpmNow>.05)) continue; rec.o.getWorldPosition(wp); P.push({d:wp.distanceTo(cam.position),rpm:rec.rpmNow,jet:rec.jet,air:rec.air}); }
     try{ TSND.frame(cam.position,FE,FN,P); }catch(e){ console.error(e); } }
   { const [wx2,wy2]=hdgV(R.wind.from+180), ws=R.wind.kn*KN; if(TR3.sky) TR3.sky.position.copy(cam.position);
@@ -6253,7 +6471,7 @@ function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
   // the ships
   const rollA=T=>clamp(R.sea.hs*2.4*(16/T.B),.3,12);
   for(const T of R.tgts){ let r=TR3.tg.get(T.id); const x=T.x*1000-FE, z=-(T.y*1000-FN);
-    if(T===R.ship){ TR3.ship.visible=T.status!=='sunk'&&T.status!=='blown'; TR3.foam.visible=T.status==='afloat'; }
+    if(T===R.ship){ TR3.ship.visible=T.status!=='sunk'&&T.status!=='blown'; }
     if(T.status==='sunk'||Math.hypot(x,z)>20000){ if(r) r.outer.visible=false; continue; }
     const cur=T===R.ship&&T.status!=='blown'; if(cur){ if(r) r.outer.visible=false; r={inner:TR3.ship}; } else if(!r){ r=tgt3Make(T); TR3.tg.set(T.id,r); }
     if(T.status==='blown'&&!cur&&!r.halves) tgt3Break(T,r); if(!r.halves) tgt3Marks(T,r.inner);
@@ -6266,8 +6484,9 @@ function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
         half.rotation.z=sg*pitch; half.position.x=r.bx+sg*Math.min(1,ab/3)*T.L*.02+run; half.position.y=-(P.len*Math.sin(P.pitch*DEG)+T.D*1.3)*q; }); } }
     const Tr=.78*T.B/Math.sqrt(Math.max(.3,T.gm)), A=T.status==='afloat'?rollA(T):0;
     if(cur){ TR3.ship.rotation.x+=list*DEG; TR3.ship.rotation.z+=trim*DEG; TR3.ship.position.y-=sink; } else { r.outer.visible=true; r.outer.position.set(x,0,z); r.outer.rotation.y=(90-T.hdg)*DEG;
-    r.inner.rotation.set((list+A*Math.sin(t*2*Math.PI/Tr+T.ph))*DEG,0,(trim+A*.25*Math.sin(t*2*Math.PI/(Tr*.6)+T.ph*2))*DEG);
-    r.inner.position.y=-sink+W(x,z)*.35; }
+    const afl=T.status==='afloat', mo=shipMotion(T,T.L,T.B,T.x*1000,T.y*1000,T.hdg,afl?(T.kn||0)*KN:0,t,dt,jump); if(afl) TR3.wkShips.push(mo);
+    r.inner.rotation.set((list+A*Math.sin(t*2*Math.PI/Tr+T.ph))*DEG,0,trim*DEG+(T.status==='sinking'||T.status==='capsizing'?0:mo.pitch));
+    r.inner.position.y=-sink+(T.status==='afloat'?mo.heave:W(x,z)*.35); }
     // smoke and flame from every fire, the flames low on her and the smoke carried off downwind
     r.inner.updateMatrixWorld(true); charFrame(T,r,t); if(r.halves){ for(const h of r.halves) h.userData.plane.copy(h.userData.local).applyMatrix4(h.matrixWorld); tgt3CutFrame(T,r,t); }
     for(const c of T.comps){ const k=Math.max(c.fire,c.ufire); if(k<.05||T.status!=='afloat'&&f>.6) continue;
@@ -6280,13 +6499,18 @@ function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
   for(const q of TR3.smokes){ const a=t-q.t0, s=sprTake(TR3.smk); if(!s) break; s.position.set(q.x+wx*ws*a-FE,q.y+2.4*a,q.z-wy*ws*a+FN); const k=(6+a*(1.2+q.k))*FXBIG; s.scale.set(k,k,1); s.material.opacity=.62*(1-a/60)*Math.min(1,a/1.5+.3); }
   // weapons: torpedo tracks, bombs falling, and what happened when they arrived
   { const G=TR3.twake.geometry, P=G.attributes.position.array, U=G.attributes.uv.array, A=G.attributes.aAge.array; let k=0;
-    for(const q of R.torps){ if(k>=TWN) break; const extra=q.done?t-q.doneT:0; if(extra>75) continue;
+    const tk=torpTrack(R.sea), RS=G.attributes.aRise.array, TP=TR3.wkTorps=[];
+    for(const q of R.torps){ if(k>=TWN) break; const extra=q.done?t-q.doneT:0, rise=(q.dep||4)/TBUB; if(extra>tk.life+rise) continue;
       const x0=q.x0*1000-FE, z0=-(q.y0*1000-FN), x1=q.x*1000-FE, z1=-(q.y*1000-FN), L=Math.hypot(x1-x0,z1-z0), v=Math.max(1,q.v); if(L<1||Math.hypot(x1,z1)>15000) continue;
-      const ux=(x1-x0)/L, uz=(z1-z0)/L, s0=Math.max(0,L-v*80);
-      for(let i=0;i<TW;i++){ const sd=s0+(L-s0)*i/(TW-1), age=(L-sd)/v+extra, w=.6+Math.min(4.2,age*.1), x=x0+ux*sd, z=z0+uz*sd, y=W(x,z)+.15, j=(k*TW+i)*2;
-        P.set([x-uz*w,y,z+ux*w,x+uz*w,y,z-ux*w],j*3); U.set([sd,-1,sd,1],j*2); A[j]=age; A[j+1]=age; }
+      const ux=(x1-x0)/L, uz=(z1-z0)/L, s0=Math.max(0,L-v*(tk.life+rise-extra)), s1=Math.max(s0,L-v*Math.max(0,rise*.4-extra));   // nothing shows until the first bubbles are up
+      if(s1-s0<1) continue;
+      // where the bubbles are breaking surface now, for the wake in the water (the slick and the paler water they leave)
+      { const a=Math.max(0,L-v*Math.max(0,rise-extra)), b=Math.max(0,L-v*Math.max(0,rise-extra-Math.max(dt,.05))); if(b>a+.01) TP.push({e0:x0+ux*a+FE,n0:FN-(z0+uz*a),e1:x0+ux*b+FE,n1:FN-(z0+uz*b)}); }
+      for(let i=0;i<TW;i++){ const sd=s0+(s1-s0)*i/(TW-1), age=(L-sd)/v+extra, w=tk.w(age,rise), x=x0+ux*sd, z=z0+uz*sd, y=W(x,z)+.15, j=(k*TW+i)*2;
+        P.set([x-uz*w,y,z+ux*w,x+uz*w,y,z-ux*w],j*3); U.set([sd,-w,sd,w],j*2); A[j]=age; A[j+1]=age; RS[j]=rise; RS[j+1]=rise; }
       k++; }
-    G.setDrawRange(0,k*(TW-1)*6); G.attributes.position.needsUpdate=true; G.attributes.uv.needsUpdate=true; G.attributes.aAge.needsUpdate=true; }
+    const mu=TR3.twake.material.uniforms; mu.uTau.value=tk.tau; mu.uVis.value=tk.vis;
+    G.setDrawRange(0,k*(TW-1)*6); for(const a of ["position","uv","aAge","aRise"]) G.attributes[a].needsUpdate=true; }
   for(const b of R.bombs){ if(b.done||t<b.t0) continue; const u=clamp((t-b.t0)/(b.t1-b.t0),0,1), x=(b.rx+(b.x-b.rx)*u)*1000-FE, z=-((b.ry+(b.y-b.ry)*u)*1000-FN), y=b.ralt*(1-u*u*.6-u*.4)+(1-u)*0, m=sprTake(TR3.bmb); if(!m) break;
     m.position.set(x,y,z); m.rotation.set(0,(90-b.hdg)*DEG,-(Math.PI/2)*Math.min(1,u*1.4+(b.dive?.7:0))); }
   for(const fx of R.fx){ const a=t-fx.t, x=fx.x*1000-FE, z=-(fx.y*1000-FN); if(a<0||a>70||Math.hypot(x,z)>15000) continue; const y0=W(x,z);
