@@ -336,6 +336,31 @@ legend{padding:0;margin-bottom:6px}
 .agall{position:sticky;bottom:-14px;background:var(--surface);padding:8px 0;border-top:1px solid var(--line)}
 .agsq{display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:6px;font-size:13.5px;flex-wrap:wrap}
 .agsq .st{font-size:12.5px;color:var(--muted)}
+.agbox{width:min(1500px,100%)}
+.agcvs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+@media(max-width:980px){.agcvs{grid-template-columns:minmax(0,1fr)}}
+.agcv{padding:8px 10px;gap:6px;font-size:12.5px}
+.agcv>h4{font-size:14px}
+.agcv .btn{padding:4px 9px;font-size:12px;min-height:0}
+.agcv .label{font-size:10.5px;margin:2px 0 0}
+.agcols{display:flex;flex-direction:column;gap:5px}
+.agcol{min-height:0;padding:4px 7px;gap:3px}
+.agcol h4{font-size:10.5px}
+.agcol.empty{opacity:.7}
+.agtype{font-size:11px}
+.agp{width:24px;height:24px;padding:1px;border-radius:4px}
+.agp svg{width:20px;height:20px}
+.agp .n{font-size:8px}
+.agsq{font-size:12.5px;gap:8px;padding-top:4px}
+.agsq .st{font-size:11.5px}
+.agdeck .trrow,.agdeck .trtype{font-size:12px;gap:3px 8px}
+.agdeck .trtype .mono{font-size:11px}
+.agdeck{gap:5px}
+.agdeck label{font-size:11.5px!important}
+.trview.trfs{position:fixed;inset:0;z-index:25;max-height:none;min-height:0;aspect-ratio:auto;border-radius:0}
+.trfsbar{position:absolute;top:10px;right:10px;display:none;gap:8px;align-items:center;z-index:2}
+.trview.trfs .trfsbar{display:flex}
+.trfsbar .hint{font:500 11px "IBM Plex Mono",monospace;color:rgba(255,255,255,.75);background:rgba(0,0,0,.4);padding:4px 7px;border-radius:4px}
 .trfl .st{font-size:12.5px;color:var(--muted)}
 .trlog{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:13px;max-height:22em;overflow:auto}
 .trlog .mono{color:var(--muted);font-size:12px;margin-right:6px}
@@ -457,9 +482,10 @@ legend{padding:0;margin-bottom:6px}
             <button class="btn ghost" data-trspawn="DD" title="Destroyer">DD</button><button class="btn ghost" data-trspawn="CL" title="Light cruiser">CL</button><button class="btn ghost" data-trspawn="CA" title="Heavy cruiser">CA</button><button class="btn ghost" data-trspawn="BC" title="Battlecruiser">BC</button><button class="btn ghost" data-trspawn="BB" title="Battleship">BB</button><button class="btn ghost" data-trspawn="CV" title="Carrier">CV</button></span>
             <span class="trbtns"><button class="btn ghost" id="trtfbtn" hidden>Enemy task force</button><button class="btn" id="trair">Airgroups</button></span></div>
           <div class="trview"><canvas id="trmap" aria-label="Chart of the trials area, with the ship, the wind, target ships and the flights aloft. Drag to move it, scroll or pinch to zoom, and zoom right in to see that spot in 3D. Click to steer toward a point."></canvas>
-            <canvas id="tr3" hidden aria-label="The sea in 3D at the spot you zoomed in on. Drag to turn the view, right-drag or shift-drag to move it, scroll to zoom; zoom out to go back to the chart."></canvas></div>
+            <canvas id="tr3" hidden aria-label="The sea in 3D at the spot you zoomed in on. Drag to turn the view, right-drag or shift-drag to move it, scroll to zoom; zoom out to go back to the chart."></canvas>
+            <div class="trfsbar"><span class="hint">Esc to leave full screen</span><button class="btn" id="trfsair">Airgroups</button></div></div>
           <div class="trbtns"><button class="btn ghost" id="trzin" aria-label="Zoom in">+</button><span class="mono" id="trzoom" style="display:inline-block;min-width:14ch;text-align:center"></span><button class="btn ghost" id="trzout" aria-label="Zoom out">−</button>
-            <button class="btn ghost" id="trfollow" aria-pressed="true">Follow ship</button><button class="btn ghost" id="trgrid" aria-pressed="false">Squares</button><button class="btn ghost" id="trwind" aria-pressed="false">Wind arrows</button><button class="btn ghost" id="trrings" aria-pressed="true">Strike range</button><button class="btn ghost" id="trsight" aria-pressed="true" hidden>Sight</button><button class="btn ghost" id="trturn" aria-pressed="false" hidden>Turn with her</button><span class="trbtns" id="trchase" hidden><button class="btn ghost" id="trcprev" aria-label="Follow the previous aircraft of this flight">◂ Aircraft</button><span class="mono" id="trcname" style="font-size:12px"></span><button class="btn ghost" id="trcnext" aria-label="Follow the next aircraft of this flight">Aircraft ▸</button><button class="btn ghost" id="trcstop">Stop following</button></span>
+            <button class="btn ghost" id="trfollow" aria-pressed="true">Follow ship</button><button class="btn ghost" id="trgrid" aria-pressed="false">Squares</button><button class="btn ghost" id="trwind" aria-pressed="false">Wind arrows</button><button class="btn ghost" id="trrings" aria-pressed="true">Strike range</button><button class="btn ghost" id="trallow3d" aria-pressed="true">Allow 3D</button><button class="btn ghost" id="trfull">Full screen</button><button class="btn ghost" id="trsight" aria-pressed="true" hidden>Sight</button><button class="btn ghost" id="trturn" aria-pressed="false" hidden>Turn with her</button><span class="trbtns" id="trchase" hidden><button class="btn ghost" id="trcprev" aria-label="Follow the previous aircraft of this flight">◂ Aircraft</button><span class="mono" id="trcname" style="font-size:12px"></span><button class="btn ghost" id="trcnext" aria-label="Follow the next aircraft of this flight">Aircraft ▸</button><button class="btn ghost" id="trcstop">Stop following</button></span>
             <span class="muted" id="trhint" style="font-size:12.5px">Drag to move the chart. Scroll to zoom: right in, it turns to 3D. Click to steer.</span></div></div>
         <div class="panel" id="trtf" hidden></div>
         <div class="panel" id="trscout" hidden></div>
@@ -3676,6 +3702,22 @@ const DROPS=[
     'Fighters on a sortie strafe the ships when no enemy fighters are about: they knock out light anti-aircraft guns, pock the decks with bullet holes, and wreck or hole aircraft on a carrier’s deck. They draw the light guns’ fire as they do it.',
     'Trials in 3D: aircraft fly smoothly, and the camera follows them without shaking. Everything makes a sound, as loud as it is near the camera: the sea and wind, ships’ machinery and wash, aircraft engines, guns, flak, bombs, splashes and torpedoes dropped.',
   ]},
+  {at:'2026-11-24T16:08:00+13:00',items:[
+    'Carriers on the chart are always drawn from their 3D model, at any zoom, kept to a readable size when zoomed far out.',
+    'Allow 3D, beside Strike range: on to begin with. Turned off, the chart zooms right in instead of turning to 3D.',
+    'Full screen, for the chart and the 3D view: nothing on screen but the Airgroups button. Esc leaves it.',
+    'The Airgroups screen is compact: hangar, deck and airborne stacked, each only as big as its aircraft need, smaller symbols and writing, and two carriers side by side.',
+    'Click one of your flights on the chart, then click where it should go: on enemy ships or aircraft it attacks them, on one of your carriers its fighters patrol and its bombers land, anywhere else it flies there and holds. Shift-click to add more legs.',
+    'Patrols fly a big circle over the fleet, each flight spaced evenly round it. A squadron alone splits into two flights, opposite each other. Patrolling aircraft no longer shake on the chart.',
+    'Flights fly in a V with three, five or more aircraft; two fly side by side and four in two pairs.',
+    'Flights on the chart are labelled like Squadron 2 - Patrolling, with what they are made of beneath: 8 Fighters, 4 Dive Bombers. Enemy flights too.',
+    'Enemy scouts and strikes are squadrons and flights, named like yours.',
+    'Scouts that find enemy ships stay with them, circling out of reach of their guns, until fuel runs low or enemy fighters that outnumber them drive them off.',
+    'Recalling a squadron whose aircraft are spread out no longer gathers them all in one place: each flight turns for home from where it is.',
+    'Torpedo bombers attack from different sides at once, from ahead and from either beam, so a ship cannot turn away from all of them.',
+    'Task forces read 4 CV, 3 DD. The crosshair over a target goes once the attack begins. A ship’s list shows how bad it is, as 1° (Negligible), Minor, Moderate, Severe or Critical, and the count of fires is gone from the chart.',
+    'Smoother: every aircraft type’s 3D model, and every carrier’s chart picture, is made in idle moments instead of in the middle of a frame, which caused stalls of up to half a second; aircraft far from the camera are drawn as one shape instead of about sixty, and only those near it cast shadows.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -4273,6 +4315,7 @@ function trStepCV(dt){
   if(R.ops!=='launch') for(const f of R.flights) f.fresh=false;
   // in the air: flights fly their missions; the fuel runs down; low fuel turns them for home
   for(const f of R.flights){ f.planes=f.planes.filter(p=>p.state==='air'); if(!f.planes.length) continue;
+    if(f.capWait!=null&&(t-f.t0>600||!R.planes.some(p=>p.sq===f.capWait&&p.task==='cap'&&!['air','circuit','lost'].includes(p.state)))){ const n=R.flights.filter(q=>q!==f&&q.capSq===f.capWait&&q.mission==='cap').length; f.capSq=f.capWait; f.capWait=null; f.mission='cap'; f.role='fighter'; if(n) f.name=`${f.name.replace(/, flight \d+$/,'')}, flight ${n+1}`; }
     if(f.scWait&&(t-f.t0>900||!R.planes.some(p=>p.task==='scout'&&p.scout&&p.scout.key===f.scKey&&p.state!=='lost'))){ const w=f.scWait; f.scWait=null; f.mission='scout'; f.phase='out'; f.tx=w.x; f.ty=w.y; f.role=roleMix(f.planes); trLog(`${f.name} sets off with ${f.planes.length} aircraft.`); }
     let spd=Math.min(...f.planes.map(p=>p.st.cruise))/3600; const home=Math.hypot(sh.x-f.x,sh.y-f.y), need=home/spd+600;
     if(f.mission!=='home'&&Math.min(...f.planes.map(p=>p.fuel))<need){ f.mission='home'; trLog(`${f.name} is short of fuel and turns for home.`); }
@@ -4283,6 +4326,10 @@ function trStepCV(dt){
         if(Math.min(...seen.map(T=>Math.hypot(T.x-f.x,T.y-f.y)))<14) atkBegin(f); }
       else if(f.phase==='out'){ tx=f.tx; ty=f.ty; if(Math.hypot(tx-f.x,ty-f.y)<spd*dt*1.5+1){ f.phase='search'; f.srch={x:f.tx,y:f.ty,t0:t,a:Math.random()*2*Math.PI}; trLog(`${f.name} reaches where ${grpName(f.tgtG)} was ${f.red?'reported':'last seen'} and finds nothing there: it spreads out to search.`,true); } }
       else { const q=srchPt(f,t+90); tx=q.x; ty=q.y; f.shdg=bearing(tx-f.x,ty-f.y); } }
+    else if(f.mission==='move'){ const q=f.route&&f.route[0]; orbit=false; if(!q){ f.mission='hold'; f.hx=f.x; f.hy=f.y; } else { tx=q.x; ty=q.y; if(Math.hypot(tx-f.x,ty-f.y)<spd*dt*1.5+.2){ f.route.shift(); if(!f.route.length){ f.mission='hold'; f.hx=q.x; f.hy=q.y; trLog(`${f.name} has reached the marker and holds there.`); } } } }
+    else if(f.mission==='hold'){ tx=f.hx; ty=f.hy; orbit=true; }
+    else if(f.mission==='intercept'){ const g=f.itgt; if(!g||!g.planes.some(p=>p.state==='air')){ f.mission='hold'; f.hx=f.x; f.hy=f.y; f.itgt=null; trLog(`${f.name}: the enemy it was after has gone. It holds where it is.`); } else { tx=g.x; ty=g.y; orbit=false; spd=Math.min(...f.planes.map(p=>p.st.speed))*.9/3600; } }
+    else if(f.mission==='scout'&&['out','area','shadow'].includes(f.phase)&&(f._sh=scoutShadow(f,t,dt))){ tx=f._sh.x; ty=f._sh.y; orbit=false; f.shdg=bearing(tx-f.x,ty-f.y); }
     else if(f.mission==='scout'||f.mission==='strike'){ if(f.phase==='out'){ const T=f.tgt&&R.tgts.find(q=>q.id===f.tgt); if(T){ f.tx=T.x; f.ty=T.y; } tx=f.tx; ty=f.ty; orbit=false;
         if(f.mission==='strike'&&(f.tgt||!f.red)&&Math.hypot(tx-f.x,ty-f.y)<14){ atkBegin(f); }
         else if(f.mission==='scout'&&f.area&&Math.hypot(tx-f.x,ty-f.y)<spd*dt*1.5){ f.phase='area'; f.srch={t0:t,a:Math.random()*2*Math.PI}; trLog(`${f.name} reaches its search circle and flies round it.`); }
@@ -4290,9 +4337,10 @@ function trStepCV(dt){
           trLog(miss?`${f.name} finds nothing where the enemy was reported and turns back.`:f.mission==='strike'?`${f.name} is over the target.`:`${f.name} reaches the end of its search leg and turns back.`,miss); } }
       else if(f.phase==='area'){ const A=f.area, u=(t-f.srch.t0)*spd/A.r; orbit=false; if(u>2*Math.PI){ f.phase='back'; f.t0=t; trLog(`${f.name} has searched its circle and turns back.`); } else { const a=f.srch.a+u+.6; tx=A.x+Math.cos(a)*A.r; ty=A.y+Math.sin(a)*A.r; f.shdg=bearing(tx-f.x,ty-f.y); } }
       else if(f.phase==='attack'){ tx=f.x; ty=f.y; orbit=false; } else { orbit=true; if(home<8){ f.mission='home'; } } }
+    if(f.mission==='cap'&&!f.intc){ const P=capSpot(f,t); tx=P.x; ty=P.y; orbit=false; }
     if(f.mission==='cap'&&f.intc){ tx=f.intc.x; ty=f.intc.y; orbit=false; spd=Math.min(...f.planes.map(p=>p.st.speed))*.9/3600; }
     const r=f.mission==='cap'?8:4, dx=clamp(tx,-BOXKM,BOXKM)-f.x, dy=clamp(ty,-BOXKM,BOXKM)-f.y, dd=Math.hypot(dx,dy);
-    if(!orbit||dd>r){ const s=Math.min(dd,spd*dt); if(dd>1e-6){ f.x+=dx/dd*s; f.y+=dy/dd*s; } } else { const a=Math.atan2(f.y-ty,f.x-tx)+spd*dt/r; f.x=tx+Math.cos(a)*r; f.y=ty+Math.sin(a)*r; }
+    if(!orbit||dd>r*1.5){ const s=Math.min(dd,spd*dt); if(dd>1e-6){ f.x+=dx/dd*s; f.y+=dy/dd*s; } } else { const a=Math.atan2(f.y-ty,f.x-tx)+spd*dt/r, qx=tx+Math.cos(a)*r, qy=ty+Math.sin(a)*r, ex=qx-f.x, ey=qy-f.y, ed=Math.hypot(ex,ey), st=Math.min(ed,spd*dt*1.15); if(ed>1e-6){ f.x+=ex/ed*st; f.y+=ey/ed*st; } }
     for(const p of f.planes){ p.fuel-=dt; if(p.fuel<=0){ p.state='lost'; p.lostKind='fuel'; R.stats.lost++; trLog(`${p.d.name} of ${f.name} ran out of fuel and ditched.`); } }
     if(f.mission==='home'&&home<6) for(const p of f.planes){ p.state='circuit'; p.fl=null; R.circuit.push(p); } }
   R.flights=R.flights.filter(f=>f.planes.some(p=>p.state==='air'));
@@ -4454,13 +4502,14 @@ function advEnemy(){ const R=TR, t=R.t, blues=R.tgts.filter(T=>T.side==='blue'&&
 }
 function advSearch(tf,cs){ let k=0, n=Math.min(11,5+cs.length*3); const off=Math.random()*360;
   for(const C of cs){ withC(C,()=>{ const R=TR; R.quiet=true; const ps=R.planes.filter(p=>p.armed&&!p.task&&!p.sq&&(p.state==='hangar'||p.state==='fwd')&&p.role!=='fighter').sort((a,b)=>b.st.radius-a.st.radius);
-    for(const p of ps.slice(0,Math.ceil(n/cs.length))){ const b=off+k*360/n, leg=Math.min(p.st.radius*.85,320), [hx,hy]=hdgV(b); k++;
-      p.task='scout'; p.scout={x:clamp(R.ship.x+hx*leg,-BOXKM,BOXKM),y:clamp(R.ship.y+hy*leg,-BOXKM,BOXKM)}; if(p.state==='hangar') p.order=true; else p.respot=true; } R.quiet=false; }); }
+    const sq={id:++R.sqid,name:`Squadron ${R.sqid}`}; let j=0;
+    for(const p of ps.slice(0,Math.ceil(n/cs.length))){ const b=off+k*360/n, leg=Math.min(p.st.radius*.85,320), [hx,hy]=hdgV(b); k++; j++;
+      p.task='scout'; p.scout={x:clamp(R.ship.x+hx*leg,-BOXKM,BOXKM),y:clamp(R.ship.y+hy*leg,-BOXKM,BOXKM),key:`es${sq.id}-${j}`,name:`${sq.name}, flight ${j}`}; if(p.state==='hangar') p.order=true; else p.respot=true; } R.quiet=false; }); }
   if(k) trLog(`${tf.name} sends out ${k} scouts to look for you.`,true); }
 function advStrike(tf,cs){ const R0=TR, k=tf.known, age=TR.t-k.t, [hx,hy]=hdgV(k.hdg), ex=k.x+hx*k.kn*KN*age/1000, ey=k.y+hy*k.kn*KN*age/1000; let sent=0;
   for(const C of cs){ withC(C,()=>{ const R=TR; R.quiet=true; R.pfx=`Enemy carrier ${C.name}: `; try{ const d=Math.hypot(ex-R.ship.x,ey-R.ship.y), ok=p=>p.armed&&!p.task&&(p.state==='hangar'||p.state==='fwd')&&p.st.radius>=d*1.05;
     const bom=R.planes.filter(p=>ok(p)&&p.role!=='fighter'&&loadKind(p)), fig=R.planes.filter(p=>ok(p)&&p.role==='fighter'&&p.sq==null), esc=fig; if(bom.length<2) return;
-    const sq={id:++R.sqid,name:`Strike ${R.sqid}`}; for(const p of [...bom,...esc]) p.sq=sq.id; R.sq.push(sq);
+    const sq={id:++R.sqid,name:`Squadron ${R.sqid}`}; for(const p of [...bom,...esc]) p.sq=sq.id; R.sq.push(sq);
     const so={id:++R.soid,sqs:[sq.id],state:'pick',tgt:null,tgtG:k.g||null,tx:ex,ty:ey}; R.sorties.push(so); trSortieGo(so); sent+=bom.length+esc.length;
     trLog(`ranges a strike for you: ${bom.length} bombers and ${esc.length} fighters, ${f0(d)} km to where you were reported.`,true); } finally { R.quiet=false; R.pfx=''; } }); }
   return sent>0; }
@@ -4632,7 +4681,7 @@ function atkBegin(f){ const R=TR, t=R.t; let ships=[];
     p.ax=f.x; p.ay=f.y; p.alt=alt; p.ahdg=bearing((T||c0).x-f.x,(T||c0).y-f.y); p.av=p.st.cruise/3.6; p.pitchA=0; p.rollA=0; }
   const idx=new Map(), nth=(T,k)=>{ const key=(T?T.id:0)+k, n=idx.get(key)||0; idx.set(key,n+1); return n; };
   const aim=T=>({tgt:T?T.id:null,tx:T?T.x:c0.x,ty:T?T.y:c0.y,hdg:T?T.hdg:bearing(f.x-c0.x,f.y-c0.y),inb:bearing(f.x-(T||c0).x,f.y-(T||c0).y)});
-  for(const p of by.torp){ const T=at.get(p), i=nth(T,'torp'), A=aim(T), side=i%2?1:-1, k=Math.floor(i/2), off=side*(62+(k*11)%44), [sx,sy]=hdgV(A.hdg+off);
+  for(const p of by.torp){ const T=at.get(p), i=nth(T,'torp'), A=aim(T), off=[0,-90,90,-45,45][i%5]+((Math.floor(i/5)*13)%26-6), [sx,sy]=hdgV(A.hdg+off);
     p.atk={...base,tgt:A.tgt,tx:A.tx,ty:A.ty,kind:'torp',ph:'approach',ox:sx*7,oy:sy*7,tp:torpOf(p.d)}; }
   const brakes=p=>part('brakes',p.d.brakes).id!=='none';
   for(const p of by.dive){ const T=at.get(p), i=nth(T,'dive'), A=aim(T), br=brakes(p), th=(br?70:48)*DEG, hp=br?3800:3200, b=(R.wind.from+180+(i%3-1)*12)%360, [bx,by2]=hdgV(b), dd=hp/Math.tan(th)/1000;
@@ -4761,13 +4810,13 @@ const trFocus=()=>{ const v=TR.view; if(v.chase&&TR3.chasePos) return {x:TR3.cha
 const trScale=()=>{ const r=$('#trmap').getBoundingClientRect(); return Math.min(r.width,r.height)/2/TR.view.km; };
 function trClampView(){ const v=TR.view; v.x=clamp(v.x,-BOXKM,BOXKM); v.y=clamp(v.y,-BOXKM,BOXKM); }
 // Zoom by a factor about a point (px, py from the centre of the chart), keeping that point under the pointer.
-function trZoom(f,px,py){ const v=TR.view, c=trFocus(), s=trScale()||1, km=clamp(v.km*f,KM3D*.9,BOXKM*1.25);
+function trZoom(f,px,py){ const v=TR.view, c=trFocus(), s=trScale()||1, no3=trMapOpts().d3===false, km=clamp(v.km*f,no3?.04:KM3D*.9,BOXKM*1.25);
   if(px||py){ const wx=c.x+px/s, wy=c.y-py/s; v.follow=false; v.lock=null; v.chase=null; v.x=wx-(wx-c.x)*km/v.km; v.y=wy-(wy-c.y)*km/v.km; } else if(!v.follow){ v.x=c.x; v.y=c.y; }
-  v.km=km; trClampView(); if(km<KM3D) trEnter3D(); trZoomLabel(); }
+  v.km=km; trClampView(); if(km<KM3D&&!no3) trEnter3D(); trZoomLabel(); }
 function trEnter3D(){ const v=TR.view; if(!window.THREE){ v.km=KM3D; return; } v.d3=true; TR3.dist=1300; TR3.pitch=.3; trView(); }
 function trLeave3D(){ const v=TR.view; if(v.chase){ const c=trFocus(); v.x=c.x; v.y=c.y; v.chase=null; v.follow=false; v.lock=null; } v.d3=false; v.km=KM3D*1.5; trView(); }
 function trZoomLabel(){ const v=TR.view; $('#trzoom').textContent=v.d3?'3D':(v.km*2>=10?f0(v.km*2):f1(v.km*2))+' km across'; $('#trfollow').setAttribute('aria-pressed',String(!!v.follow));
-  const MO=trMapOpts(); $('#trgrid').setAttribute('aria-pressed',String(MO.grid)); $('#trwind').setAttribute('aria-pressed',String(MO.wind)); $('#trrings').setAttribute('aria-pressed',String(MO.rings!==false));
+  const MO=trMapOpts(); $('#trgrid').setAttribute('aria-pressed',String(MO.grid)); $('#trwind').setAttribute('aria-pressed',String(MO.wind)); $('#trrings').setAttribute('aria-pressed',String(MO.rings!==false)); $('#trallow3d').setAttribute('aria-pressed',String(MO.d3!==false));
   $('#trsight').hidden=!TR.adv; $('#trsight').setAttribute('aria-pressed',String(trS().sight!==false));
   $('#trturn').hidden=!v.d3||!(v.follow||v.lock!=null); $('#trturn').setAttribute('aria-pressed',String(!!TR3.follow));
   $('#trchase').hidden=!v.chase; if(v.chase){ const q=trChaseList(), p=q.find(o=>o.id===v.chase.pid); $('#trcname').textContent=p?`${p.d.name} · ${q.indexOf(p)+1} of ${q.length}`:''; }
@@ -4806,9 +4855,9 @@ function trFlightHdg(f){ const m=TR.fh||(TR.fh=new Map()), q=m.get(f.id);
   if(Math.hypot(f.x-q.x,f.y-q.y)>.02){ q.h=bearing(f.x-q.x,f.y-q.y); q.x=f.x; q.y=f.y; } return q.h; }
 // A flight's aircraft in formation about its position: each squadron (or type) a box of fours, one squadron behind another.
 function flightMarks(ps,x,y,hdg,sp){ const g=new Map(); for(const p of ps){ const k=p.sq!=null?'s'+p.sq:'r'+p.role; if(!g.has(k)) g.set(k,[]); g.get(k).push(p); }
-  const a=hdg*DEG, fw=[Math.sin(a),-Math.cos(a)], rt=[Math.cos(a),Math.sin(a)], out=[], groups=[...g.values()], rows=q=>Math.ceil(q.length/4);
-  let r0=-((groups.reduce((s,q)=>s+rows(q),0)+groups.length-1)-1)/2;
-  for(const q of groups){ q.forEach((p,i)=>{ const row=Math.floor(i/4), n=Math.min(4,q.length-row*4), col=i%4-(n-1)/2, b=(r0+row)*sp, l=col*sp; out.push({p,x:x-fw[0]*b+rt[0]*l,y:y-fw[1]*b+rt[1]*l,h:hdg}); }); r0+=rows(q)+1; }
+  const a=hdg*DEG, fw=[Math.sin(a),-Math.cos(a)], rt=[Math.cos(a),Math.sin(a)], out=[], groups=[...g.values()].map(q=>({q,sl:formSlots(q.length)})), dep=G=>Math.max(...G.sl.map(z=>z[1]))+1;
+  let r0=-(groups.reduce((s,G)=>s+dep(G),0)+groups.length-2)/2;
+  for(const G of groups){ G.q.forEach((p,i)=>{ const [l,bk]=G.sl[i], b=(r0+bk)*sp, w=l*sp; out.push({p,x:x-fw[0]*b+rt[0]*w,y:y-fw[1]*b+rt[1]*w,h:hdg}); }); r0+=dep(G)+1; }
   return out; }
 // A little plane, nose along hdg (degrees from north), its half-span sz pixels. Seen from above, a machine diving (pitch below zero,
 // in radians) is foreshortened with its nose further away, so the nose narrows and the tail swells; climbing, the other way round.
@@ -4834,7 +4883,7 @@ function ringsDraw(c,PX,PY,s){ const R=TR; c.save(); c.setLineDash([7,5]); c.lin
       const a=-Math.PI/4; c.globalAlpha=1; c.fillStyle=ROLECOL[role]; c.fillText(`${nm} ${f0(km)} km`,x+r*Math.cos(a)+6,y+r*Math.sin(a)-4+i*14); }); }
   c.restore(); }
 // A force's ships counted by type, biggest first as they come: 1CV, 5DD
-const shipMix=ts=>{ const m=new Map(); for(const t of ts) m.set(t,(m.get(t)||0)+1); return [...m].map(([t,n])=>n+t).join(', '); };
+const SHIPORD=['CV','BB','BC','CA','CL','DD'], shipMix=ts=>{ const m=new Map(); for(const t of ts) m.set(t,(m.get(t)||0)+1); return [...m].sort((a,b)=>SHIPORD.indexOf(a[0])-SHIPORD.indexOf(b[0])).map(([t,n])=>`${n} ${t}`).join(', '); };
 const agoText=a=>a<90?`${Math.round(a)} s`:a<3600?`${Math.round(a/60)} min`:`${Math.floor(a/3600)} h ${Math.round(a%3600/60)} min`;
 // Where enemy task forces were last seen: the ships as they were, frozen, with the course and speed they were making.
 function lastSeenDraw(c,PX,PY,s){ const R=TR; if(!sightOn()) return; c.save(); c.font='500 11px "IBM Plex Mono", monospace';
@@ -4848,10 +4897,11 @@ function lastSeenDraw(c,PX,PY,s){ const R=TR; if(!sightOn()) return; c.save(); c
   c.restore(); }
 // A crosshair on each task force your aircraft are sent against, and the search going on where one is being looked for.
 function aimDraw(c,PX,PY,s){ const R=TR, done=new Set(), aims=[];
+  const hit=new Set(); for(const C of cvAll()) if(C.side==='blue') for(const f of C.flights) if(f.tgtG&&f.phase==='attack') hit.add(f.tgtG.k+f.tgtG.id);
   for(const C of cvAll()){ if(C.side!=='blue') continue; for(const so of C.sorties) if(so.tgtG&&(so.state==='ranging'||so.state==='out')) aims.push(so.tgtG);
-    for(const f of C.flights){ if(f.tgtG&&['out','search','attack'].includes(f.phase)) aims.push(f.tgtG);
+    for(const f of C.flights){ if(f.tgtG&&['out','search'].includes(f.phase)) aims.push(f.tgtG);
       if(f.phase==='search'&&f.srch){ const q=srchPt(f,R.t); c.save(); c.strokeStyle='rgba(255,210,74,.5)'; c.setLineDash([2,4]); c.beginPath(); c.arc(PX(f.srch.x),PY(f.srch.y),Math.max(6,(q.r+airEye(f))*s),0,2*Math.PI); c.stroke(); c.restore(); } } }
-  for(const g of aims){ const k=g.k+g.id; if(done.has(k)) continue; done.add(k); const p=grpShow(g); if(!p) continue; const x=PX(p.x), y=PY(p.y);
+  for(const g of aims){ const k=g.k+g.id; if(done.has(k)||hit.has(k)) continue; done.add(k); const p=grpShow(g); if(!p) continue; const x=PX(p.x), y=PY(p.y);
     c.save(); c.strokeStyle='#FFD24A'; c.lineWidth=1.6; c.beginPath(); c.arc(x,y,13,0,2*Math.PI); for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ c.moveTo(x+dx*8,y+dy*8); c.lineTo(x+dx*19,y+dy*19); } c.stroke(); c.restore(); } }
 // The flight you clicked: how much farther it can go and still get home (an ellipse round it and its carrier), and its fuel.
 function selDraw(c,PX,PY,s){ const R=TR; if(R.selF==null) return; let f=null, C0=null; for(const C of cvAll()){ const q=C.flights.find(o=>o.id===R.selF); if(q){ f=q; C0=C; break; } }
@@ -4863,6 +4913,8 @@ function selDraw(c,PX,PY,s){ const R=TR; if(R.selF==null) return; let f=null, C0
   const l1=`${f.name}: fuel for ${f0(left)} km more`, l2=a>cc?`${f0(dh)} km from home · the ring is as far as it can go and still get back`:`${f0(dh)} km from home: not enough fuel to get back`, l3='Click it again to follow it in 3D';
   c.fillRect(x-4,y-12,Math.max(c.measureText(l1).width,c.measureText(l2).width)+8,44); c.fillStyle='#fff'; c.fillText(l1,x,y); c.fillStyle=a>cc?'rgba(255,255,255,.8)':'#F08A7E'; c.fillText(l2,x,y+13); c.fillStyle='rgba(255,255,255,.6)'; c.fillText(l3,x,y+26); c.restore(); }
 function trDrawMap(){
+  if(!TR.planPre){ TR.planPre=true; const list=[...cvAll().map(C=>[C.cv,C.cs]),...TR.tgts.filter(T=>T.cvm).map(T=>[T.cvm,T.csm||cvStats(T.cvm)])], idle=window.requestIdleCallback?f=>requestIdleCallback(f,{timeout:600}):f=>setTimeout(f,60);
+    const next=()=>{ const q=list.shift(); if(!q||!TR) return; try{ cvPlanImg(q[0],q[1]); }catch(e){} idle(next); }; idle(next); }
   if(TR.view.d3) return;
   const cvs=$('#trmap'), r=cvs.getBoundingClientRect(); if(!r.width) return; const dpr=window.devicePixelRatio||1, cw=Math.round(r.width*dpr), ch=Math.round(r.height*dpr); if(cvs.width!==cw||cvs.height!==ch){ cvs.width=cw; cvs.height=ch; }
   const c=cvs.getContext('2d'), W=r.width, H=r.height; c.setTransform(dpr,0,0,dpr,0,0); TR.mapHits=[];
@@ -4881,7 +4933,7 @@ function trDrawMap(){
   if(sightOn()) fogDraw(c,PX,PY,s,W,H);
   if(MO.rings!==false) ringsDraw(c,PX,PY,s);
   if(R.tgts.length) tgtDrawMap(c,PX,PY,s);
-  lastSeenDraw(c,PX,PY,s); aimDraw(c,PX,PY,s); scoutDraw(c,PX,PY,s);
+  lastSeenDraw(c,PX,PY,s); aimDraw(c,PX,PY,s); scoutDraw(c,PX,PY,s); routeDraw(c,PX,PY);
   // flights and their lines; close in, each aircraft of an attack on its own
   for(const C of cvAll()) for(const f of C.flights){ if(!f.planes.some(p=>p.state==='air')) continue; const red=C.side==='red', col=ROLECOL[f.role]||'#fff', x=PX(f.x), y=PY(f.y); if(red&&sightOn()&&!f.vis) continue;
     if((f.mission==='scout'||f.mission==='strike')&&f.phase==='out'){ c.strokeStyle=col; c.setLineDash([5,4]); c.beginPath(); c.moveTo(x,y); c.lineTo(PX(f.tx),PY(f.ty)); c.stroke(); c.setLineDash([]); c.beginPath(); c.arc(PX(f.tx),PY(f.ty),5,0,Math.PI*2); c.stroke(); }
@@ -4895,12 +4947,12 @@ function trDrawMap(){
     for(const g of flightSpread(f)) marks.push(...flightMarks(g.ps.filter(p=>!(solo&&p.atk)),PX(g.x),PY(g.y),f.phase==='search'?f.shdg||hd:hd,sp));
     for(const m of marks){ planeGlyph(c,m.x,m.y,m.h,szOf(m.p),ROLECOL[m.p.role]||'#fff',red,pitchOf(m.p)); R.mapHits.push({x:m.x,y:m.y,p:m.p,f,C}); }
     const lx=marks.length?Math.max(...marks.map(m=>m.x)):x, ly=marks.length?Math.min(...marks.map(m=>m.y)):y;
-    c.fillStyle=red?'#F6B5AC':'#fff'; c.textAlign='left'; c.fillText(`${live.length} ${red?'enemy · ':C!==R.cur?C.name+' · ':''}${f.name}`,lx+gs+5,ly-2); }
+    c.fillStyle=red?'#F6B5AC':'#fff'; c.textAlign='left'; c.fillText(`${red?'Enemy ':C!==R.cur?C.name+' · ':''}${f.name} - ${flightDoing(f)}`,lx+gs+5,ly-2); c.fillStyle=red?'rgba(246,181,172,.8)':'rgba(255,255,255,.75)'; c.fillText(flightMix(live),lx+gs+5,ly+11); }
   selDraw(c,PX,PY,s);
   if(R.circuit.length){ c.strokeStyle='rgba(255,255,255,.5)'; c.setLineDash([3,3]); c.beginPath(); c.arc(PX(sh.x),PY(sh.y),Math.max(10,3*s),0,Math.PI*2); c.stroke(); c.setLineDash([]); }
   // the ship, to scale when zoomed in
   { const sx=PX(sh.x), sy=PY(sh.y); c.save(); c.translate(sx,sy); c.rotate(sh.hdg*Math.PI/180); cvChartDraw(c,R.cv,R.cs,s,sh.status==='burnt'?'#0B0C0D':'#E9EDF0',sh.status,k=>deckPlanesDraw(c,k)); c.restore(); }
-  const msg=SCP?`Click the chart to place a circle for the scouts to search round (${SCP.legs.length} of ${SCP.max}), or type bearings below the chart.`:R.spawn==='TF'?'Click the chart to place the enemy task force there. Esc to stop.':R.spawn?`Click the chart to anchor a ${TGT[R.spawn]?TGT[R.spawn].name.toLowerCase():'carrier'} there. Esc to stop.`:R.pick?(R.pick.so!=null?'Click a task force (or where one was last seen), or a point, for the sortie to attack':'Click the map to send the flight there'):'';
+  const msg=R.selF!=null&&!R.pick&&!R.spawn&&!SCP?'Click where it should go: enemy ships or aircraft to attack them, your carrier to patrol or land, or a point. Shift-click for more legs. Esc to let go.':SCP?`Click the chart to place a circle for the scouts to search round (${SCP.legs.length} of ${SCP.max}), or type bearings below the chart.`:R.spawn==='TF'?'Click the chart to place the enemy task force there. Esc to stop.':R.spawn?`Click the chart to anchor a ${TGT[R.spawn]?TGT[R.spawn].name.toLowerCase():'carrier'} there. Esc to stop.`:R.pick?(R.pick.so!=null?'Click a task force (or where one was last seen), or a point, for the sortie to attack':'Click the map to send the flight there'):'';
   if(msg){ c.fillStyle='rgba(0,0,0,.45)'; c.fillRect(0,0,W,30); c.fillStyle='#fff'; c.textAlign='center'; c.fillText(msg,W/2,19); }
   // compass card with the wind
   c.textAlign='left'; c.fillStyle='rgba(0,0,0,.35)'; c.fillRect(8,msg?36:8,152,40); c.fillStyle='#fff'; const cy0=msg?52:24;
@@ -5200,6 +5252,8 @@ function tgtStep(T,dt){ const t=TR.t;
   if(W>T.reserve){ T.status='sinking'; T.sinkT=0; tgtNote(T,`She has more water in her than she can float with, and is going down by the ${Mt>0?'stern':'head'}.`); }
   else if(Math.abs(T.list)>T.cap||gm<=.02){ T.status='capsizing'; T.sinkT=0; tgtNote(T,gm<=.02?'The water sloshing in her has taken away her stability: she is rolling over.':`At ${f0(Math.abs(T.list))}° of list she cannot recover: she is rolling over.`); } }
 // On the chart: every target ship always shows, to scale close in, coloured by how she is.
+// A list in words: under 2° negligible, under 5° minor, under 10° moderate (aircraft start to shift), under 20° severe, then critical.
+const listWord=a=>a<2?'Negligible':a<5?'Minor':a<10?'Moderate':a<20?'Severe':'Critical', listText=a=>`${f0(a)}° (${listWord(a)})`;
 function tgtDrawMap(c,PX,PY,s){ const R=TR;
   const hid=sightOn(); for(const T of R.tgts){ if(T===R.ship||hid&&T.side==='red'&&!T.vis) continue; const x=PX(T.x), y=PY(T.y), len=Math.max(10,T.L/1000*s), wid=Math.max(3,T.B/1000*s*1.2), base=T.side==='red'?'#F08A7E':T.side==='blue'?'#8EC1EA':'#D9DEE2';
     if(T.status==='sunk'){ c.strokeStyle='rgba(255,255,255,.3)'; c.beginPath(); c.arc(x,y,4,0,Math.PI*2); c.stroke(); c.fillStyle='rgba(255,255,255,.35)'; c.textAlign='left'; c.fillText(`${T.type} ${T.name} (sunk)`,x+8,y+4); continue; }
@@ -5207,7 +5261,7 @@ function tgtDrawMap(c,PX,PY,s){ const R=TR;
     c.save(); c.translate(x,y); c.rotate(T.hdg*Math.PI/180); if(T.spec.cv){ const cv2=T.cvm||TR.cv, cs2=T.csm||cvStats(cv2); cvChartDraw(c,cv2,cs2,s,col,T.status,T.cvC&&T.side!=='red'?k=>withC(T.cvC,()=>deckPlanesDraw(c,k)):null); } else shipGlyph(c,T.spec.cv?'CV':T.type,T.L/1000*s,T.B/1000*s,col,T.spec.cv?{deckW:((T.cvm||TR.cv).deckW||T.B)/1000*s,port:(T.cvm||TR.cv).iside==='port'}:{tur:T.spec.tur,fun:T.spec.fun},T.status==='burnt'); c.restore();
     if(T.tf&&R.view.km>15) continue;   // far out, a task force is labelled once, not ship by ship
     c.fillStyle=base; c.textAlign='left'; c.fillText(`${T.side==='red'?'Enemy ':''}${T.type} ${T.name}`,x+len/2+6,y-2);
-    if(hurt) { c.fillStyle='rgba(255,255,255,.75)'; c.fillText(T.status!=='afloat'?{sinking:'sinking',capsizing:'capsizing',blown:'blown up',burnt:'consumed by fire, abandoned'}[T.status]:`${T.fires?`${T.fires} fire${T.fires>1?'s':''} · `:''}list ${f0(Math.abs(T.list))}°`,x+len/2+6,y+11); } }
+    if(hurt) { c.fillStyle='rgba(255,255,255,.75)'; c.fillText(T.status!=='afloat'?{sinking:'sinking',capsizing:'capsizing',blown:'blown up',burnt:'consumed by fire, abandoned'}[T.status]:`List ${listText(Math.abs(T.list))}`,x+len/2+6,y+11); } }
   if(R.view.km>15) for(const tf of R.tfs){ const sh=tf.ships.filter(T=>T.status!=='sunk'&&!(hid&&T.side==='red'&&!T.vis)); if(!sh.length) continue; const x=PX(sh.reduce((s,T)=>s+T.x,0)/sh.length), y=PY(sh.reduce((s,T)=>s+T.y,0)/sh.length);
     c.fillStyle=tf.side==='red'?'#F08A7E':'#8EC1EA'; c.textAlign='left'; c.fillText(`${tf.name} · ${sh.length} ship${sh.length>1?'s':''}`,x+14,y+16); }
   if(TR.view.km<60) for(const q of R.torps){ if(q.done&&R.t-q.doneT>30) continue; c.strokeStyle=q.fail?'rgba(255,255,255,.3)':'rgba(255,255,255,.75)'; c.lineWidth=1; c.beginPath(); c.moveTo(PX(q.x0),PY(q.y0)); c.lineTo(PX(q.x),PY(q.y)); c.stroke(); }
@@ -5242,7 +5296,7 @@ function shipGlyph(c,ty,L,B,col,o={},outline){ let [ml,mw]=SHIPMIN[ty]||[12,3]; 
 const PLANIMG=new Map(); let PLANR=null;
 function cvPlanImg(cv,cs){ if(!window.THREE) return null; const key=JSON.stringify(cv); if(PLANIMG.has(key)) return PLANIMG.get(key);
   let out=null; try{ if(!PLANR){ PLANR=new THREE.WebGLRenderer({canvas:document.createElement('canvas'),antialias:true,alpha:true,preserveDrawingBuffer:true}); PLANR.setClearColor(0x000000,0); }
-    const dS=deckStart(cv), ex=Math.max(cv.L/2+Math.max(0,-dS),dS+cv.deckL-cv.L/2)+3, wh=Math.max(cv.B,cv.deckW)/2+9, ppm=4, W=Math.round(2*wh*ppm), H=Math.round(2*ex*ppm);
+    const dS=deckStart(cv), ex=Math.max(cv.L/2+Math.max(0,-dS),dS+cv.deckL-cv.L/2)+3, wh=Math.max(cv.B,cv.deckW)/2+9, ppm=6, W=Math.round(2*wh*ppm), H=Math.round(2*ex*ppm);
     PLANR.setSize(W,H,false); const sc=new THREE.Scene(), m=cvMesh(cv,cs); sc.add(m.grp);
     sc.add(new THREE.HemisphereLight(0xffffff,0x6b7780,1.1)); const dl=new THREE.DirectionalLight(0xffffff,1.1); dl.position.set(30,100,-40); sc.add(dl);
     const cam=new THREE.OrthographicCamera(-wh,wh,ex,-ex,1,150); cam.position.set(0,149.5,0); cam.up.set(1,0,0); cam.lookAt(0,0,0);   // the far plane at the waterline
@@ -5251,10 +5305,8 @@ function cvPlanImg(cv,cs){ if(!window.THREE) return null; const key=JSON.stringi
   if(PLANIMG.size>24) PLANIMG.clear(); PLANIMG.set(key,out); return out; }
 // The carrier drawn in place (the canvas already turned to her heading, centred on her): the picture when she is big enough to see,
 // otherwise a small mark kept in proportion to her length, so a light carrier stays smaller than a fleet carrier.
-function cvChartDraw(c,cv,cs,s,col,status,deck){ const len=cv.L/1000*s;
-  if(len<34){ shipGlyph(c,'CV',cv.L/1000*s,cv.B/1000*s,col,{deckW:cv.deckW/1000*s,port:cv.iside==='port',Lm:cv.L,isl:cv.island!=='none'},status==='burnt'); return; }
-  const P=cvPlanImg(cv,cs); if(!P){ shipGlyph(c,'CV',len,cv.B/1000*s,col,{deckW:cv.deckW/1000*s,port:cv.iside==='port',Lm:cv.L,isl:cv.island!=='none'}); return; }
-  const k=s/1000; c.save(); if(status==='burnt') c.filter='brightness(.3)'; else if(status&&status!=='afloat') c.filter='sepia(1) saturate(3) hue-rotate(-25deg)';
+function cvChartDraw(c,cv,cs,s,col,status,deck){ const len=cv.L/1000*s, P=cvPlanImg(cv,cs); if(!P){ shipGlyph(c,'CV',len,cv.B/1000*s,col,{deckW:cv.deckW/1000*s,port:cv.iside==='port',Lm:cv.L,isl:cv.island!=='none'}); return; }
+  const k=Math.max(s/1000,Math.max(16,38*cv.L/250)/cv.L); c.save(); c.imageSmoothingQuality='high'; if(status==='burnt') c.filter='brightness(.3)'; else if(status&&status!=='afloat') c.filter='sepia(1) saturate(3) hue-rotate(-25deg)';
   c.drawImage(P.img,-P.wh*k,-P.ex*k,2*P.wh*k,2*P.ex*k); c.restore();
   if(deck&&len>=110) deck(k); }
 // The aircraft on a carrier's deck, drawn on the chart over her picture: ranged aft with wings spread, parked forward with them folded.
@@ -5276,7 +5328,7 @@ function tgtRowsHTML(){ const R=TR; if(!R.tgts.length) return '<p class="muted" 
   return vis.map(T=>{ const d=Math.hypot(T.x-R.ship.x,T.y-R.ship.y), h=T.hits, hit=[h.bomb&&`${h.bomb} bomb${h.bomb>1?'s':''}`,h.torp&&`${h.torp} torpedo${h.torp>1?'es':''}`,h.near&&`${h.near} near miss${h.near>1?'es':''}`,h.dud&&`${h.dud} dud${h.dud>1?'s':''}`,h.col&&`${h.col} collision${h.col>1?'s':''}`].filter(Boolean).join(', ');
     const st=T.status==='sunk'?'sunk':T.status==='afloat'?(T.flood>1||T.fires?'damaged':'undamaged')+(T.ev&&T.ev.until>R.t?', evading':'')+(T.firing?', firing':''):{sinking:'sinking',capsizing:'rolling over',blown:'blown up',burnt:'consumed by fire, ship abandoned'}[T.status];
     return `<div class="trfl"><div><strong>${esc(T.type)} ${esc(T.name)}</strong> <span class="st">${T.side==='blue'?'yours':T.side==='red'?'enemy':'target'} · ${fmtK(T.disp)} t ${T.spec.name.toLowerCase()} · ${f0(d)} km, ${String(Math.round(bearing(T.x-R.ship.x,T.y-R.ship.y))).padStart(3,'0')}° · ${st}</span>
-      <div class="st">${hit?`Hit by ${hit}`:'Not hit'}${T.status==='afloat'&&T.flood>1?` · ${fmtK(T.flood)} t of water in her (${f0(T.flood/T.reserve*100)}% of what she can take) · list ${f1(Math.abs(T.list))}°${Math.abs(T.list)>.5?(T.list>0?' to starboard':' to port'):''}`:''}${T.status==='afloat'&&T.fires?` · ${T.fires} fire${T.fires>1?'s':''}`:''}${shipSys(T)?` · ${shipSys(T)}`:''}</div>
+      <div class="st">${hit?`Hit by ${hit}`:'Not hit'}${T.status==='afloat'&&T.flood>1?` · ${fmtK(T.flood)} t of water in her (${f0(T.flood/T.reserve*100)}% of what she can take) · list ${listText(Math.abs(T.list))}${Math.abs(T.list)>.5?(T.list>0?' to starboard':' to port'):''}`:''}${T.status==='afloat'&&T.fires?` · ${T.fires} fire${T.fires>1?'s':''}`:''}${shipSys(T)?` · ${shipSys(T)}`:''}</div>
       ${T.log[0]?`<div class="st">${mmss(T.log[0].t)} ${esc(T.log[0].s)}</div>`:''}</div>
       <span class="trbtns"><button class="btn ghost" data-tgview="${T.id}">View</button>${T.side==='blue'?'':`<button class="btn ghost" data-tgdel="${T.id}">Remove</button>`}</span></div>`; }).join(''); }
 // The flight deck in plan, bow to the left, with every aircraft on it: ranged aft wings spread, parked forward wings folded.
@@ -5318,8 +5370,8 @@ function trDeckHTML(){ const R=TR;
 function trPanelsHTML(){
   const R=TR, m=trMot(), W=trWOD(), sh=R.ship, into=Math.abs(W.rel)<=20;
   const flights=R.flights.length?R.flights.map(f=>{ const dist=Math.hypot(f.x-sh.x,f.y-sh.y), fuel=Math.min(...f.planes.map(p=>p.fuel));
-      const what={form:'forming up over the ship',cap:'on patrol over the ship',scout:f.phase==='out'?'searching outbound':'searching, coming back',strike:f.phase==='out'?'outbound to the target':f.phase==='attack'?'attacking':'returning from the strike',home:'returning to land'}[f.mission];
-      return `<div class="trfl"><div><strong>${f.planes.length} × ${esc(f.name)}</strong><div class="st">${what} · ${f0(dist)} km out · fuel for ${mmss(fuel)}</div></div>
+      const what=flightDoing(f).toLowerCase();
+      return `<div class="trfl"><div><strong>${esc(f.name)}</strong> <span class="mono" style="font-size:12px">${flightMix(f.planes)}</span><div class="st">${what} · ${f0(dist)} km out · fuel for ${mmss(fuel)}</div></div>
         <span class="trbtns"><button class="btn ghost" data-trmis="cap" data-fl="${f.id}">Patrol</button><button class="btn ghost" data-trmis="scout" data-fl="${f.id}">Search</button><button class="btn ghost" data-trmis="strike" data-fl="${f.id}">Strike</button><button class="btn ghost" data-trmis="home" data-fl="${f.id}">Land</button></span></div>`; }).join('')
     :'<p class="muted" style="margin:0;font-size:13px">No flights aloft.</p>';
   const st=R.stats, avg=a=>a.length?mmss(a.reduce((x,y)=>x+y,0)/a.length):'–';
@@ -5400,7 +5452,7 @@ const TSND={seen:new WeakSet(),
       const S2={flak:f.heavy?[.5,500,.35,320]:[.22,220,.07,1700],hit:[.9,700,1.3,260],col:[.8,500,1,300],sec:[.9,700,1.4,240],boom:[1.3,1400,2.8,170],splash:[.35,320,.7,900],near:[.55,450,.9,700],tsplash:[.4,160,.55,1300],crash:[.6,320,1,480]}[f.kind];
       if(!S2) continue; const v=S2[0]*att(d,S2[1]); if(v<.004) continue; SND.burst(Math.min(1,v),S2[2],S2[3]); n++; }
     let g=0; for(const q of (R.trc||[])){ if(this.seen.has(q)) continue; this.seen.add(q); if(R.t-q.t>1||g>=6||Math.random()<.4) continue; const v=.2*att(dist(q.x0,q.y0,q.a0),220); if(v<.004) continue; SND.burst(v,.05,2100); g++; } } };
-const TR3={follow:false};
+const TR3={follow:false}; let LOWMAT=null; const lowMat0=()=>LOWMAT||(LOWMAT=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.7,metalness:.15}));
 function trView(){ const on=!!(TR&&TR.view.d3); $('#trmap').hidden=on; $('#tr3').hidden=!on;
   if(on&&!TR3.r){ try{ TR3.r=new THREE.WebGLRenderer({canvas:$('#tr3'),antialias:true}); TR3.r.localClippingEnabled=true; TR3.r.setPixelRatio(Math.min(2,window.devicePixelRatio||1)); TR3.r.shadowMap.enabled=true; TR3.r.shadowMap.type=THREE.PCFSoftShadowMap; TR3.cam=new THREE.PerspectiveCamera(30,2,1,60000); guardGL($('#tr3'),()=>{ TR3.key=null; }); }
     catch(e){ TR.view.d3=false; TR.view.km=KM3D; toast('3D is not available in this browser.'); $('#trmap').hidden=false; $('#tr3').hidden=true; } }
@@ -5592,6 +5644,18 @@ function tr3Build(){
   const tpl=new Map(); TR3.planeTpl=d=>{ const k=d.name; if(!tpl.has(k)){ const g=meshFor({design:d,st:compute(d)},2,{gear:true}); g.traverse(o=>{ if(o.name==='glow'||o.name==='flash') o.visible=false; });
       g.updateMatrixWorld(true); const b=new THREE.Box3().setFromObject(g); tpl.set(k,{g,h:-b.min.y+.05}); }
     const T=tpl.get(k), o=T.g.clone(); o.rotation.order='YZX'; return {o,h:T.h,an:animParts(o),fold:-1,gear:0,vis:false}; };
+  TR3.tplHas=k=>tpl.has(k);
+  // Far off, each aircraft is drawn as one merged shape in its colours, one draw instead of about sixty, so a sky full of aircraft stays smooth.
+  const low=new Map(), lowMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.7,metalness:.15});
+  TR3.planeLow=d=>{ if(low.has(d.name)) return low.get(d.name); const g=meshFor({design:d,st:compute(d)},0,{}); g.updateMatrixWorld(true);
+    const body=new THREE.Color((part('paint',d.paint)||PARTS.paint[0]).body||'#888'), pos=[], col=[];
+    g.traverse(o=>{ if(!o.isMesh||!o.visible||o.name==='glow'||o.name==='flash') return; const m=[].concat(o.material)[0]; if(!m||m.transparent) return;
+      let q=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone(); q.applyMatrix4(o.matrixWorld); const P=q.attributes.position, c=m.map?body:(m.color||body);
+      for(let i=0;i<P.count;i++){ pos.push(P.getX(i),P.getY(i),P.getZ(i)); col.push(c.r,c.g,c.b); } q.dispose(); });
+    const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3)); geo.computeVertexNormals();
+    disposeTree(g); low.set(d.name,geo); return geo; };
+  { const want=[...new Map(cvAll().flatMap(C=>C.planes).map(p=>[p.d.name,p.d])).values()], idle=window.requestIdleCallback?f=>requestIdleCallback(f,{timeout:400}):f=>setTimeout(f,40);
+    const next=()=>{ if(TR3.key!==R) return; const d=want.shift(); if(!d) return; if(!tpl.has(d.name)) try{ TR3.planeTpl(d); TR3.planeLow&&TR3.planeLow(d); }catch(e){} idle(next); }; idle(next); }
   const th0=(90-R.ship.hdg)*DEG;
   Object.assign(TR3,{scene:sc,yawG,ship,sea,seaT,tile:SEATILE,foam,wake,wpos,wuv,NW,trail:[],puffs,smokeAt:mesh.smoke,nextPuff:R.t,key:R,lastT:null,fails:0,planes:new Map(),fprev:new Map(),
     lifts:mesh.lifts.map(v=>v&&Object.assign(v,{pos:0,t0:null,start:0})),wires:mesh.wires,barrier:mesh.barrier,barUp:0});
@@ -5708,7 +5772,8 @@ function tr3Frame(){
     const want=(90-trFlightHdg(f))*DEG, pv=TR3.fprev.get(f.id), yaw=pv&&!jump?pv.yaw+Math.atan2(Math.sin(want-pv.yaw),Math.cos(want-pv.yaw))*ease(1.1/Math.max(1,TR.speed||1)):want; TR3.fprev.set(f.id,{yaw});
     const SL=TR3.slotS||(TR3.slotS=new Map());
     const alt={form:450,cap:1200,scout:900,strike:1500,home:600}[f.mission]||800, fx=Math.cos(yaw), fz=-Math.sin(yaw);
-    f.planes.forEach((q,i)=>{ if(q.atk) return; const j=Math.ceil(i/2), sdv=i%2?1:-1, ox=-fx*14*j+fz*sdv*12*j, oz=-fz*14*j-fx*sdv*12*j; let o=SL.get(q.id); if(!o||jump) SL.set(q.id,o={x:ox,z:oz}); else { const k=ease(.8); o.x+=(ox-o.x)*k; o.z+=(oz-o.z)*k; }
+    const fp=f.planes.filter(q=>!q.atk), SLT=formSlots(fp.length);
+    fp.forEach((q,i)=>{ const [l,bk]=SLT[i], ox=-fx*bk*18+fz*l*15, oz=-fz*bk*18-fx*l*15; let o=SL.get(q.id); if(!o||jump) SL.set(q.id,o={x:ox,z:oz}); else { const k=ease(.8); o.x+=(ox-o.x)*k; o.z+=(oz-o.z)*k; }
       flightPose.set(q.id,{par:'world',x:x+o.x,y:alt,z:z+o.z,yaw,fold:0,spin:true,gear:1,snap:false}); }); }
   if(typeof atkPose==='function') atkPose(flightPose,FE,FN,t);
   // the arrester wires: the one a landing aircraft's hook catches is dragged forward with it, then springs back when it lets go
@@ -5742,11 +5807,14 @@ function tr3Frame(){
     if(rec&&rec.st!==p.state){ rec.from=rec.vis&&rec.o.parent===TR3.ship&&!jump?{x:rec.o.position.x-(rec.pdx||0),z:rec.o.position.z-(rec.pdz||0),yaw:rec.o.rotation.y}:null; rec.st=p.state; }
     const ps=mine.has(p)?poseOf(p,rec||{h:1.6}):(flightPose.get(p.id)||{vis:false});
     if(ps.vis===false){ if(rec) rec.o.visible=false; continue; }
-    if(!rec){ rec=TR3.planeTpl(p.d); rec.st=p.state; TR3.planes.set(p.id,rec); }
+    if(!rec){ rec=TR3.planeTpl(p.d); rec.st=p.state; TR3.planes.set(p.id,rec); try{ rec.hiKids=[...rec.o.children]; rec.lo=new THREE.Mesh(TR3.planeLow(p.d),lowMat0()); rec.lo.visible=false; rec.o.add(rec.lo); }catch(e){ rec.lo=null; } }
     const par=ps.par==='yaw'?TR3.yawG:ps.par==='world'?TR3.scene:TR3.ship; let snap=ps.snap||jump||!rec.vis; if(rec.o.parent!==par){ par.add(rec.o); snap=true; }
     const deck=ps.par==null&&ps.pitch==null, pk=rec.park||(rec.park=rec.o.userData.park||{x:0,y:0,ang:0}), want=deck?pk.ang:(ps.pitch||0);
     rec.pitchV=(snap&&!rec.vis)||jump||rec.pitchV==null?want:rec.pitchV+clamp(want-rec.pitchV,-dt*.5,dt*.5);
     { const th=rec.pitchV, c=Math.cos(th), sn=Math.sin(th), lx=pk.x-(pk.x*c-pk.y*sn), ly=pk.y-(pk.x*sn+pk.y*c), yw=ps.yaw||0; rec.pdx=deck?lx*Math.cos(yw):0; rec.pdz=deck?-lx*Math.sin(yw):0; rec.pdy=deck?ly:0; }
+    if(!(rec.lodN-->0)||snap){ rec.lodN=15; const wq=rec.o.getWorldPosition(TR3._lv||(TR3._lv=new THREE.Vector3())), dc=wq.distanceTo(TR3.cam.position), sh=dc<1800, far=!!rec.lo&&dc>900&&!TR.view.chase;
+      if(sh!==rec.shad){ rec.shad=sh; rec.o.traverse(o=>{ if(o.isMesh) o.castShadow=sh; }); }
+      if(far!==rec.far){ rec.far=far; for(const k of rec.hiKids||[]) k.visible=!far; if(rec.lo) rec.lo.visible=far; } }
     rec.o.visible=true; rec.vis=true; tv.set(ps.x+rec.pdx,(ps.y??yD+rec.h)+rec.pdy,ps.z+rec.pdz);
     if(snap||ps.par==='world'||rec.o.position.distanceTo(tv)>45) rec.o.position.copy(tv); else { const d=tv.clone().sub(rec.o.position), l=d.length(), mv=Math.min(l,ps.par==='world'?Math.max(dt*120,l*.25):dt*6); if(l>1e-6) rec.o.position.addScaledVector(d,mv/l); }
     { const wr=ps.roll||0; rec.rollV=snap||rec.rollV==null?wr:rec.rollV+(wr-rec.rollV)*ease(.25); }
@@ -6190,11 +6258,51 @@ const trSortiePlanes=so=>TR.planes.filter(p=>so.sqs.includes(p.sq));
 function trJoinFlight(p){ const R=TR, sh=R.ship, t=R.t, mk=o=>{ const f=Object.assign({id:++R.fid,x:sh.x,y:sh.y,planes:[],tx:0,ty:0,phase:'',t0:t},o); R.flights.push(f); return f; };
   if(p.task==='scout'&&p.scout&&p.scout.key){ const s=p.scout; p.scout=null; p.task=null; return R.flights.find(q=>q.scKey===s.key&&q.scWait)||mk({role:p.role,name:s.name,mission:'form',scWait:s,tx:s.x,ty:s.y,area:s.area,scKey:s.key}); }   // the line's aircraft form up over the ship, then set off together
   if(p.task==='scout'&&p.scout){ const s=p.scout; p.scout=null; p.task=null; return mk({role:p.role,name:`Scout ${R.fid+1}`,mission:'scout',phase:'out',tx:s.x,ty:s.y}); }
-  if(p.task&&p.task.startsWith('so')){ const so=R.sorties.find(q=>'so'+q.id===p.task); if(so&&so.state==='ranging') return R.flights.find(q=>q.sortie===so.id&&q.mission==='form')||mk({role:'torpedo',name:`Sortie ${so.id}`,mission:'form',sortie:so.id}); }
-  if(p.task==='cap'){ const sq=trSq(p.sq); return R.flights.find(q=>q.capSq===p.sq&&q.mission==='cap')||mk({role:'fighter',name:`${sq?sq.name:'Patrol'} on patrol`,mission:'cap',capSq:p.sq}); }
+  if(p.task&&p.task.startsWith('so')){ const so=R.sorties.find(q=>'so'+q.id===p.task); if(so&&so.state==='ranging') return R.flights.find(q=>q.sortie===so.id&&q.mission==='form')||mk({role:'torpedo',name:R.side==='red'?so.sqs.map(id=>(trSq(id)||{}).name).filter(Boolean).join(' and ')||`Sortie ${so.id}`:`Sortie ${so.id}`,mission:'form',sortie:so.id}); }
+  if(p.task==='cap'){ const sq=trSq(p.sq); return R.flights.find(q=>q.capWait===p.sq&&q.mission==='form')||mk({role:'fighter',name:sq?sq.name:'Patrol',mission:'form',capWait:p.sq}); }   // a patrol forms up over the ship, then takes its place in the circle
   return R.flights.find(f=>f.fresh&&f.role===p.role&&f.mission==='form'&&!f.sortie)||mk({role:p.role,name:`${part('role',p.role).name} flight ${R.fid+1}`,mission:'form',fresh:true}); }
-// Take aircraft out of whatever they are doing in the air and give them a flight of their own.
-function trRegroup(ps,o){ const R=TR; if(!ps.length) return null; const f0x=ps[0].fl; const f=Object.assign({id:++R.fid,x:f0x?f0x.x:R.ship.x,y:f0x?f0x.y:R.ship.y,planes:[],tx:0,ty:0,phase:'',t0:R.t},o);
+// Formation slots for n aircraft, in units of the spacing: [across (right +), back]. One alone; two side by side; four in two pairs;
+// three, five or more in a V with the leader at the point.
+function formSlots(n){ if(n<=1) return [[0,0]]; if(n===2) return [[-.5,0],[.5,0]]; if(n===4) return [[-.5,0],[.5,0],[-.5,1],[.5,1]];
+  const o=[[0,0]]; for(let i=1;i<n;i++){ const r=Math.ceil(i/2); o.push([(i%2?-1:1)*r*.85,r*.8]); } return o; }
+// A flight's job, in a word or two, and what it is made of: 8 Fighters, 4 Dive Bombers.
+function flightDoing(f){ const ph=f.phase;
+  if(f.mission==='form') return f.scWait?'Forming up to scout':f.capWait!=null?'Forming up to patrol':f.sortie!=null?'Forming up for the strike':'Forming up';
+  if(f.mission==='cap') return f.intc?'Intercepting':'Patrolling';
+  if(f.mission==='scout') return ph==='shadow'?'Shadowing':ph==='area'?'Searching':ph==='back'?'Returning':'Scouting';
+  if(f.mission==='strike') return ph==='attack'?'Attacking':ph==='search'?'Searching':ph==='back'?'Returning':'Outbound';
+  return {home:'Returning to land',move:'Flying to the marker',hold:'Holding at the marker',intercept:'Intercepting'}[f.mission]||'Flying'; }
+const ROLEPL={fighter:['Fighter','Fighters'],dive:['Dive Bomber','Dive Bombers'],torpedo:['Torpedo Bomber','Torpedo Bombers']};
+function flightMix(ps){ const n={}; for(const p of ps) n[p.role]=(n[p.role]||0)+1; return ['fighter','dive','torpedo'].filter(r=>n[r]).map(r=>`${n[r]} ${ROLEPL[r][n[r]>1?1:0]}`).join(', '); }
+// Patrols: every patrolling flight of a side flies one big circle over its carriers, the flights spaced evenly round it (two opposite
+// each other, three a third of the way round, and so on), all going round together. A squadron alone up there splits into two flights.
+const CAPR=9; let CAPC=null;
+function capSpot(f,t){ const R=TR, side=R.side||'blue';
+  if(!CAPC||CAPC.t!==t||CAPC.side!==side){ const cs=cvAll().filter(C=>C.side===side&&!C.gone&&C.ship&&(C.ship.status||'afloat')==='afloat'), list=[];
+    for(const C of cvAll()) if(C.side===side) for(const q of (C===R.cur?R.flights:C.flights)) if(q.mission==='cap'&&!q.intc&&q.planes.some(p=>p.state==='air')&&!list.includes(q)) list.push(q);
+    const ctr0=cs.length?{x:cs.reduce((a,C)=>a+C.ship.x,0)/cs.length,y:cs.reduce((a,C)=>a+C.ship.y,0)/cs.length}:{x:R.ship.x,y:R.ship.y};
+    const v=Math.min(...list.flatMap(q=>q.planes.map(p=>p.st.cruise)),400)*.85/3600;
+    CAPC={t,side,list:list.sort((a,b)=>a.id-b.id),ctr:ctr0,w:v/CAPR}; }
+  const L=CAPC.list; if(!L.includes(f)){ L.push(f); L.sort((a,b)=>a.id-b.id); }
+  if(L.length===1&&f.planes.length>=2&&!f.split){ const base=f.name.replace(/, flight \d+$/,''), half=f.planes.slice(Math.ceil(f.planes.length/2)); f.split=true; f.name=`${base}, flight 1`;
+    const g=trRegroup(half,{role:'fighter',name:`${base}, flight 2`,mission:'cap',capSq:f.capSq,split:true}); if(g){ g.x=f.x; g.y=f.y; L.push(g); } }
+  const k=L.indexOf(f), a=CAPC.w*t+2*Math.PI*k/L.length; return {x:CAPC.ctr.x+Math.cos(a)*CAPR,y:CAPC.ctr.y+Math.sin(a)*CAPR}; }
+// A scout that finds enemy ships stays with them, circling well outside the reach of their guns and reporting, until its fuel says
+// go home, or enemy fighters that outnumber it come after it.
+const SHADOWKM=11;
+function scoutShadow(f,t,dt){ const R=TR, side=R.side||'blue', eye=airEye(f);
+  const foes=cvAll().filter(C=>C.side!==side).flatMap(C=>C.flights).filter(g=>g.planes.some(p=>p.state==='air'&&p.role==='fighter')&&Math.hypot(g.x-f.x,g.y-f.y)<15);
+  if(foes.reduce((n,g)=>n+g.planes.filter(p=>p.state==='air'&&p.role==='fighter').length,0)>f.planes.length){ if(f.phase==='shadow'){ f.phase='back'; f.t0=t; trLog(`${f.name} is driven off by enemy fighters and turns for home.`,side!=='red'); } return null; }
+  const ships=R.tgts.filter(T=>T.status==='afloat'&&tgtHostile(T,side)&&Math.hypot(T.x-f.x,T.y-f.y)<(f.phase==='shadow'?eye+25:eye));
+  if(!ships.length){ if(f.phase==='shadow'){ f.phase='back'; f.t0=t; } return null; }
+  if(f.phase!=='shadow'){ f.phase='shadow'; f.shA=Math.atan2(f.y-ships[0].y,f.x-ships[0].x)+(Math.random()-.5)*1.6; if(side!=='red') trLog(`${f.name} has found enemy ships and stays with them, keeping out of reach of their guns.`,true); }
+  const c=ships.reduce((a,T)=>({x:a.x+T.x/ships.length,y:a.y+T.y/ships.length}),{x:0,y:0}), far=Math.max(...ships.map(T=>Math.hypot(T.x-c.x,T.y-c.y)));
+  const r=far+SHADOWKM; f.shA+=Math.min(...f.planes.map(p=>p.st.cruise))/3600*dt/r; return {x:c.x+Math.cos(f.shA)*r,y:c.y+Math.sin(f.shA)*r}; }
+// Take aircraft out of whatever they are doing in the air and give them a flight of their own. Aircraft from flights far apart (scouts
+// on different lines, say) each get a flight of their own where they are, instead of all being put in one place.
+function trRegroup(ps,o){ const R=TR; if(!ps.length) return null;
+  { const by=new Map(); for(const p of ps) if(p.state==='air'){ const k=p.fl||null; if(!by.has(k)) by.set(k,[]); by.get(k).push(p); }
+    if(by.size>1){ let first=null, k=0; const base=(o.name||'').replace(/, flight \d+$/,''); for(const g of by.values()){ k++; const f=trRegroup(g,Object.assign({},o,{name:base?`${base}, flight ${k}`:o.name})); first=first||f; } return first; } } const f0x=ps[0].fl; const f=Object.assign({id:++R.fid,x:f0x?f0x.x:R.ship.x,y:f0x?f0x.y:R.ship.y,planes:[],tx:0,ty:0,phase:'',t0:R.t},o);
   for(const p of ps){ if(p.fl) p.fl.planes=p.fl.planes.filter(q=>q!==p); if(p.state==='air'){ f.planes.push(p); p.fl=f; p.atk=null; } } R.flights.push(f); R.flights=R.flights.filter(q=>q===f||q.planes.length); return f; }
 const roleMix=ps=>ps.some(p=>p.role==='torpedo')?'torpedo':ps.some(p=>p.role==='dive')?'dive':'fighter';
 function trSortieGo(so){ const R=TR, ps=trSortiePlanes(so); so.state='ranging'; so.t0=R.t;
@@ -6237,8 +6345,8 @@ const agCvs=()=>{ trKeep(); return TR.cvs.filter(C=>C.side!=='red'&&!C.gone); };
 const agSt=C=>{ if(!AG.by.has(C)) AG.by.set(C,{sel:new Set(),ssel:new Set()}); return AG.by.get(C); };
 function agWith(C,fn){ const st=agSt(C), s0=AG.sel, s1=AG.ssel; AG.sel=st.sel; AG.ssel=st.ssel; try{ return withC(C,fn); } finally{ AG.sel=s0; AG.ssel=s1; } }
 function agHTML(){ const R=TR, cols=AGCOL.map(([k,name,f])=>{ const ps=R.planes.filter(p=>f(p.state));
-    return `<div class="agcol"><h4><span>${name}</span><span class="mono">${ps.length}</span></h4>${agTypes(ps).map(([nm,qs])=>`<button class="agtype" data-agtype="${esc(nm)}" data-agcol="${k}">${esc(nm)} · ${qs.length}</button>
-      <div class="agps">${qs.map(p=>{ const sq=p.sq&&trSq(p.sq); return `<button class="agp${p.armed?'':' off'}" data-agp="${p.id}" aria-pressed="${AG.sel.has(p.id)}" title="${esc(p.d.name)} · ${esc(part('role',p.role).name)}${p.armed?'':' · not armed'}${sq?` · ${esc(sq.name)}`:''}">${planeSVG(ROLECOL[p.role])}${sq?`<span class="n">${sq.id}</span>`:''}</button>`; }).join('')}</div>`).join('')||'<span class="muted" style="font-size:12.5px">None</span>'}</div>`; }).join('');
+    return `<div class="agcol${ps.length?'':' empty'}"><h4><span>${name}</span><span class="mono">${ps.length}</span></h4>${agTypes(ps).map(([nm,qs])=>`<button class="agtype" data-agtype="${esc(nm)}" data-agcol="${k}">${esc(nm)} · ${qs.length}</button>
+      <div class="agps">${qs.map(p=>{ const sq=p.sq&&trSq(p.sq); return `<button class="agp${p.armed?'':' off'}" data-agp="${p.id}" aria-pressed="${AG.sel.has(p.id)}" title="${esc(p.d.name)} · ${esc(part('role',p.role).name)}${p.armed?'':' · not armed'}${sq?` · ${esc(sq.name)}`:''}">${planeSVG(ROLECOL[p.role])}${sq?`<span class="n">${sq.id}</span>`:''}</button>`; }).join('')}</div>`).join('')||''}</div>`; }).join('');
   const lost=R.planes.filter(p=>p.state==='lost').length, ns=AG.sel.size, nq=AG.ssel.size, dis=nq?'':' disabled';
   const sqs=R.sq.length?R.sq.map(sq=>{ const ps=sqPlanes(sq), mix=agTypes(ps).map(([nm,qs])=>`${qs.length} × ${esc(nm)}`).join(', ');
       return `<label class="agsq"><input type="checkbox" data-agsq="${sq.id}"${AG.ssel.has(sq.id)?' checked':''}><strong>${esc(sq.name)}</strong><span>${mix||'no aircraft left'}</span><span class="st">${esc(agStatus(sq))}</span></label>`; }).join('')
@@ -6288,10 +6396,10 @@ function agAct(b,C){ const R=TR;
     const n=sqs.reduce((k,sq)=>k+sqPlanes(sq).filter(p=>p.state!=='lost').length,0); if(!n) return;
     SCP={C,sqs:sqs.map(q=>q.id),legs:[],max:n}; AG.ssel.clear(); return ()=>{ agClose(); scoutPanel(); trDrawMap(); $('#trscout').scrollIntoView({block:'nearest'}); }; }
   if(b.dataset.agact==='cap'){ if(busy.length){ toast(`${busy.map(q=>q.name).join(', ')} ${busy.length>1?'are':'is'} on a sortie. Recall first.`); return; }
-    for(const sq of sqs){ sq.task='cap'; const ps=sqPlanes(sq); for(const p of ps) if(p.state!=='lost') p.task='cap'; const up=ps.filter(p=>p.state==='air'); if(up.length) trRegroup(up,{role:'fighter',name:`${sq.name} on patrol`,mission:'cap',capSq:sq.id}); }
+    for(const sq of sqs){ sq.task='cap'; const ps=sqPlanes(sq); for(const p of ps) if(p.state!=='lost') p.task='cap'; const up=ps.filter(p=>p.state==='air'); if(up.length) trRegroup(up,{role:'fighter',name:sq.name,mission:'cap',capSq:sq.id}); }
     trLog(`${sqs.map(q=>q.name).join(', ')}: protect the carrier.`); agRender(true); return; }
   if(b.dataset.agact==='recall'){ for(const sq of sqs){ sq.task=null; for(const so of R.sorties) if(so.sqs.includes(sq.id)&&so.state!=='done'){ so.sqs=so.sqs.filter(id=>id!==sq.id); if(!so.sqs.length) so.state='done'; }
-      const ps=sqPlanes(sq); for(const p of ps){ p.task=null; p.order=false; p.respot=false; } const up=ps.filter(p=>p.state==='air'); if(up.length) trRegroup(up,{role:roleMix(up),name:`${sq.name}, recalled`,mission:'home'}); }
+      const ps=sqPlanes(sq); for(const p of ps){ p.task=null; p.order=false; p.respot=false; } const up=ps.filter(p=>p.state==='air'); if(up.length) trRegroup(up,{role:roleMix(up),name:sq.name,mission:'home'}); }
     trLog(`${sqs.map(q=>q.name).join(', ')} recalled to land.`); agRender(true); return; }
   if(b.dataset.agact==='disband'){ for(const sq of sqs){ for(const p of sqPlanes(sq)){ p.sq=null; if(p.task==='cap') p.task=null; } } R.sq=R.sq.filter(q=>!AG.ssel.has(q.id)); AG.ssel.clear(); agRender(true); return; } }
 // Scouting: a squadron (or several) sent out along bearings, or to circles placed on the chart, one search line for each aircraft at
@@ -6349,12 +6457,15 @@ $('#tab-trials').addEventListener('click',e=>{
   if(b.dataset.adv){ const ad=ts.adv||(ts.adv={}), i=b.dataset.adv.indexOf(':'), k=b.dataset.adv.slice(0,i), id=b.dataset.adv.slice(i+1), o=k==='cv'?(ad.cvs=ad.cvs||{}):(ad.esc=ad.esc||{}); o[id]=clamp((o[id]||0)+ +b.dataset.d,0,k==='cv'?5:12); save(); renderTrials(); return; }
   if(b.id==='trstart'){ trStart(); return; }
   if(!TR) return;
-  if(b.id==='trend'){ TSND.silence(); TR=null; TR3.key=null; AG.open=false; $('#agd').hidden=true; renderTrials(); return; }
+  if(b.id==='trend'){ TSND.silence(); trFull(false); TR=null; TR3.key=null; AG.open=false; $('#agd').hidden=true; renderTrials(); return; }
   if(b.dataset.trspeed!=null){ const v=+b.dataset.trspeed; if(v===0) TR.pause=!TR.pause; else { TR.speed=v; TR.pause=false; } renderTrials(); return; }
   if(b.id==='trzin'||b.id==='trzout'){ const k=b.id==='trzout'?1.8:1/1.8; if(TR.view.d3) tr3Dist(TR3.dist*k); else trZoom(k); return; }
   if(b.id==='trfollow'){ const v=TR.view; v.lock=null; v.chase=null; if(!v.follow){ v.follow=true; } else { v.follow=false; v.x=TR.ship.x; v.y=TR.ship.y; } trZoomLabel(); return; }
   if(b.id==='trgrid'||b.id==='trwind'){ const MO=trMapOpts(), k=b.id==='trgrid'?'grid':'wind'; MO[k]=!MO[k]; save(); trZoomLabel(); trDrawMap(); return; }
   if(b.id==='trrings'){ const MO=trMapOpts(); MO.rings=MO.rings===false; save(); trZoomLabel(); trDrawMap(); return; }
+  if(b.id==='trallow3d'){ const MO=trMapOpts(); MO.d3=MO.d3===false; save(); if(MO.d3===false&&TR.view.d3) trLeave3D(); else if(MO.d3!==false&&!TR.view.d3&&TR.view.km<KM3D) TR.view.km=KM3D*1.2; trZoomLabel(); trDrawMap(); return; }
+  if(b.id==='trfull'){ trFull(true); return; }
+  if(b.id==='trfsair'){ agOpen(); return; }
   if(b.id==='trsight'){ const ts=trS(); ts.sight=ts.sight===false; save(); if(TR){ sightStep(); trLog(ts.sight?'Sight on: you see only what your ships and aircraft can see.':'Sight off: every ship and aircraft shows on the chart.'); } trZoomLabel(); trDrawMap(); return; }
   if(b.id==='trcprev'||b.id==='trcnext'){ trChaseStep(b.id==='trcnext'?1:-1); return; }
   if(b.id==='trcstop'){ trChaseStop(); return; }
@@ -6386,12 +6497,43 @@ $('#tab-trials').addEventListener('change',e=>{ if(e.target.dataset.trn!=null) r
     const v=TR.view, c=trFocus(), s=trScale()||1; v.follow=false; v.lock=null; v.chase=null; v.x=c.x-(e.clientX-was[0])/s; v.y=c.y+(e.clientY-was[1])/s; trClampView(); trZoomLabel(); cvs.style.cursor='grabbing'; });
   cvs.addEventListener('pointerup',e=>{ if(!pts.delete(e.pointerId)) return; pinch=null;
     if(down&&!moved&&!pts.size&&TR){ const r=cvs.getBoundingClientRect(), c=trFocus(), s=trScale()||1, mx=e.clientX-r.left, my=e.clientY-r.top;
-      if(!TR.spawn&&!TR.pick){ const h=(TR.mapHits||[]).map(q=>({q,d:Math.hypot(q.x-mx,q.y-my)})).filter(o=>o.d<11).sort((a,b)=>a.d-b.d)[0]; if(h){ if(h.q.C.side==='red'||TR.selF===h.q.f.id) trChase(h.q.p,h.q.f); else { TR.selF=h.q.f.id; trDrawMap(); } down=null; return; } TR.selF=null; }
+      if(!TR.spawn&&!TR.pick&&!SCP){ const h=(TR.mapHits||[]).map(q=>({q,d:Math.hypot(q.x-mx,q.y-my)})).filter(o=>o.d<11).sort((a,b)=>a.d-b.d)[0];
+        if(h){ if(TR.selF!=null&&h.q.C.side==='red') flightOrder({air:h.q.f},e.shiftKey); else if(h.q.C.side==='red'||TR.selF===h.q.f.id) trChase(h.q.p,h.q.f); else { TR.selF=h.q.f.id; trDrawMap(); } down=null; return; }
+        if(TR.selF!=null){ flightOrder({x:c.x+(e.clientX-r.left-r.width/2)/s,y:c.y-(e.clientY-r.top-r.height/2)/s},e.shiftKey); down=null; return; } }
       trMapClick(c.x+(e.clientX-r.left-r.width/2)/s,c.y-(e.clientY-r.top-r.height/2)/s); } down=null; });
   cvs.addEventListener('pointercancel',e=>{ pts.delete(e.pointerId); down=null; pinch=null; });
   cvs.addEventListener('wheel',e=>{ if(!TR) return; e.preventDefault(); const r=cvs.getBoundingClientRect(); trZoom(Math.exp(e.deltaY*.0022),e.clientX-r.left-r.width/2,e.clientY-r.top-r.height/2); },{passive:false});
   cvs.addEventListener('dblclick',e=>{ if(!TR) return; const r=cvs.getBoundingClientRect(); trZoom(1/3,e.clientX-r.left-r.width/2,e.clientY-r.top-r.height/2); }); }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&TR&&(TR.spawn||TR.pick)&&$('#agd').hidden){ if(TR.pick&&TR.pick.so!=null){ const pk=TR.pick, end=id=>()=>{ const so=TR.sorties.find(q=>q.id===id); if(so) so.state='done'; }; for(const m of [{C:pk.C,so:pk.so},...(pk.also||[])]) if(m.C&&m.C!==TR.cur) withC(m.C,end(m.so)); else end(m.so)(); trLog('Sortie cancelled.'); } TR.spawn=null; TR.pick=null; trSpawnBtns(); } });
+// Full screen: the chart or the 3D view fills the window with nothing over it but the Airgroups button. Esc leaves it.
+function trFull(on){ const el=document.querySelector('#trrun .trview'); if(!el) return; el.classList.toggle('trfs',on); document.body.style.overflow=on?'hidden':''; if(TR){ trDrawMap(); } }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&TR&&TR.selF!=null&&$('#agd').hidden){ TR.selF=null; trDrawMap(); e.stopImmediatePropagation(); } },true);
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&$('#agd').hidden&&document.querySelector('.trview.trfs')&&!(TR&&(TR.spawn||TR.pick))) trFull(false); });
+// Orders by the chart: click one of your flights, then click where it should go. On an enemy task force (or where one was last seen)
+// it attacks it; on enemy aircraft it goes after them; on one of your carriers its fighters patrol over the fleet and its bombers land;
+// anywhere else it flies there and holds. Shift-click to add another leg, so it can fly a course of several legs.
+function flightOrder(o,shift){ const R0=TR; let f=null, C=null; for(const Q of cvAll()){ if(Q.side==='red') continue; const q=(Q===R0.cur?R0.flights:Q.flights).find(z=>z.id===R0.selF); if(q){ f=q; C=Q; break; } }
+  if(!f||!f.planes.some(p=>p.state==='air')){ R0.selF=null; return; }
+  withC(C,()=>{ const R=TR, s=trScale()||1, clear=()=>{ f.tgtG=null; f.tgt=null; f.srch=null; f.itgt=null; f.scWait=null; f.area=null; f.phase=''; for(const p of f.planes) p.atk=null; };
+    if(o.air){ clear(); f.mission='intercept'; f.itgt=o.air; trLog(`${f.name}: go after the enemy ${o.air.name}.`); return; }
+    const G=trGroupAt(o.x,o.y,s); if(G){ clear(); f.mission='strike'; f.phase='out'; f.tgtG=G.g; f.tx=G.x; f.ty=G.y; trLog(`${f.name}: attack ${grpName(G.g)}${G.last?', starting where it was last seen':''}.`); return; }
+    const home=cvAll().find(Q=>Q.side!=='red'&&!Q.gone&&Q.ship&&Math.hypot(Q.ship.x-o.x,Q.ship.y-o.y)<Math.max(1.2,16/s));
+    if(home){ const fig=f.planes.filter(p=>p.state==='air'&&p.role==='fighter'), bom=f.planes.filter(p=>p.state==='air'&&p.role!=='fighter');
+      if(fig.length&&bom.length){ clear(); trRegroup(bom,{role:roleMix(bom),name:f.name,mission:'home'}); f.mission='cap'; f.role='fighter'; trLog(`${f.name}: fighters to patrol over the fleet, bombers to land.`); }
+      else if(fig.length){ clear(); f.mission='cap'; trLog(`${f.name}: patrol over the fleet.`); }
+      else { clear(); f.mission='home'; trLog(`${f.name}: return and land.`); }
+      return; }
+    const pt={x:clamp(o.x,-BOXKM,BOXKM),y:clamp(o.y,-BOXKM,BOXKM)};
+    if(shift&&f.mission==='move'&&f.route&&f.route.length) f.route.push(pt); else { clear(); f.mission='move'; f.route=[pt]; }
+    trLog(`${f.name}: fly ${f0(Math.hypot(pt.x-f.x,pt.y-f.y))} km to ${String(Math.round(bearing(pt.x-f.x,pt.y-f.y))).padStart(3,'0')}°${f.route.length>1?` (leg ${f.route.length})`:''}.`); });
+  if(!shift) R0.selF=null; trPanels(true); trDrawMap(); }
+// Your flights' courses: the legs still to fly, the point they hold at, or the aircraft they are chasing.
+function routeDraw(c,PX,PY){ c.save(); c.lineWidth=1.3; c.setLineDash([5,4]);
+  for(const C of cvAll()){ if(C.side==='red') continue; for(const f of C.flights){ if(!f.planes.some(p=>p.state==='air')) continue; const col=ROLECOL[f.role]||'#fff'; c.strokeStyle=col; c.fillStyle=col;
+    if(f.mission==='move'&&f.route&&f.route.length){ c.beginPath(); c.moveTo(PX(f.x),PY(f.y)); for(const q of f.route) c.lineTo(PX(q.x),PY(q.y)); c.stroke(); for(const q of f.route){ c.beginPath(); c.arc(PX(q.x),PY(q.y),3.5,0,2*Math.PI); c.fill(); } }
+    else if(f.mission==='hold'){ c.beginPath(); c.arc(PX(f.hx),PY(f.hy),5,0,2*Math.PI); c.stroke(); }
+    else if(f.mission==='intercept'&&f.itgt){ c.beginPath(); c.moveTo(PX(f.x),PY(f.y)); c.lineTo(PX(f.itgt.x),PY(f.itgt.y)); c.stroke(); } } }
+  c.restore(); }
 function trSpawnBtns(){ for(const x of document.querySelectorAll('[data-trspawn]')) x.setAttribute('aria-pressed',String(TR&&TR.spawn===x.dataset.trspawn)); }
 
 function viewerBuild(){
@@ -6574,7 +6716,7 @@ function numEdit(o){ if(o.querySelector('input')) return; const d=o.closest('.di
 document.addEventListener('click',e=>{ const o=e.target.closest('.dim output'); if(o) numEdit(o); });
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches&&e.target.matches('.dim output')){ e.preventDefault(); numEdit(e.target); } });
 // for testing only: ?debug exposes the inner state to the console
-if(/[?&]debug\b/.test(location.search)) window.FT={strafeHit,deckPlanesHit,liftHit,deckSlide,cvPlanImg,TSND,scoutAdd,scoutGo,scoutPanel,trDeckHTML,newCV,autoLayout,cvVolumes,cvFaults,cvSea,CVP,cvPart,deckStart,clsOf,renderCV,cvChanged,CVCACHE,CVFIRE,tgtShaft,SPREAD,BOMBFX,hangarHere,hangarK,advFight,advAA,advAir,trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
+if(/[?&]debug\b/.test(location.search)) window.FT={trPanels,agRender,flightOrder,capSpot,formSlots,flightDoing,flightMix,trFull,strafeHit,deckPlanesHit,liftHit,deckSlide,cvPlanImg,TSND,scoutAdd,scoutGo,scoutPanel,trDeckHTML,newCV,autoLayout,cvVolumes,cvFaults,cvSea,CVP,cvPart,deckStart,clsOf,renderCV,cvChanged,CVCACHE,CVFIRE,tgtShaft,SPREAD,BOMBFX,hangarHere,hangarK,advFight,advAA,advAir,trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
 })();
 </script>
 
