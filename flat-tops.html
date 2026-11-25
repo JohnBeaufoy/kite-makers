@@ -1972,16 +1972,22 @@ function stowPass(cvs,rows,cap){
   return {placed,left,ships};
 }
 // Tonnage left unused under the limit is paid back into the aircraft budget, at 60% of the year's money for each ton the treaty allows.
-const airBudget=r=>r.air;   // the same sum the rival has, whatever tonnage you leave unused
+// The aircraft budget starts at the rival's own. Carrier tonnage left unused under the limit is paid into it, and tonnage over the limit
+// is paid for out of it, at the same rate: the year's money for each ton the limit allows.
+const TONRATE=1;
+const tonBonus=r=>{ const t=fleetTons(); return sailing().length?Math.round((r.tons-t)*r.air/r.tons*TONRATE/100)*100:0; };
+const airBudget=r=>Math.max(0,r.air+tonBonus(r));
 function fleetChecks(r){
   const out=[], ships=sailing(), tons=fleetTons(), n=airCount(), cost=airCost(r);
   if(!S.classes.length) out.push({bad:true,t:'Design a carrier class on the Carriers tab.'});
   else if(!S.ships.length) out.push({bad:true,t:'Lay down at least one ship on the Carriers tab.'});
   else if(!ships.length) out.push({bad:true,t:'Choose at least one carrier to sail.'});
-  else out.push(tons>r.tons?{bad:true,t:`${fmtK(tons-r.tons)} t over the ${fmtK(r.tons)} t limit.`}:{t:`${ships.length} carrier${ships.length>1?'s':''}, ${fmtK(tons)} t, within the limit.`});
+  else { const b=tonBonus(r), k=`${ships.length} carrier${ships.length>1?'s':''}, ${fmtK(tons)} t`;
+    out.push(tons>r.tons?{note:true,t:`${k}: ${fmtK(tons-r.tons)} t over the ${fmtK(r.tons)} t limit, which costs £${fmtK(-b)} of the aircraft budget.`}
+      :{t:`${k}, within the limit${b>0?`: the ${fmtK(r.tons-tons)} t left unused adds £${fmtK(b)} to the aircraft budget`:''}.`}); }
   for(const s of ships){ const c=clsOf(s.cls), F=cvFaults(c.cv); if(F.notes.length) out.push({t:`${s.name} sails with ${F.notes.length} design fault${F.notes.length>1?'s':''}: ${F.notes.join(' ')}`}); }
   if(!n) out.push({bad:true,t:'No aircraft in the air group.'});
-  const ab=r.air;
+  const ab=airBudget(r);
   if(n){ out.push(cost>ab?{bad:true,t:`£${fmtK(cost-ab)} over the aircraft budget.`}:{t:`${n} aircraft for £${fmtK(cost)}, within the budget.`});
     if(ships.length){ const st=stowAir(); if(st.left.length) for(const l of st.left) out.push({bad:true,t:`${l.n} × ${l.name} will not fit: ${l.why}.`}); else out.push({t:`All ${n} aircraft have a place aboard.`}); } }
   for(const x of airRows()) if(x.n&&compute(x.d).sm<-.04) out.push({bad:true,t:`${x.d.name} is unflyable.`});
@@ -3973,6 +3979,9 @@ const DROPS=[
     'The roundels on the wings sit on the wing again. Where the aileron is cut from the trailing edge the wing is a little thinner, and they had been floating above it; they now fold with the outer wing, too.',
     'The bridge and great funnel island looks as Lexington and Saratoga’s did: the funnel is a huge slab some 30 m long, standing well above the bridge, on an island about 45 m long. Like every island layout it is only for looks: her displacement, weight and aircraft figures are the same whichever you choose (guns and parked aircraft only keep clear of it).',
     'A carrier’s planned air group is what she sails with. Choosing her to sail on the Fleet tab adds her plan to the fleet’s air group (leaving her behind takes it off again), and in battle she takes those aircraft aboard herself. The numbers can still be changed before sailing.',
+  ]},
+  {at:'2026-11-25T22:30:00+13:00',items:[
+    'Carrier tonnage and the aircraft budget trade against each other. Sail with less than the year’s tonnage limit and the tonnage left unused is paid into your aircraft budget; go over it and the excess is paid for out of the budget, at the same rate both ways (the year’s aircraft money for each ton the limit allows: leave a tenth of the tonnage unused and the budget is a tenth bigger). A fleet over the limit can now sail. The Fleet tab shows how much the tonnage adds or costs.',
   ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
