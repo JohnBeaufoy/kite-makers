@@ -275,7 +275,11 @@ legend{padding:0;margin-bottom:6px}
 .cvstats .k{font-weight:500;white-space:nowrap}
 .cvstats .v,.cvweights .v{font-family:var(--f-mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums}
 .cvstats .v.bad,.cvair .bad{color:var(--bad)}
-.cvair{grid-template-columns:minmax(0,1fr) auto auto auto}
+.cvair{grid-template-columns:minmax(0,1fr) auto auto auto auto}
+.cvair .cnt{display:flex;gap:4px;align-items:center;justify-content:flex-end}
+.cvair .cnt button{width:26px;height:26px;background:var(--surface);border:1px solid var(--line);color:var(--ink);cursor:pointer}
+.cvair .cnt input[type=number]{width:52px}
+.cvair .note .bad,.cvair small .bad{color:var(--bad)}
 .cvsea{grid-template-columns:minmax(0,1.4fr) repeat(4,minmax(0,1fr));gap:4px 10px;align-items:end}
 .cvsea .h.v{white-space:normal;letter-spacing:.04em;font-size:10.5px;line-height:1.25}
 .cvsea .h small{display:block;text-transform:none;letter-spacing:0;font-size:11px}
@@ -294,7 +298,7 @@ legend{padding:0;margin-bottom:6px}
 .liftrow{border:1px solid var(--line);border-radius:3px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
 .liftrow .ltitle{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between}
 @media(max-width:900px){#cvbench .sheet{order:-1}}
-@media(max-width:520px){.cvair{grid-template-columns:minmax(0,1.6fr) minmax(0,.6fr) minmax(0,.6fr) minmax(0,.6fr);gap:4px 8px}}
+@media(max-width:520px){.cvair{grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(0,.5fr)) auto;gap:4px 8px}}
 .trrun{display:flex;flex-direction:column;gap:16px}
 .trhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .trhead h3{margin:0}
@@ -1124,19 +1128,51 @@ const RIVALS3=[
 // fineness is found that gives her speed. They keep the gear their real ships had (cv.rival), whatever you have unlocked: rivals may be
 // up to about 15% over their own tonnage limit, where the real ships came out that way.
 const RIVALHIST=[{name:'Yorktown',nat:'US',year:1937,L:234.7,B:25.4,std:19875,kn:32.5,shp:120000,shafts:'4',boiler:'b36',fore:'open',hside:'open',hangars:1,hH:5.3,hFrom:0.14,hTo:0.82,deckL:244,deckW:26.2,deckOv:4,belt:102,hdArm:38,tps:2.5,tpsk:'internal',island:'small',istyle:'tower',iside:'stbd',islX:0.4,funnel:'island',lifts:[[0.2,14.6,13.4,0],[0.47,14.6,13.4,0],[0.73,14.6,13.4,0]],cats:2,cat:'c38',wire:'w37',wires:9,aaH:'h1',nH:8,aaM:'m1',nM:4,aaL:'l1',nL:24,radar:'r1',N:90,G:75},{name:'Wasp',nat:'US',year:1940,L:210.3,B:25.1,std:14700,kn:29.5,shp:70000,shafts:'2',boiler:'b36',fore:'open',hside:'open',hangars:1,hH:5.2,hFrom:0.15,hTo:0.85,deckL:225,deckW:28,deckOv:4,belt:16,hdArm:32,tps:0,island:'small',istyle:'lattice',iside:'stbd',islX:0.37,funnel:'island',lifts:[[0.3,13.4,13.4,0],[0.6,13.4,13.4,0],[0.5,13,11,1]],cats:2,cat:'c38',wire:'w37',wires:9,aaH:'h1',nH:8,aaM:'m1',nM:4,aaL:'l1',nL:24,radar:'r1',N:76,G:71},{name:'Essex',nat:'US',year:1942.9,L:249.9,B:28.3,std:27100,kn:32.7,shp:150000,shafts:'4',boiler:'b40',fore:'open',hside:'open',hangars:1,hH:5.3,hFrom:0.12,hTo:0.86,deckL:262,deckW:32.9,deckOv:6,belt:102,hdArm:64,tps:3.5,tpsk:'internal',island:'small',istyle:'tower',iside:'stbd',islX:0.4,funnel:'island',lifts:[[0.2,14.6,13.4,0],[0.74,14.6,13.4,0],[0.45,18.3,10.4,1]],cats:1,cat:'c40',wire:'w37',wires:9,aaH:'h3',nH:6,aaM:'m2',nM:8,aaL:'l2',nL:46,radar:'r2',dc:'dc2',avgas:'saddle',N:90,G:94},{name:'Independence',nat:'US',year:1943,L:182.9,B:21.8,std:11000,kn:31.6,shp:100000,shafts:'4',boiler:'b36',fore:'open',hside:'open',hangars:1,hH:5.3,hFrom:0.22,hTo:0.76,deckL:168,deckW:22.3,deckOv:2,belt:127,hdArm:50,tps:1,tpsk:'bulge',island:'small',istyle:'compact',iside:'stbd',islX:0.12,funnel:'stacks',lifts:[[0.3,12.8,11.6,0],[0.7,12.8,11.6,0]],cats:1,cat:'c40',wire:'w37',wires:8,aaH:'h1',nH:0,aaM:'m2',nM:6,aaL:'l2',nL:16,radar:'r2',dc:'dc2',avgas:'saddle',N:33,G:33},{name:'Hosho',nat:'JP',year:1923,L:155.5,B:17.8,std:7470,kn:25,shp:30000,shafts:'2',boiler:'b25',fore:'open',hside:'closed',hangars:1,hH:4.5,hFrom:0.22,hTo:0.78,deckL:158,deckW:22.7,deckOv:2,belt:0,hdArm:0,tps:0,island:'none',funnel:'down',lifts:[[0.3,10.4,9,0],[0.67,10.4,9,0]],cats:0,wire:'w30',wires:6,aaH:'h1',nH:0,aaM:'m1',nM:4,aaL:'l1',nL:0,radar:'none',N:15,G:15},{name:'Akagi',nat:'JP',year:1938,L:250.4,B:31.3,std:36500,kn:31.2,shp:133000,shafts:'4',boiler:'b25',fore:'open',hside:'closed',hangars:2,hH:4.6,hFrom:0.14,hTo:0.88,deckL:249,deckW:30.5,deckOv:3,belt:152,hdArm:79,tps:2.5,tpsk:'bulge',island:'small',istyle:'bridge',iside:'port',islX:0.4,funnel:'down',lifts:[[0.17,13,11.8,0],[0.45,13,12,0],[0.8,13,8.4,0]],cats:0,wire:'w37',wires:9,aaH:'h2',nH:6,aaM:'m1',nM:14,aaL:'l1',nL:0,radar:'none',N:91,G:63},{name:'Ryujo',nat:'JP',year:1936,L:175.4,B:20.3,std:10600,kn:29,shp:65000,shafts:'2',boiler:'b32',fore:'open',hside:'closed',hangars:2,hH:4.3,hFrom:0.22,hTo:0.8,deckL:156.5,deckW:23,deckOv:2,belt:25,hdArm:25,tps:0,island:'none',funnel:'down',lifts:[[0.32,11,15.7,0],[0.62,11,8,0]],cats:0,wire:'w30',wires:6,aaH:'h2',nH:4,aaM:'m1',nM:12,radar:'none',N:48,G:33},{name:'Soryu',nat:'JP',year:1937.9,L:222,B:21.3,std:15900,kn:34.5,shp:152000,shafts:'4',boiler:'b36',fore:'open',hside:'closed',hangars:2,hH:4.6,hFrom:0.14,hTo:0.86,deckL:216.9,deckW:26,deckOv:3,belt:46,hdArm:25,tps:0,island:'small',istyle:'compact',iside:'stbd',islX:0.2,funnel:'down',lifts:[[0.22,11.5,16,0],[0.48,11.5,12,0],[0.78,11.5,10,0]],cats:0,wire:'w37',wires:9,aaH:'h2',nH:6,aaM:'m1',nM:14,radar:'none',N:63,G:57},{name:'Hiryu',nat:'JP',year:1939.5,L:222,B:22.3,std:17300,kn:34.4,shp:153000,shafts:'4',boiler:'b36',fore:'open',hside:'closed',hangars:2,hH:4.6,hFrom:0.14,hTo:0.86,deckL:216.9,deckW:27,deckOv:3,belt:90,hdArm:55,tps:0,island:'small',istyle:'compact',iside:'port',islX:0.45,funnel:'down',lifts:[[0.22,11.5,16,0],[0.48,11.5,12,0],[0.78,11.5,10,0]],cats:0,wire:'w37',wires:9,aaH:'h2',nH:6,aaM:'m1',nM:12,radar:'none',N:64,G:57},{name:'Taiho',nat:'JP',year:1944.2,L:253,B:27.7,std:29300,kn:33.3,shp:160000,shafts:'4',boiler:'b36',fore:'closed',hside:'closed',hangars:2,hH:5,hFrom:0.14,hTo:0.86,deckL:257.5,deckW:30,deckOv:4,deckArm:75,belt:55,hdArm:32,tps:3,tpsk:'internal',island:'small',istyle:'stepped',iside:'stbd',islX:0.32,funnel:'island',lifts:[[0.18,14,14,0],[0.8,14,14,0]],cats:0,wire:'w37',wires:14,aaH:'h2',nH:6,aaM:'m1',nM:17,radar:'r2',dc:'dc1',N:53,G:60},{name:'Argus',nat:'UK',year:1918,L:170,B:20.7,std:14000,kn:20.5,shp:20000,shafts:'4',boiler:'b25',fore:'closed',hside:'closed',hangars:1,hH:6.1,hFrom:0.25,hTo:0.75,deckL:168,deckW:20.7,deckOv:2,belt:0,hdArm:0,tps:0,island:'none',funnel:'stacks',lifts:[[0.3,9,11,0],[0.62,9,11,0]],cats:0,wire:'w30',wires:4,barrier:false,aaH:'h1',nH:2,aaM:'m1',nM:0,radar:'none',N:20,G:15},{name:'Hermes',nat:'UK',year:1924,L:170,B:21.4,std:10850,kn:25,shp:40000,shafts:'2',boiler:'b25',fore:'closed',hside:'closed',hangars:1,hH:4.9,hFrom:0.25,hTo:0.78,deckL:173,deckW:27.4,deckOv:3,belt:76,hdArm:25,tps:0,island:'small',istyle:'tower',iside:'stbd',islX:0.35,funnel:'island',lifts:[[0.3,13,10,0],[0.65,13,10,0]],cats:0,wire:'w30',wires:4,aaH:'h1',nH:3,aaM:'m1',nM:2,radar:'none',N:20,G:15},{name:'Courageous',nat:'UK',year:1928,L:228.6,B:27.6,std:24200,kn:30,shp:90000,shafts:'4',boiler:'b25',fore:'open',hside:'closed',hangars:2,hH:4.6,hFrom:0.18,hTo:0.82,deckL:175,deckW:30.5,deckOv:0,belt:76,hdArm:25,tps:2,tpsk:'bulge',island:'small',istyle:'long',iside:'stbd',islX:0.45,funnel:'island',lifts:[[0.3,14.6,14,0],[0.7,14.6,14,0]],cats:0,wire:'w30',wires:4,aaH:'h1',nH:16,aaM:'m1',nM:3,radar:'none',N:48,G:48},{name:'Illustrious',nat:'UK',year:1940.4,L:205.1,B:29.2,std:23000,kn:30.5,shp:111000,shafts:'3',boiler:'b36',fore:'closed',hside:'box',hangars:1,hH:4.9,hFrom:0.2,hTo:0.78,deckL:225.6,deckW:29.2,deckOv:8,deckArm:76,belt:114,hdArm:64,tps:3,tpsk:'internal',island:'small',istyle:'long',iside:'stbd',islX:0.42,funnel:'island',lifts:[[0.2,13.7,6.7,0],[0.82,13.7,6.7,0]],cats:1,cat:'c38',wire:'w37',wires:6,aaH:'h2',nH:8,aaM:'m1',nM:6,radar:'r1',dc:'dc0',N:36,G:36},{name:'Implacable',nat:'UK',year:1944.7,L:216,B:29.2,std:23450,kn:32,shp:148000,shafts:'4',boiler:'b40',fore:'closed',hside:'box',hangars:2,hH:4.3,hFrom:0.18,hTo:0.8,deckL:232,deckW:29.2,deckOv:10,deckArm:76,belt:114,hdArm:51,tps:3,tpsk:'internal',island:'small',istyle:'stream',iside:'stbd',islX:0.4,funnel:'island',lifts:[[0.2,13.7,10,0],[0.8,13.7,10,0]],cats:1,cat:'c43',wire:'w43',wires:9,aaH:'h2',nH:8,aaM:'m1',nM:6,aaL:'l2',nL:38,radar:'r2',dc:'dc2',N:72,G:81}];
+// What each real ship drew at full load (m), the fuel oil (t) and aviation fuel (m³) she carried, and her complement: with the air group
+// (air:1, as the US and British figures are given) or without it (the Japanese figures). A missing figure is worked out as for your ships.
+const HISTREAL={Yorktown:{T:7.9,oil:4280,av:674,crew:2217,air:1},Wasp:{T:6.1,av:606,crew:2167,air:1},Essex:{T:8.7,oil:6330,av:877,crew:2600,air:1},
+  Independence:{T:7.9,oil:2630,av:462,crew:1569,air:1},Hosho:{T:6.2,oil:2700,crew:550},Akagi:{T:8.7,oil:5770,crew:1630},Ryujo:{T:7.1,oil:2490,crew:924},
+  Soryu:{T:7.6,oil:3670,crew:1100},Hiryu:{T:7.7,oil:4400,crew:1100},Taiho:{T:9.6,oil:5700,crew:1751},Argus:{T:6.4,oil:2000,crew:495},
+  Hermes:{T:8.2,oil:2000,crew:664},Courageous:{T:8.3,oil:3250,crew:1216,air:1},Illustrious:{T:8.8,oil:4850,av:230,crew:1229,air:1},Implacable:{T:8.9,oil:4690,av:430,crew:2300,air:1}};
 const HISTCV=new Map();
 function histCV(name){ if(HISTCV.has(name)) return HISTCV.get(name); const h=RIVALHIST.find(q=>q.name===name); if(!h) return null;
-  const cv=newCV(h.std), keys=['L','B','shp','shafts','boiler','turbine','bow','fore','hside','hangars','hH','deckL','deckW','deckOv','deckArm','belt','hdArm','tps','tpsk','island','istyle','iside','islX','funnel','cats','cat','wire','wires','barrier','aaH','nH','aaM','nM','aaL','nL','radar','dc','avgas'];
+  const X=HISTREAL[name]||{}, G=h.G||h.N, cv=Object.assign(newCV(h.std),{hist:true,airN:G}), keys=['L','B','shp','shafts','boiler','turbine','bow','fore','hside','hangars','hH','deckL','deckW','deckOv','deckArm','belt','hdArm','tps','tpsk','island','istyle','iside','islX','funnel','cats','cat','wire','wires','barrier','aaH','nH','aaM','nM','aaL','nL','radar','dc','avgas'];
   // gear the real ship's figures do not give is the best of her own year, not of whatever date your campaign has reached
   for(const c of ['boiler','cat','wire','aaH','aaM','aaL','dc','avgas']){ const ok=CVP[c].filter(p=>p.from<=h.year+1e-6); if(ok.length) cv[c]=ok[ok.length-1].id; }
   for(const k of keys) if(h[k]!=null) cv[k]=h[k]; cv.hFrom=Math.round(h.hFrom*h.L); cv.hTo=Math.round(h.hTo*h.L); cv.lifts=h.lifts.map(([x,l,w,e])=>({x:Math.round(x*h.L),l,w,edge:!!e}));
   for(const l of cv.lifts) if(!l.edge){ cv.hFrom=Math.min(cv.hFrom,Math.floor(l.x-l.l/2-1)); cv.hTo=Math.max(cv.hTo,Math.ceil(l.x+l.l/2+1)); }
   cv.n=Math.round(Math.min(26,Math.max(14,h.L/10))); if(cv.island==='none'&&cv.funnel==='island') cv.funnel='down';
+  if(X.crew) cv.crewH=Math.max(250,X.crew-(X.air?G*AIRCREW:0)); if(X.av) cv.avgasH=X.av; if(X.oil) cv.oilH=X.oil; cv.powK=1;
   const set=(k,v)=>{ cv[k]=v; autoLayout(cv); return computeCV(cv); };
-  const fit=(k,lo,hi,get,want,up)=>{ for(let i=0;i<22;i++){ const m=(lo+hi)/2, st=set(k,m); (get(st)<want)===up?lo=m:hi=m; } set(k,Math.round((lo+hi)/2*100)/100); };
-  cv.ballast=0; for(let it=0;it<7;it++){ fit('D',8,22,st=>st.std,h.std,true); if(computeCV(cv).GM<1.2) fit('D',8,cv.D,st=>st.GM,1.2,false); const short=h.std-computeCV(cv).std; if(short>h.std*.01) cv.ballast=Math.round(Math.min(12000,(cv.ballast||0)+short)/50)*50; fit('Cb',.4,.65,st=>st.speed,h.kn,false); }
-  // where the hull came out too small for what she carries, deepen it (shedding ballast) until it is not, keeping her speed
-  for(let k=0;k<20;k++){ const st=computeCV(cv), F=cvFaults(cv,st); if(!F.notes.some(n=>!/untried/.test(n))) break; cv.D=Math.round((cv.D+.3)*100)/100; if(cv.ballast) cv.ballast=Math.max(0,cv.ballast-600); autoLayout(cv); fit('Cb',.4,.65,q=>q.speed,h.kn,false); }
+  const fit=(k,lo,hi,get,want,up)=>{ for(let i=0;i<15;i++){ const m=(lo+hi)/2, st=set(k,m); (get(st)<want)===up?lo=m:hi=m; } set(k,Math.round((lo+hi)/2*100)/100); };
+  // Each figure is fitted to the real ship's in turn, until they all agree:
+  //  - depth: the least that holds everything she carries (machinery, oil, avgas, magazines, her crew and the air group's) with the
+  //    hangar deck well clear of the sea;
+  //  - fullness: her real draught at full load;
+  //  - the propulsive efficiency of her own hull form and screws: her real speed;
+  //  - the weight of her structure, light as Japanese ships were built or heavy as the British: her real standard displacement, with
+  //    ballast low in the hull where she needs it to stand up.
+  const bad=st=>cvFaults(cv,st).notes.some(n=>!/untried|unstable|capsize/.test(n))||st.berths<G||st.fbHangar<4;
+  const fitD=()=>{ const b0=cv.ballast; cv.ballast=0; let D=Math.max(8,(cv.D||8)-1.5); if(!bad(set('D',D))) D=8; while(D<26&&bad(set('D',D))) D+=.2; cv.ballast=b0; set('D',Math.round(D*100)/100); };   // (without ballast, which follows from the depth)   // (stepped up from shallow: the layout makes the test uneven in depth)
+  // (the beam given for a bulged ship is over the bulges)
+  const bulgeB=()=>{ const st=computeCV(cv); return tpsIn(cv)?0:2*cv.tps*st.protL/cv.L*.9; };
+  cv.ballast=0; cv.wK=1;
+  const weigh=()=>{ fit('wK',.4,1.8,st=>st.std,h.std,true); const short=h.std-computeCV(cv).std; if(short>h.std*.005) cv.ballast=Math.round((cv.ballast+short)/50)*50; };
+  const steady=()=>{ if(computeCV(cv).GM>=1.6) return; let lo=cv.ballast, hi=lo+16000; for(let i=0;i<12;i++){ cv.ballast=(lo+hi)/2; computeCV(cv).GM<1.6?lo=cv.ballast:hi=cv.ballast; } cv.ballast=Math.ceil(hi/50)*50; };   // real carriers stood up with 1.5 to 3 m
+  // fullness and depth pull on each other (a fuller hull draws less and holds more), so each new fullness is only half taken, and the
+  // nearest the fits come to the real ship is kept
+  const fk=['B','Cb','powK','D','ballast','wK'], score=()=>{ const st=computeCV(cv); return Math.abs(st.std/h.std-1)+(X.T?Math.abs(st.T/X.T-1):0)+Math.abs(st.speed/h.kn-1)+(bad(st)?1:0); };
+  let best=null;
+  for(let it=0;it<8;it++){ cv.B=Math.round((h.B-bulgeB())*100)/100;
+    const cb0=cv.Cb; if(X.T){ fit('Cb',.38,.74,st=>st.T,X.T,false); if(it) cv.Cb=Math.round((cb0+cv.Cb)/2*100)/100; }
+    fit('powK',.4,2.4,st=>st.speed,h.kn,true); fitD();
+    cv.ballast=0; for(let j=0;j<3;j++){ steady(); weigh(); }
+    const sc=score(); if(!best||sc<best.sc) best={sc,v:fk.map(k=>cv[k])}; }
+  fk.forEach((k,i)=>{ cv[k]=best.v[i]; }); autoLayout(cv);
+  // then polish, without moving the depth: draught, speed, stability and displacement together; and if the last fits leave her a
+  // little short of room, deepen her the little it takes
+  const polish=()=>{ for(let j=0;j<3;j++){ if(X.T) fit('Cb',.38,.74,st=>st.T,X.T,false); fit('powK',.4,2.4,st=>st.speed,h.kn,true); steady(); weigh(); } };
+  polish(); for(let k=0;k<40&&bad(set('D',cv.D));k++) cv.D=Math.round((cv.D+.1)*100)/100; polish();
   const out={cv,N:h.N,G:h.G||h.N}; HISTCV.set(name,out); return out; }
 RIVALS3.forEach((r,i)=>{r.id=i;});
 // The budget is worked out the first time it is needed, once the aircraft and carriers can be costed and built.
@@ -1292,7 +1328,7 @@ const SPACE={
   fuel:{name:'Fuel oil',short:'Fuel',hold:1,col:'#5E4B3A'},
   mag:{name:'Magazines',short:'Magazine',hold:1,low:1,col:'#A12D2D'},
   avgas:{name:'Aviation fuel',short:'Avgas',hold:1,low:1,col:'#D9B23C'},
-  crew:{name:'Crew quarters',short:'Crew',low:1,col:'#6F8FB0'},
+  crew:{name:'Crew quarters',short:'Crew',hold:1,low:1,col:'#6F8FB0'},   // in the hold: mess decks on the platform decks below the waterline
   stores:{name:'Stores',short:'Stores',hold:1,low:1,col:'#7D8A5A'},
   shops:{name:'Workshops',short:'Shops',low:1,col:'#8A7AA8'},
   void:{name:'Empty',short:'',hold:1,low:1,col:''},
@@ -1329,11 +1365,16 @@ function autoLayout(cv){
       if(!free.length) break; const lo=Math.min(...hold.map((h,i)=>h!=='void'&&h!=='stores'||i===0?i:n)), hi=Math.max(...hold.map((h,i)=>h!=='void'&&h!=='stores'||i===n-1?i:-1));
       let i=side%2?Math.max(...free.filter(j=>j<mid)):Math.min(...free.filter(j=>j>=mid)); if(!isFinite(i)) i=free[0]; hold[i]=what; g+=vol.hold[i]; side++; } };
   fill('mag',need.mag); fill('avgas',need.avgas/cvPart('avgas',cv.avgas).fill);
-  { const pr=protRange({hold}), tpsOil=pr[1]>=pr[0]?(pr[1]-pr[0]+1)*vol.len*cv.tps*2*vol.hh*.5:0; fill('fuel',Math.max(0,cv.shp*.032-tpsOil)); }   // about the oil a fleet carrier of that power carried; the rest stays empty for buoyancy
-  // stores and workshops on the lower decks at the ends, crew in between
-  const vl=vol.low; let s=0, w=0, i=0, j=n-1;
+  { const pr=protRange({hold}), tpsOil=pr[1]>=pr[0]?(pr[1]-pr[0]+1)*vol.len*cv.tps*2*vol.hh*.5:0; fill('fuel',Math.max(0,cv.oilH?(cv.oilH-tpsOil*.95)/.9:cv.shp*.032-tpsOil)); }   // about the oil a fleet carrier of that power carried; the rest stays empty for buoyancy
+  // stores in the hold where it has room (the lower decks are wanted for crew), then on the lower decks at the ends with the workshops,
+  // and crew in between
+  const vl=vol.low; let w=0, i=0, j=n-1, s=hold.reduce((t,h,k)=>t+(h==='stores'?vol.hold[k]:0),0);
+  for(let k=1;k<n-1&&s<need.stores;k++) if(hold[k]==='void'){ hold[k]='stores'; s+=vol.hold[k]; }
   while(s<need.stores&&i<j){ low[i]='stores'; s+=vl[i]; i++; }
   while(w<need.shops&&j>i){ low[j]='shops'; w+=vl[j]; j--; }
+  // more men than the lower decks berth sleep on the platform decks in the hold
+  let q=low.reduce((t,h,k)=>t+(h==='crew'?vl[k]:0),0);
+  for(let k=1;k<n-1&&q<need.crewQ;k++) if(hold[k]==='void'){ hold[k]='crew'; q+=vol.hold[k]; }
   cv.hold=hold; cv.low=low; return cv;
 }
 // Volumes of each compartment, hold and lower decks, after the torpedo protection takes its share of the sides.
@@ -1348,17 +1389,32 @@ const VITAL=new Set(['boiler','engine','mag','avgas']);
 function protRange(cv){ const v=(cv.hold||[]).map((h,i)=>VITAL.has(h)?i:-1).filter(i=>i>=0); return v.length?[Math.min(...v),Math.max(...v)]:[1,0]; }
 // Hangar area on each hangar deck: the hull's width at hangar level less the side structure, over the hangar's length. The hangar deck
 // stands well above the waterline, where the sides flare out and the hull is much fuller than at the waterline, so its width at each
-// station is the waterline fraction f(x) raised to the power HFLARE (full amidships, narrowing only toward the ends).
+// station is the waterline fraction f(x) raised to the power HFLARE (full amidships, narrowing only toward the ends). That is for the
+// historical carriers the rivals sail; yours are measured at the waterline width, which leaves you less hangar for the same hull.
 const HFLARE=.2;
 function hangarArea(cv){ const f=hullShape(cv), cut=cvPart('hside',cv.hside).cut, a=clamp(cv.hFrom,0,cv.L), b=clamp(cv.hTo,a,cv.L); let s=0;
-  for(let x=a;x<b;x+=1) s+=Math.max(0,Math.min(cv.B,Math.pow(f(x+.5),HFLARE)*cv.B*1.15)-cut)*Math.min(1,b-x); return s*.95; }
+  for(let x=a;x<b;x+=1) s+=Math.max(0,Math.min(cv.B,Math.pow(f(x+.5),cv.hist||cv.rival?HFLARE:1)*cv.B*1.15)-cut)*Math.min(1,b-x); return s*.95; }
 // Nominal air group, for sizing magazines, avgas, workshops and the aviation crew: fighter-sized aircraft folded, in the hangar and a deck park.
 function nominalAir(cv){ const isl=cvPart('island',cv.island); return Math.round(hangarArea(cv)*cv.hangars/65+Math.max(0,(cv.deckL-110)*cv.deckW*.8-isl.len*isl.bw)/80); }
+// The aircraft a carrier is designed to operate: the air group planned for her on the Carriers tab, or, with none planned, about as many
+// fighter-sized aircraft as she has room for. A historical carrier is built for the air group she really embarked.
+const AIRCREW=10;   // men aboard for each aircraft: aircrew, mechanics, armourers and deck handlers
+// Aviation fuel: real carriers stowed about ten fillings of each aircraft's tanks (an Essex 877 m³ for about 90 aircraft, a Yorktown
+// 674 m³ for 75 to 80). The planned air group sets it from each type’s own tanks; with none planned, 8 m³ for each aircraft.
+const AVFILLS=10, AVGAS_EACH=8;
+// Crew quarters: berths, messes, washrooms, galleys and sick bay. A wartime carrier gave each man about 2 m² of deck, bunks three
+// high, and a share of the mess decks and washrooms: about 6 m³ in all.
+const CREWM3=6;
+function cvAvgasNeed(cv,N){ if(cv.hist) return cv.avgasH||N*AVGAS_EACH; const rows=cvPlanRows(cv); if(!rows.length) return N*AVGAS_EACH;
+  return rows.reduce((t,x)=>t+x.n*(x.d.fuelL||0)/1000*AVFILLS,0); }
+function cvPlanRows(cv){ const p=cv.airPlan||{}, lib=typeof S!=='undefined'&&S?[S.design,...(S.lib||[])].filter((d,i,a)=>d&&a.findIndex(x=>x&&x.name===d.name)===i):[];
+  return lib.map(d=>({d,n:Math.max(0,Math.round(+p[d.name]||0))})).filter(x=>x.n>0); }
+function cvAirN(cv){ if(cv.hist) return cv.airN||0; const n=cvPlanRows(cv).reduce((t,x)=>t+x.n,0); return n||nominalAir(cv); }
 function cvNeeds(cv){
-  const B=cvPart('boiler',cv.boiler), Tu=cvPart('turbine',cv.turbine), Vm=cv.shp*B.m3*Tu.m3, N=nominalAir(cv);
+  const B=cvPart('boiler',cv.boiler), Tu=cvPart('turbine',cv.turbine), Vm=cv.shp*B.m3*Tu.m3, N=cvAirN(cv);
   const H=cvPart('aaH',cv.aaH), M=cvPart('aaM',cv.aaM), Lg=cvPart('aaL',cv.aaL), R=cvPart('radar',cv.radar), DC=cvPart('dc',cv.dc);
-  const crew=Math.round(150+cv.shp/300+N*9+cv.nH*H.crew+cv.nM*M.crew+cv.nL*Lg.crew+R.crew+DC.crew);
-  return {N,crew,boiler:.62*Vm,engine:.38*Vm,mag:N*1.4+cv.nH*3+cv.nM+cv.nL*.1,avgas:N*2.5,crewQ:crew*5,stores:crew*1.4,shops:N*4};
+  const crewShip=cv.hist&&cv.crewH?cv.crewH:Math.round(150+cv.shp/300+cv.nH*H.crew+cv.nM*M.crew+cv.nL*Lg.crew+R.crew+DC.crew), crew=crewShip+N*AIRCREW;
+  return {N,crew,crewShip,boiler:.62*Vm,engine:.38*Vm,mag:N*1.4+cv.nH*3+cv.nM+cv.nL*.1,avgas:cvAvgasNeed(cv,N),crewQ:crew*CREWM3,stores:crew*1.4,shops:N*4};
 }
 // Hull resistance, fitted to 24 real carriers from the Hosho to the Essex: skin friction (ITTC 1957 line with a form factor and a
 // little for each shaft's brackets) and wave-making, which climbs steeply with speed for its length and is worse for a broad, shallow hull.
@@ -1373,15 +1429,16 @@ function computeCV(cv){
   const have=k=>cv.hold.reduce((s,h,i)=>s+(h===k?vol.hold[i]:0),0)+cv.low.reduce((s,h,i)=>s+(h===k?vol.low[i]:0),0);
   const protL=prot[1]>=prot[0]?(prot[1]-prot[0]+1)*len:0;
   // fuel: the fuel compartments, and the liquid layer of the torpedo protection
-  const tpsLiquid=protL*cv.tps*2*vol.hh*.5*.95, fuel=Math.round(have('fuel')*.95*.95+tpsLiquid);
-  const avgasM3=have('avgas')*AG.fill, hArea=hangarArea(cv), hLen=Math.max(0,cv.hTo-cv.hFrom);
+  const tpsLiquid=protL*cv.tps*2*vol.hh*.5*.95, fuel=Math.round(Math.min(have('fuel')*.95*.95+tpsLiquid,cv.oilH||Infinity));   // a historical ship carries the oil she really did
+  const avgasM3=Math.min(have('avgas')*AG.fill,cv.avgasH||Infinity), hArea=hangarArea(cv), hLen=Math.max(0,cv.hTo-cv.hFrom);
   const hFD=cv.D+cv.hangars*(cv.hH+.7)+.5;   // flight deck height above the keel
   // weights, each with its height above the keel for the centre of gravity
   const W=[], add=(k,w,z)=>W.push({k,w,z});
-  add('Hull structure',.105*cv.L*cv.B*cv.D*Math.sqrt(cv.Cb/.5),.52*cv.D);
-  add('Watertight bulkheads',(n-1)*cv.B*cv.D*.012*7.85*.75,.5*cv.D);
-  add('Hangar decks and sides',cv.hangars*hLen*(cv.B*.9)*.1+(cv.hside==='open'?hLen*1.2:2*hLen*cv.hH*cv.hangars*.1),cv.D+cv.hangars*cv.hH*.5);
-  add('Flight deck',cv.deckL*cv.deckW*.17,hFD);
+  const wK=cv.wK||1;   // how heavily she is built: only the historical ships differ, fitted to their real displacement
+  add('Hull structure',.105*cv.L*cv.B*cv.D*Math.sqrt(cv.Cb/.5)*wK,.52*cv.D);
+  add('Watertight bulkheads',(n-1)*cv.B*cv.D*.012*7.85*.75*wK,.5*cv.D);
+  add('Hangar decks and sides',(cv.hangars*hLen*(cv.B*.9)*.1+(cv.hside==='open'?hLen*1.2:2*hLen*cv.hH*cv.hangars*.1))*wK,cv.D+cv.hangars*cv.hH*.5);
+  add('Flight deck',cv.deckL*cv.deckW*.17*wK,hFD);
   if(Is.w) add(cv.funnel==='island'||!cv.funnel?'Island and funnel':'Island',Is.w,hFD+9);
   const Fu=cvPart('funnel',cv.funnel); if(Fu.w) add('Side funnels and uptakes',Fu.w*(cv.shp/4000+10),cv.D+2);
   if(cv.fore==='closed') add('Enclosed bow plating',Math.max(0,cv.hFrom)*(hFD-cv.D)*2*.12,(cv.D+hFD)/2);
@@ -1410,7 +1467,7 @@ function computeCV(cv){
   const KG=(W.reduce((s,x)=>s+x.w*x.z,0)+fuel*vol.hh*.35+feed*vol.hh*.3)/full, Cwp=(1+2*cv.Cb)/3;
   const KB=.53*T, BM=Cwp*Cwp/(11.7*cv.Cb)*Bw*Bw/T, GM=KB+BM-KG;
   // speed on trial, and range at 15 knots (cruising machinery and the ship's electrical load as well)
-  const P=cv.shp*Tu.eta; let lo=2,hi=22;   // the fit pairs trial displacement with the full-load draught
+  const P=cv.shp*Tu.eta*(cv.powK||1); let lo=2,hi=22;   // the fit pairs trial displacement with the full-load draught
   for(let i=0;i<40;i++){ const V=(lo+hi)/2; hullPower(cv.L,Bw,T,trial,Sh.n,Bo2.wave,V)>P?hi=V:lo=V; }
   const speed=lo/KN, p15=hullPower(cv.L,Bw,T,trial,Sh.n,Bo2.wave,15*KN)+.02*cv.shp+1500, range=fuel/(p15*Bo.sfc/1000)*15;
   const reqs=[
@@ -1422,7 +1479,11 @@ function computeCV(cv){
     if(!cv.rival&&p.from>cvNow()+1e-6&&(c!=='cat'||cv.cats)) errs.push(`${p.name}: not available until ${dateText(p.from)}.`); }
   if(cv.island==='none'&&cvPart('funnel',cv.funnel).id==='island') errs.push('A flush deck has no island to carry the funnel: choose side funnels.');
   if(!cv.rival&&cv.lifts.some(l=>l.edge)&&cvNow()<1940-1e-6) errs.push('Deck-edge lifts: not available until 1940.');
-  for(const r of reqs) if(r.have<r.need*.995) (r.k==='shops'||r.k==='stores'?warns:errs).push(`${r.label}: ${f0(r.have)} m³ of the ${f0(r.need)} m³ needed.`);
+  const haveQ=have('crew'), berths=Math.max(haveQ>=need.crewQ*.995?need.N:0,Math.floor((haveQ/CREWM3-need.crewShip)/AIRCREW));   // spare quarters house more
+  for(const r of reqs) if(r.have<r.need*.995){
+    if(r.k==='crew'&&haveQ>=need.crewShip*CREWM3*.995) warns.push(`Crew quarters: berths for the men of only ${berths} of the ${need.N} aircraft planned (${AIRCREW} men each). Only ${berths} can embark. More crew compartments let more go.`);
+    else if(r.k==='crew') errs.push(`Crew quarters: ${f0(r.have)} m³, short even of the ${f0(need.crewShip*CREWM3)} m³ the ship's company needs before any aircraft (${f0(r.need)} m³ with the air group).`);
+    else (r.k==='shops'||r.k==='stores'?warns:errs).push(`${r.label}: ${f0(r.have)} m³ of the ${f0(r.need)} m³ needed.`); }
   if(len<8&&cv.hold.includes('boiler')) errs.push(`Compartments are only ${f1(len)} m long: too short for boilers. Use fewer bulkheads.`);
   const ers=cv.hold.filter(h=>h==='engine').length; if(ers<Math.ceil(Sh.n/2)) errs.push(`${Sh.n} shafts need at least ${Math.ceil(Sh.n/2)} engine rooms.`);
   const unit=/E.*B.*E|B.*E.*B/.test(cv.hold.filter(h=>h==='boiler'||h==='engine').map(h=>h==='boiler'?'B':'E').join(''));
@@ -1437,7 +1498,7 @@ function computeCV(cv){
   cv.lifts.forEach((l,i)=>{ if(!l.edge&&(l.x-l.l/2<cv.hFrom||l.x+l.l/2>cv.hTo)) errs.push(`Lift ${i+1} is not over the hangar.`); if(l.edge&&cv.hside!=='open') errs.push(`Deck-edge lift ${i+1} needs an open hangar side to reach.`); });
   if(cv.deckW<cv.B*.8) warns.push('The flight deck is narrow for the hull.');
   return {std:Math.round(std),full:Math.round(full),trial,T,Tstd,KG,GM,speed,range,fuel,avgasM3,hArea,hArea2:hArea*cv.hangars,hLen,hFD,fbHangar,fbDeck:hFD-T,need,vol,reqs,W,errs,warns,unit,protL,prot,
-    crew:need.crew,N:need.N,cat:Ca,wire:Wi,island:Is,aa:cv.nH*H.aa+cv.nM*M.aa+cv.nL*Lg.aa};
+    crew:need.crew,crewShip:need.crewShip,berths,N:need.N,nominal:nominalAir(cv),cat:Ca,wire:Wi,island:Is,aa:cv.nH*H.aa+cv.nM*M.aa+cv.nL*Lg.aa};
 }
 // A carrier with design faults can still go to sea, but each fault costs her something there. These are the costs, with a line
 // for each saying what it does. cvSea gives her figures at sea with them applied.
@@ -1845,7 +1906,7 @@ function renderRivals(){
       <canvas data-rc="${i}" aria-label="${d.name}, the fighter of ${r.title}'s fleet, in side elevation"></canvas>
       <p>${r.blurb}</p>
       <p class="mono" style="font-size:12px">Carriers up to ${r.tons.toLocaleString()} t · aircraft budget £${r.air.toLocaleString()}</p>
-      <p class="mono" style="font-size:12px">Fighter ${d.name}: ${spec}<br>Dive bomber ${r.dive.name} · torpedo bomber ${r.torp.name}</p>
+      <p class="mono" style="font-size:12px">${(()=>{ const g=rivalGroup(r); return `${g.n[0]} ${d.name} fighters (${spec})<br>${g.n[1]} ${r.dive.name} dive bombers · ${g.n[2]} ${r.torp.name} torpedo bombers<br>${g.total} aircraft in all, across ${r.fleet.length} carrier${r.fleet.length>1?'s':''}`; })()}</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn ghost" data-pick="${i}" aria-pressed="${S.selected===i}">${S.selected===i?'Selected':'Select'}</button>
         <button class="btn ghost" data-plan="${i}">Plan fleet</button>
@@ -1900,17 +1961,17 @@ function stowOn(cvs,rows){
   return {placed:P.placed,left:P.left,lists:P.ships.map(sh=>sh.list)};
 }
 function stowPass(cvs,rows,cap){
-  const ships=cvs.map(cv=>{ const cs=cvStats(cv); return {cv,cs,hangar:cs.hArea2,park:cv.deckL*cv.deckW*1.2,nPark:0,list:[]}; });   // the deck park here is only a ceiling: trStow settles it
+  const ships=cvs.map(cv=>{ const cs=cvStats(cv); return {cv,cs,hangar:cs.hArea2,park:cv.deckL*cv.deckW*1.2,nPark:0,list:[],berths:cs.berths}; });   // the deck park here is only a ceiling: trStow settles it
   const rs=rows.map(x=>{ const a=compute(x.d), fits=ships.map(sh=>cvAircraft(sh.cv,sh.cs,a,x.d)); return {x,a,fits,ok:fits.filter(f=>f.ok).length}; }).sort((p,q)=>p.ok-q.ok);
   let placed=0; const left=[];
   for(const r of rs){ const fh=r.a.foldSpan*r.x.d.fusLen*HPACK, fp=r.a.foldSpan*r.x.d.fusLen*1.15; let k=0;
     for(;k<r.x.n;k++){ let put=false;
       // each type spread across the carriers in turn, so every air group is mixed: below in any hangar with room first, then on deck
-      for(let w=0;w<2&&!put;w++) for(let j=0;j<ships.length&&!put;j++){ const i=(k+j)%ships.length, f=r.fits[i], sh=ships[i]; if(!f.ok) continue;
+      for(let w=0;w<2&&!put;w++) for(let j=0;j<ships.length&&!put;j++){ const i=(k+j)%ships.length, f=r.fits[i], sh=ships[i]; if(!f.ok||sh.list.length>=sh.berths) continue;
         if(w===0){ if(!f.tall&&f.lift&&sh.hangar>=fh){ sh.hangar-=fh; put=true; } } else if(sh.park>=fp&&sh.nPark<cap[i]){ sh.park-=fp; sh.nPark++; put=true; }
         if(put) sh.list.push({d:r.x.d,a:r.a,f}); }
       if(!put) break; placed++; }
-    if(k<r.x.n) left.push({name:r.x.d.name,n:r.x.n-k,why:r.ok?'no room left':(r.fits.find(f=>!f.ok)||{why:['no carrier sailing']}).why.join('; ')||'no carrier sailing'}); }
+    if(k<r.x.n) left.push({name:r.x.d.name,n:r.x.n-k,why:r.ok?(ships.every((sh,i)=>!r.fits[i].ok||sh.list.length>=sh.berths)?'no berths left for their crews':'no room left'):(r.fits.find(f=>!f.ok)||{why:['no carrier sailing']}).why.join('; ')||'no carrier sailing'}); }
   return {placed,left,ships};
 }
 // Tonnage left unused under the limit is paid back into the aircraft budget, at 60% of the year's money for each ton the treaty allows.
@@ -2182,8 +2243,9 @@ function cvStatRows(cv,cs){
   return `<span class="k" data-wtip>Standard displacement</span><span class="v" data-wtip style="text-decoration:underline dotted;cursor:help">${fmtK(cs.std)} t</span>`+row('Full load',`${fmtK(cs.full)} t, draught ${f1(cs.T)} m`)
     +row('Top speed',`${f1(cs.speed)} knots`)+row('Range at 15 knots',`${fmtK(cs.range)} nautical miles`)+row('Fuel oil',`${fmtK(cs.fuel)} t`)
     +row('Metacentric height',`${f2(cs.GM)} m at full load`,cs.GM<1.2)+row('Hangar deck above the sea',`${f1(cs.fbHangar)} m at full load`,cs.fbHangar<3.5)
-    +row('Hangar floor',`${fmtK(cs.hArea2)} m²${cv.hangars>1?' on two decks':''}`)+row('Aircraft, fighter-sized',`about ${cs.N}`)
-    +row('Aviation fuel',`${fmtK(cs.avgasM3)} m³, ${f1(cs.avgasM3/Math.max(1,cs.N))} m³ an aircraft`)+row('Crew',fmtK(cs.crew))
+    +row('Hangar floor',`${fmtK(cs.hArea2)} m²${cv.hangars>1?' on two decks':''}`)+row('Aircraft, fighter-sized',`room for about ${cs.nominal}`)
+    +row(cvPlanRows(cv).length?'Air group planned':'Air group, estimated',`${cs.N} aircraft, berths for ${cs.berths}`,cs.berths<cs.N)
+    +row('Aviation fuel',`${fmtK(cs.avgasM3)} m³, ${f1(cs.avgasM3/Math.max(1,cs.N))} m³ an aircraft`)+row('Crew, ship (with aircraft)',`${fmtK(cs.crewShip)} (${fmtK(cs.crew)})`)
     +row('Machinery',cs.unit?'Unit system (rooms alternate)':'Grouped (one hit can stop her)')
     +row('Anti-aircraft fire',`${f1(cs.aa)} (relative)`);
 }
@@ -2198,14 +2260,27 @@ function cvSeaTable(cv,cs){
     <span>Flying she can keep up</span>${rows.map(r=>`<span class="v${r.m.ops?'':' bad'}">${r.m.ops?Math.round(r.m.ops*100)+'%':'None'}</span>`).join('')}
     <span class="note">She rolls on a ${f1(m0.Tr)} second period: ${m0.Tr<10?'stiff and quick, which throws aircraft and deck crews about':m0.Tr>16?'slow and gentle, but a ship this tender lists heavily when damaged':'an easy motion'}. Deck motion slows landing most, then rolling slows moving aircraft about the deck. ${rows.map(r=>r.m.stop?`${r.s.name} sea: ${r.m.stop.toLowerCase()}`:'').filter(Boolean)[0]||''}${cv.iside==='port'?' The island to port sits in the landing circuit and slows every landing.':''}</span>`;
 }
+// The planned air group stowed as she would sail with it: below, in the forward deck park, in the deck park aft, or left ashore.
+function cvPlanStow(cv,cs){ const rows=cvPlanRows(cv); if(!rows.length) return null;
+  const st=stowOn([cv],rows), L=st.lists[0].map(x=>Object.assign({},x)); trStow(cv,cs,L); const by={};
+  for(const x of L){ const b=by[x.d.name]||(by[x.d.name]={h:0,f:0,a:0}); if(x.where==='hangar') b.h++; else if(x.where==='fwd') b.f++; else if(x.where==='aft') b.a++; }
+  const n=rows.reduce((t,x)=>t+x.n,0), tot=k=>Object.values(by).reduce((t,b)=>t+b[k],0);
+  return {by,left:st.left,n,placed:st.placed,h:tot('h'),f:tot('f'),a:tot('a')}; }
 function cvAirTable(cv,cs){
-  const lib=[S.design,...(S.lib||[])].filter((d,i,a)=>a.findIndex(x=>x.name===d.name)===i);
-  return `<span class="h">Your aircraft aboard</span><span class="h v">Hangar</span><span class="h v">Deck park</span><span class="h v">Flies?</span>
-    ${lib.map(d=>{ const a=compute(d), x=cvAircraft(cv,cs,a,d);
-      return `<span>${esc(d.name||'Untitled')}${d===S.design?' <span class="muted">(drawing board)</span>':''}${x.why.length?`<small class="bad">${esc(x.why.join('; '))}</small>`:`<small>${x.catOK&&!x.deckOK?'catapult launch':`${f0(x.run)} m take-off run`} · catches the wire at ${f0(x.eng)} km/h</small>`}</span>
-        <span class="v">${x.hangar}</span><span class="v">${x.park}</span><span class="v ${x.ok?'':'bad'}">${x.ok?'Yes':'No'}</span>`; }).join('')}
-    <span class="note">Take-off and landing are worked out with the wind over the deck at her top speed plus 5 knots of natural wind. Deck-park numbers leave the take-off run clear.</span>`;
+  const lib=[S.design,...(S.lib||[])].filter((d,i,a)=>a.findIndex(x=>x.name===d.name)===i), plan=cv.airPlan||{}, P=cvPlanStow(cv,cs);
+  const where=b=>!b?'':[b.h?`${b.h} below`:'',b.f?`${b.f} on deck forward`:'',b.a?`${b.a} in the deck park aft`:''].filter(Boolean).join(', ');
+  return `<span class="h">Your aircraft aboard</span><span class="h v">Hangar</span><span class="h v">Deck park</span><span class="h v">Flies?</span><span class="h v">Air group</span>
+    ${lib.map(d=>{ const a=compute(d), x=cvAircraft(cv,cs,a,d), n=Math.max(0,Math.round(+plan[d.name]||0)), b=P&&P.by[d.name], lf=P&&P.left.find(l=>l.name===d.name);
+      return `<span>${esc(d.name||'Untitled')}${d===S.design?' <span class="muted">(drawing board)</span>':''}${x.why.length?`<small class="bad">${esc(x.why.join('; '))}</small>`:`<small>${x.catOK&&!x.deckOK?'catapult launch':`${f0(x.run)} m take-off run`} · catches the wire at ${f0(x.eng)} km/h</small>`}${n?`<small>${where(b)||'none aboard'}${lf?`<span class="bad">; ${lf.n} stay ashore: ${esc(lf.why)}</span>`:''}</small>`:''}</span>
+        <span class="v">${x.hangar}</span><span class="v">${x.park}</span><span class="v ${x.ok?'':'bad'}">${x.ok?'Yes':'No'}</span>
+        <span class="v cnt"><button data-cvastep="-1" data-cvaname="${esc(d.name)}" aria-label="One fewer ${esc(d.name)}">−</button><input type="number" min="0" max="300" data-cvan="${esc(d.name)}" value="${n}" aria-label="Number of ${esc(d.name)} in her air group"><button data-cvastep="1" data-cvaname="${esc(d.name)}" aria-label="One more ${esc(d.name)}">+</button></span>`; }).join('')}
+    <span class="note">${P?`Planned air group, ${P.n} aircraft: ${P.h} in the hangar${P.f+P.a?`, ${P.f+P.a} on the flight deck${P.a?` (${P.a} of them in a deck park aft, which must be launched or struck below before anything can land)`:''}`:', none on deck'}${P.placed<P.n?`; <span class="bad">${P.n-P.placed} cannot go</span>`:''}. Their crews add ${fmtK(P.n*AIRCREW)} men (${AIRCREW} an aircraft), for ${fmtK(cs.crew)} aboard in all, and the crew quarters must hold them.${P.placed<P.n?' <span class="bad">The crew is worked out for every aircraft planned, including those that cannot go: plan only what she can carry.</span>':''}`:`Type in an air group to see where it stows and how many men it adds: ${AIRCREW} for each aircraft. With none planned, her crew is worked out for about ${cs.N} aircraft.`}</span>
+    <span class="note">Take-off and landing are worked out with the wind over the deck at her top speed plus 5 knots of natural wind. Hangar and deck-park numbers are for that type alone, leaving the take-off run clear.</span>`;
 }
+$('#cvair').addEventListener('click',e=>{ const b=e.target.closest('[data-cvastep]'); if(!b) return; const c=cvSel(); if(!c) return; const p=c.cv.airPlan||(c.cv.airPlan={}), k=b.dataset.cvaname;
+  p[k]=clamp((+p[k]||0)+ +b.dataset.cvastep,0,300); if(!p[k]) delete p[k]; cvChanged(false); });
+$('#cvair').addEventListener('change',e=>{ const k=e.target.dataset.cvan; if(k==null) return; const c=cvSel(); if(!c) return; const p=c.cv.airPlan||(c.cv.airPlan={});
+  p[k]=clamp(Math.round(+e.target.value)||0,0,300); if(!p[k]) delete p[k]; cvChanged(false); });
 function renderCV(){
   const c=cvSel(); $('#cvbench').hidden=!c; if(!c) return;
   const cv=c.cv, cs=cvStats(cv);
@@ -2224,7 +2299,7 @@ function renderCVSheet(){
 }
 // Hovering over a carrier part: what fitting it would change, better in green and worse in red, as for aircraft parts.
 const CVROWS=[['Standard displacement',c=>c.std,' t','down',fmtK],['Top speed',c=>c.speed,' knots','up',f1],['Range at 15 knots',c=>c.range,' nm','up',fmtK],['Metacentric height',c=>c.GM,' m','gm',f2],
-  ['Hangar deck above the sea',c=>c.fbHangar,' m','up',f1],['Hangar floor',c=>c.hArea2,' m²','up',fmtK],['Aircraft, fighter-sized',c=>c.N,'','up',f0],['Aviation fuel',c=>c.avgasM3,' m³','up',fmtK],
+  ['Hangar deck above the sea',c=>c.fbHangar,' m','up',f1],['Hangar floor',c=>c.hArea2,' m²','up',fmtK],['Aircraft, fighter-sized',c=>c.nominal,'','up',f0],['Aviation fuel',c=>c.avgasM3,' m³','up',fmtK],
   ['Crew',c=>c.crew,'','down',fmtK],['Anti-aircraft fire',c=>c.aa,'','up',f1],['Design faults',c=>c.errs.length,'','down',f0]];
 const CVEFF={fore:{closed:[1,'Drier forward: more flying in a head sea.'],open:[0,'Seas break in under the flight deck: less flying in a head sea.']},
   iside:{port:[0,'The island is in the landing circuit: landings are slower and a little riskier.'],stbd:[1,'The island is clear of the landing circuit.']},
@@ -3883,6 +3958,14 @@ const DROPS=[
     'Hangars are as big as the real ships’ were. The hangar deck stands high in the hull, where the sides flare out, so it now keeps nearly the full width of the ship along its length instead of narrowing like the waterline: a Yorktown’s hangar grows from about 1,800 m² to 2,800 m². Your own carriers’ hangars grow the same way.',
     'Fixes: a fleet at the edge of the battle area that needs to turn into the wind to launch or land now does so, sliding along the edge, instead of being turned back and left unable to fly; a front aircraft that cannot get off is moved to the back of the range, where its run is longest; and the Back to the fleet button and the battle result now show when a battle ends.',
   ]},
+  {at:'2026-11-25T18:00:00+13:00',items:[
+    'Every aircraft brings ten men with it: aircrew, mechanics, armourers and deck handlers. A carrier’s crew is now her ship’s company plus ten for each aircraft, and her crew quarters must berth them all. The Carriers tab shows both, as 383 (783): the ship alone, and with her air group. A carrier never embarks more aircraft than she has berths for.',
+    'Plan an air group on the Carriers tab: type in how many of each of your aircraft she should carry, and see where they stow (in the hangar, in the forward deck park or in a deck park aft), which cannot go and why, and how many men they add. With no air group planned, her crew is worked out for about as many fighter-sized aircraft as she has room for.',
+    'Your carriers’ hangars are back to the size they were: measured at the waterline width of the hull. The rivals’ historical carriers keep the full width of their real hangars, and each is built with berths for exactly the air group she embarked. The rival cards now say how many of each aircraft the rival fleet takes to sea.',
+    'Aviation fuel is stowed as real carriers stowed it: about ten fillings of every aircraft’s tanks (an Essex carried 877 m³ for some 90 aircraft). The air group planned on the Carriers tab sets it, from each type’s own tanks; with none planned it is 8 m³ an aircraft, three times what was asked before.',
+    'Crew quarters are a realistic size: about 6 m³ a man, for his bunk and his share of the mess decks and washrooms. They can now go in the hold as well as on the lower decks, as the mess decks on a real carrier’s platform decks did.',
+    'Every historical carrier the rivals sail is built to match the real ship: her standard displacement, her draught at full load, her speed, the fuel oil and aviation fuel she carried and her complement, with a hull deep enough to hold it all and her structure as light or heavy as her navy built. A ship whose beam is given over her bulges is measured that way.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -4654,6 +4737,11 @@ function rivalStow(r,xs){ const ds=[r.d,r.dive,r.torp], lists=[]; let placed=0;
   for(const x of xs){ const can=ds.map(d=>stowOn([x.cv],[{d,n:1}]).placed===1), tot=r.mix.reduce((t,m,k)=>t+(can[k]?m:0),0)||1;
     const rows=n=>ds.map((d,k)=>({d,n:can[k]?Math.round(n*r.mix[k]/tot):0})).filter(q=>q.n); let n=x.G; while(n>3&&stowOn([x.cv],rows(n)).left.length) n--; const st=stowOn([x.cv],rows(n)); lists.push(st.lists[0]); placed+=st.placed; }
   return {placed,left:[],lists}; }
+// The rival's carriers as they sail, and the air group each takes to sea (worked out once per rival: it never changes)
+const rivalShips=r=>r.fleet.map(f=>{ const h=histCV(f.c); return Object.assign({},f,h,{cv:Object.assign(JSON.parse(JSON.stringify(h.cv)),{rival:true})}); });
+const RGROUP=new Map();
+function rivalGroup(r){ if(RGROUP.has(r)) return RGROUP.get(r); const ds=[r.d,r.dive,r.torp], st=rivalStow(r,rivalShips(r)), n=ds.map(d=>st.lists.reduce((t,l)=>t+l.filter(x=>x.d===d).reduce((u,x)=>u+(x.n||1),0),0));
+  const g={n,total:n.reduce((a,b)=>a+b,0)}; RGROUP.set(r,g); return g; }
 function rivalAirRows(r,cvs){ const ds=[r.d,r.dive,r.torp], cost=ds.map(d=>fieldCost(d,r.date)), avg=r.mix.reduce((t,m,k)=>t+m*cost[k],0);
   const rows=n=>ds.map((d,k)=>({d,n:Math.round(n*r.mix[k])})).filter(x=>x.n);
   let n=Math.floor(r.air/avg); if(cvs) while(n>3&&stowOn(cvs,rows(n)).left.length) n=Math.floor(n*.97);
@@ -4665,7 +4753,7 @@ function battleStart(rid){
   TR={sea,wx:wxMake(sea),t:0,speed:5,pause:false,log:[],wind:{from:wind,kn:sea.wind},zoom:1,pick:null,fid:0,pid:0,view:{follow:true,x:0,y:0,km:30,d3:false},tgts:[],torps:[],bombs:[],fx:[],tid:0,spawn:null,
     cvs:[],tfs:[],adv:true,pfx:'',quiet:false,eng:[],battle:{rid,over:false,res:null,next:0}};
   const ships=sailing(), mine=stowOn(ships.map(s=>clsOf(s.cls).cv),airRows().filter(x=>x.n));
-  const theirs=r.fleet.map(f=>{ const h=histCV(f.c); return Object.assign({},f,h,{cv:Object.assign(JSON.parse(JSON.stringify(h.cv)),{rival:true})}); }), rl=rivalStow(r,theirs);
+  const theirs=rivalShips(r), rl=rivalStow(r,theirs);
   // how far apart: a little beyond the reach of the shorter-ranged side's bombers, so both must close or search
   const reach=lists=>{ const b=lists.flat().filter(q=>q.d.role!=='fighter').map(q=>q.a.radius); return b.length?Math.max(...b):200; };
   const D=clamp(Math.min(reach(mine.lists),reach(rl.lists))*.95,180,400), brg=Math.random()*360, [ux,uy]=hdgV(brg);
