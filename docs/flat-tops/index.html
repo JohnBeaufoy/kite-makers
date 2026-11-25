@@ -1395,7 +1395,10 @@ const HFLARE=.2;
 function hangarArea(cv){ const f=hullShape(cv), cut=cvPart('hside',cv.hside).cut, a=clamp(cv.hFrom,0,cv.L), b=clamp(cv.hTo,a,cv.L); let s=0;
   for(let x=a;x<b;x+=1) s+=Math.max(0,Math.min(cv.B,Math.pow(f(x+.5),cv.hist||cv.rival?HFLARE:1)*cv.B*1.15)-cut)*Math.min(1,b-x); return s*.95; }
 // Nominal air group, for sizing magazines, avgas, workshops and the aviation crew: fighter-sized aircraft folded, in the hangar and a deck park.
-function nominalAir(cv){ const isl=cvPart('island',cv.island); return Math.round(hangarArea(cv)*cv.hangars/65+Math.max(0,(cv.deckL-110)*cv.deckW*.8-isl.len*isl.bw)/80); }
+// The island as built: Lexington and Saratoga's great funnel stretched their island to about 45 m, of which the funnel alone was some
+// 30 m long, standing higher than the bridge; it weighs more too
+function islPart(cv){ const p=CVP.island.find(x=>x.id===cv.island)||CVP.island[0]; return p.len&&cv.istyle==='split'?{...p,len:p.len*1.8,w:p.w*1.6}:p; }
+function nominalAir(cv){ const isl=islPart(cv); return Math.round(hangarArea(cv)*cv.hangars/65+Math.max(0,(cv.deckL-110)*cv.deckW*.8-isl.len*isl.bw)/80); }
 // The aircraft a carrier is designed to operate: the air group planned for her on the Carriers tab, or, with none planned, about as many
 // fighter-sized aircraft as she has room for. A historical carrier is built for the air group she really embarked.
 const AIRCREW=10;   // men aboard for each aircraft: aircrew, mechanics, armourers and deck handlers
@@ -1424,7 +1427,7 @@ function hullPower(L,B,T,disp,shafts,wave,V){ const vol=disp/1.025, Cb=Math.min(
   return (Rf+Rw)*V/.65/745.7; }
 function computeCV(cv){
   const n=cv.n, vol=cvVolumes(cv), need=cvNeeds(cv), prot=protRange(cv), len=vol.len;
-  const Bo=cvPart('boiler',cv.boiler), Tu=cvPart('turbine',cv.turbine), Sh=cvPart('shafts',cv.shafts), Bo2=cvPart('bow',cv.bow), Is=cvPart('island',cv.island);
+  const Bo=cvPart('boiler',cv.boiler), Tu=cvPart('turbine',cv.turbine), Sh=cvPart('shafts',cv.shafts), Bo2=cvPart('bow',cv.bow), Is=islPart(cv);
   const Ca=cvPart('cat',cv.cat), Wi=cvPart('wire',cv.wire), H=cvPart('aaH',cv.aaH), M=cvPart('aaM',cv.aaM), Lg=cvPart('aaL',cv.aaL), R=cvPart('radar',cv.radar), DC=cvPart('dc',cv.dc), AG=cvPart('avgas',cv.avgas);
   const have=k=>cv.hold.reduce((s,h,i)=>s+(h===k?vol.hold[i]:0),0)+cv.low.reduce((s,h,i)=>s+(h===k?vol.low[i]:0),0);
   const protL=prot[1]>=prot[0]?(prot[1]-prot[0]+1)*len:0;
@@ -1961,15 +1964,19 @@ function stowOn(cvs,rows){
   return {placed:P.placed,left:P.left,lists:P.ships.map(sh=>sh.list)};
 }
 function stowPass(cvs,rows,cap){
-  const ships=cvs.map(cv=>{ const cs=cvStats(cv); return {cv,cs,hangar:cs.hArea2,park:cv.deckL*cv.deckW*1.2,nPark:0,list:[],berths:cs.berths}; });   // the deck park here is only a ceiling: trStow settles it
+  const ships=cvs.map(cv=>{ const cs=cvStats(cv), want={}; for(const x of cv.hist?[]:cvPlanRows(cv)) want[x.d.name]=x.n;
+    return {cv,cs,hangar:cs.hArea2,park:cv.deckL*cv.deckW*1.2,nPark:0,list:[],berths:cs.berths,want}; });   // the deck park here is only a ceiling: trStow settles it
   const rs=rows.map(x=>{ const a=compute(x.d), fits=ships.map(sh=>cvAircraft(sh.cv,sh.cs,a,x.d)); return {x,a,fits,ok:fits.filter(f=>f.ok).length}; }).sort((p,q)=>p.ok-q.ok);
   let placed=0; const left=[];
   for(const r of rs){ const fh=r.a.foldSpan*r.x.d.fusLen*HPACK, fp=r.a.foldSpan*r.x.d.fusLen*1.15; let k=0;
+    const nm=r.x.d.name, put1=(i,w)=>{ const f=r.fits[i], sh=ships[i]; if(!f.ok||sh.list.length>=sh.berths) return false;
+      if(w===0){ if(!(!f.tall&&f.lift&&sh.hangar>=fh)) return false; sh.hangar-=fh; } else { if(!(sh.park>=fp&&sh.nPark<cap[i])) return false; sh.park-=fp; sh.nPark++; }
+      sh.list.push({d:r.x.d,a:r.a,f}); return true; };
     for(;k<r.x.n;k++){ let put=false;
-      // each type spread across the carriers in turn, so every air group is mixed: below in any hangar with room first, then on deck
-      for(let w=0;w<2&&!put;w++) for(let j=0;j<ships.length&&!put;j++){ const i=(k+j)%ships.length, f=r.fits[i], sh=ships[i]; if(!f.ok||sh.list.length>=sh.berths) continue;
-        if(w===0){ if(!f.tall&&f.lift&&sh.hangar>=fh){ sh.hangar-=fh; put=true; } } else if(sh.park>=fp&&sh.nPark<cap[i]){ sh.park-=fp; sh.nPark++; put=true; }
-        if(put) sh.list.push({d:r.x.d,a:r.a,f}); }
+      // a carrier with this type in her planned air group takes it first, below or on deck, until she has her plan
+      for(let i=0;i<ships.length&&!put;i++) if(ships[i].want[nm]>0) for(let w=0;w<2&&!put;w++) if(put1(i,w)){ ships[i].want[nm]--; put=true; }
+      // the rest spread across the carriers in turn, so every air group is mixed: below in any hangar with room first, then on deck
+      for(let w=0;w<2&&!put;w++) for(let j=0;j<ships.length&&!put;j++) put=put1((k+j)%ships.length,w);
       if(!put) break; placed++; }
     if(k<r.x.n) left.push({name:r.x.d.name,n:r.x.n-k,why:r.ok?(ships.every((sh,i)=>!r.fits[i].ok||sh.list.length>=sh.berths)?'no berths left for their crews':'no room left'):(r.fits.find(f=>!f.ok)||{why:['no carrier sailing']}).why.join('; ')||'no carrier sailing'}); }
   return {placed,left,ships};
@@ -2023,7 +2030,7 @@ $('#addclass').addEventListener('click',()=>{ const id=newId(), name=unused(CLAS
 $('#classes').addEventListener('click',e=>{
   const pick=e.target.closest('[data-cvsel]'), lay=e.target.closest('[data-lay]'), del=e.target.closest('[data-cdel]');
   if(pick){ S.cvSel=+pick.dataset.cvsel; save(); renderYard(); $('#cvbench').scrollIntoView({block:'start'}); }
-  if(lay){ const c=clsOf(+lay.dataset.lay), taken=S.ships.map(s=>s.name), first=!S.ships.some(s=>s.cls===c.id)&&c.name&&!taken.includes(c.name), name=first?c.name:unused(SHIPNAMES,taken,'Carrier'); S.ships.push({id:newId(),name,cls:c.id,on:true}); save(); renderClassList(); renderFleet(); toast(`${name} laid down, a ${c.name}-class carrier.`); }
+  if(lay){ const c=clsOf(+lay.dataset.lay), taken=S.ships.map(s=>s.name), first=!S.ships.some(s=>s.cls===c.id)&&c.name&&!taken.includes(c.name), name=first?c.name:unused(SHIPNAMES,taken,'Carrier'); { const s={id:newId(),name,cls:c.id,on:true}; S.ships.push(s); fleetAirPlan(s,1); } save(); renderClassList(); renderFleet(); toast(`${name} laid down, a ${c.name}-class carrier.`); }
   if(del){ const id=+del.dataset.cdel, c=clsOf(id), k=S.ships.filter(s=>s.cls===id).length;
     if(k&&!del.dataset.armed){ del.dataset.armed='1'; del.textContent=`Click again to scrap ${k} ship${k>1?'s':''}`; return; }   // a second click confirms
     S.classes=S.classes.filter(x=>x.id!==id); S.ships=S.ships.filter(s=>s.cls!==id); if(S.cvSel===id) S.cvSel=(S.classes[0]||{}).id; save(); renderYard(); renderFleet(); toast(`${c.name} class ${k?'and its ships ':''}scrapped.`); }
@@ -2111,8 +2118,8 @@ const ISLAND={
     funnel:[.4,.72,.28,.98,.84],rake:.05,mast:[.82,.28],mastL:12,dish:[.15,.66],noFunnel:[[.45,.7,.28,.4,.8]]},
   compact:{blocks:[[0,.5,0,.32,.85],[.03,.42,.32,.52,.8]],glass:[[.02,.43,.43,.48,.82]],roof:[[0,.47,.52,.54,1.05]],bands:[[0,.5,0,.32,.85]],
     funnel:[.64,.94,0,.95,.7],rake:.1,mast:[.52,0],mastL:H=>H*1.15,dish:[.2,.56]},
-  split:{blocks:[[0,.4,0,.55,1],[.02,.36,.55,.75,.92]],glass:[[.02,.37,.66,.71,.94]],roof:[[0,.41,.75,.77,1.2]],bands:[[0,.4,0,.55,1]],
-    funnel:[.5,1,0,1.25,.78],rake:0,mast:[.2,.77],dish:[.3,.8],noFunnel:[[.55,.9,0,.25,.8]]},
+  split:{blocks:[[0,.3,0,.6,1],[.02,.27,.6,.82,.92]],glass:[[.02,.28,.72,.77,.94]],roof:[[0,.31,.82,.84,1.2]],bands:[[0,.3,0,.6,1]],
+    funnel:[.34,1,0,1.75,.9],rake:0,mast:[.15,.84],dish:[.24,.86],noFunnel:[[.4,.9,0,.25,.8]]},
   stepped:{blocks:[[0,1,0,.34,1],[0,.58,.34,.52,.9]],glass:[[0,.59,.45,.5,.92]],roof:[[0,.62,.52,.54,1.1]],bands:[[0,1,0,.34,1]],
     funnel:[.62,.9,.18,1.05,.8],rake:.05,cant:.45,mast:[.35,.54],dish:[.1,.6]},
   bridge:{blocks:[[0,.42,0,.45,.8],[.04,.38,.45,.66,.72]],glass:[[.03,.39,.55,.6,.74]],roof:[[0,.44,.66,.69,1.1]],bands:[[0,.42,0,.45,.8]],
@@ -2128,12 +2135,12 @@ const islH0=cv=>12;
 function islStyle(cv){ const s=ISLAND[cv.istyle]||ISLAND.tower, H=islH0(cv); return typeof s.mastL==='function'?{...s,mastL:s.mastL(H)}:s; }
 // The island's footprint on the flight deck: x in metres from the forward end of the deck, dy across it (starboard negative), and
 // how far in from the centreline its inboard face stands. The island overhangs the deck edge a little, on a sponson.
-function islBand(cv){ const isl=cvPart('island',cv.island); if(!isl.len) return null; const x0=islX(cv)-deckStart(cv), hw=cv.deckW/2;
+function islBand(cv){ const isl=islPart(cv); if(!isl.len) return null; const x0=islX(cv)-deckStart(cv), hw=cv.deckW/2;
   return {x0:x0-1,x1:x0+isl.len+1,side:cv.iside==='port'?1:-1,inner:hw-isl.bw*.56,outer:hw+isl.bw*.26}; }
 // Where the guns go along each deck edge (side +1 is starboard), kept clear of the island, deck-edge lifts, side funnels and each
 // other; and the stretches of catwalk between them. Positions are metres from the bow.
 function cvGunPlan(cv){
-  const dS=deckStart(cv), e=dS+cv.deckL, hw=cv.deckW/2, tf=Math.min(cv.deckL*.07,18), lo=dS+tf+1.5, hi=e-Math.min(4,hw*.3)-2.5, isl=cvPart('island',cv.island), sg=cv.iside==='port'?-1:1;
+  const dS=deckStart(cv), e=dS+cv.deckL, hw=cv.deckW/2, tf=Math.min(cv.deckL*.07,18), lo=dS+tf+1.5, hi=e-Math.min(4,hw*.3)-2.5, isl=islPart(cv), sg=cv.iside==='port'?-1:1;
   const occ={'1':[],'-1':[]}, block=(s,a,b,k)=>occ[s].push([a,b,k]);
   if(isl.len){ const ix=islX(cv); block(sg,ix-1.5,ix+isl.len+1.5,'island'); }
   for(const l of cv.lifts) if(l.edge) block(-sg,l.x-l.l/2-1.5,l.x+l.l/2+1.5,'lift');
@@ -2274,7 +2281,7 @@ function cvAirTable(cv,cs){
       return `<span>${esc(d.name||'Untitled')}${d===S.design?' <span class="muted">(drawing board)</span>':''}${x.why.length?`<small class="bad">${esc(x.why.join('; '))}</small>`:`<small>${x.catOK&&!x.deckOK?'catapult launch':`${f0(x.run)} m take-off run`} · catches the wire at ${f0(x.eng)} km/h</small>`}${n?`<small>${where(b)||'none aboard'}${lf?`<span class="bad">; ${lf.n} stay ashore: ${esc(lf.why)}</span>`:''}</small>`:''}</span>
         <span class="v">${x.hangar}</span><span class="v">${x.park}</span><span class="v ${x.ok?'':'bad'}">${x.ok?'Yes':'No'}</span>
         <span class="v cnt"><button data-cvastep="-1" data-cvaname="${esc(d.name)}" aria-label="One fewer ${esc(d.name)}">−</button><input type="number" min="0" max="300" data-cvan="${esc(d.name)}" value="${n}" aria-label="Number of ${esc(d.name)} in her air group"><button data-cvastep="1" data-cvaname="${esc(d.name)}" aria-label="One more ${esc(d.name)}">+</button></span>`; }).join('')}
-    <span class="note">${P?`Planned air group, ${P.n} aircraft: ${P.h} in the hangar${P.f+P.a?`, ${P.f+P.a} on the flight deck${P.a?` (${P.a} of them in a deck park aft, which must be launched or struck below before anything can land)`:''}`:', none on deck'}${P.placed<P.n?`; <span class="bad">${P.n-P.placed} cannot go</span>`:''}. Their crews add ${fmtK(P.n*AIRCREW)} men (${AIRCREW} an aircraft), for ${fmtK(cs.crew)} aboard in all, and the crew quarters must hold them.${P.placed<P.n?' <span class="bad">The crew is worked out for every aircraft planned, including those that cannot go: plan only what she can carry.</span>':''}`:`Type in an air group to see where it stows and how many men it adds: ${AIRCREW} for each aircraft. With none planned, her crew is worked out for about ${cs.N} aircraft.`}</span>
+    <span class="note">${P?`Planned air group, ${P.n} aircraft: ${P.h} in the hangar${P.f+P.a?`, ${P.f+P.a} on the flight deck${P.a?` (${P.a} of them in a deck park aft, which must be launched or struck below before anything can land)`:''}`:', none on deck'}${P.placed<P.n?`; <span class="bad">${P.n-P.placed} cannot go</span>`:''}. Their crews add ${fmtK(P.n*AIRCREW)} men (${AIRCREW} an aircraft), for ${fmtK(cs.crew)} aboard in all, and the crew quarters must hold them. When she is chosen to sail on the Fleet tab, this air group is added to the fleet’s, and she takes it aboard.${P.placed<P.n?' <span class="bad">The crew is worked out for every aircraft planned, including those that cannot go: plan only what she can carry.</span>':''}`:`Type in an air group to see where it stows and how many men it adds: ${AIRCREW} for each aircraft. When she is chosen to sail on the Fleet tab, it is added to the fleet’s air group, and she takes it aboard. With none planned, her crew is worked out for about ${cs.N} aircraft.`}</span>
     <span class="note">Take-off and landing are worked out with the wind over the deck at her top speed plus 5 knots of natural wind. Hangar and deck-park numbers are for that type alone, leaving the take-off run clear.</span>`;
 }
 $('#cvair').addEventListener('click',e=>{ const b=e.target.closest('[data-cvastep]'); if(!b) return; const c=cvSel(); if(!c) return; const p=c.cv.airPlan||(c.cv.airPlan={}), k=b.dataset.cvaname;
@@ -2383,7 +2390,10 @@ $('#ships').addEventListener('input',e=>{ const id=e.target.dataset.sname; if(id
 $('#ships').addEventListener('change',()=>renderFleet());
 $('#ships').addEventListener('click',e=>{ const b=e.target.closest('[data-sdel]'); if(!b) return; const s=S.ships.find(q=>q.id===+b.dataset.sdel);
   S.ships=S.ships.filter(q=>q!==s); save(); renderYard(); renderFleet(); toast(`${s.name} scrapped.`); });
-$('#fships').addEventListener('change',e=>{ const id=e.target.dataset.son; if(id){ S.ships.find(s=>s.id===+id).on=e.target.checked; save(); renderFleet(); } });
+// Choosing a carrier to sail adds her planned air group to the fleet's; leaving her behind takes it off again. The numbers can still be
+// changed before sailing.
+function fleetAirPlan(s,sign){ const c=clsOf(s.cls); if(!c) return; for(const x of cvPlanRows(c.cv)) if((S.lib||[]).some(d=>d.name===x.d.name)){ const a=S.air.find(q=>q.name===x.d.name); setAir(x.d.name,(a?a.n:0)+sign*x.n); } }
+$('#fships').addEventListener('change',e=>{ const id=e.target.dataset.son; if(id){ const s=S.ships.find(s=>s.id===+id); if(s.on!==e.target.checked) fleetAirPlan(s,e.target.checked?1:-1); s.on=e.target.checked; save(); renderFleet(); } });
 $('#airgroup').addEventListener('click',e=>{ const b=e.target.closest('[data-air]'); if(!b) return; const x=airRows()[+b.dataset.air]; setAir(x.d.name,x.n+(+b.dataset.step)*(e.shiftKey?10:1)); renderFleet(); });
 $('#airgroup').addEventListener('change',e=>{ const i=e.target.dataset.airn; if(i==null) return; setAir(airRows()[+i].d.name,+e.target.value); renderFleet(); });
 
@@ -3166,8 +3176,11 @@ function meshFor(p,q=1,opt={}){
     // the fixed part: through the centre, or from the bomb bay's sides out
     if(zW) for(const sg of [-1,1]) add(wingGeo(s,X,tcW,dyW,PW,part2(s,zW,zc,sg),cam),body,0,w.y); else add(wingGeo(s,X,tcW,dyW,PW,part2(s,0,zc,0),cam),body,0,w.y);
     if(zh) for(const sg of [-1,1]){ const g=folds[sg], geo=wingGeo(s,X,tcW,dyW,PW,part2(s,zh,half+1,sg),cam); geo.translate(-g.position.x,w.y-g.position.y,-g.position.z); add(geo,body,0,0,0,g); }
-    if(wi===0){ const qq=stationAt(sFull,.7), c=qq[2]-qq[1], rg=new THREE.CircleGeometry(Math.min(c*.26,.5),16); rg.rotateX(-Math.PI/2);
-      for(const sg of [-1,1]){ const m=add(rg,mark,X(qq[1]+c*.4),w.y+(naca(.4,tcW)+cam*.96)*c+dyW(qq[0])+.03,sg*qq[0]); m.rotation.x=-sg*Math.atan(slope(qq[0])); } }
+    // the roundels sit on the upper skin: measured on the wing as built there (where the aileron is cut from the trailing edge the
+    // section is that much shorter and thinner), and they fold with the outer wing
+    if(wi===0){ const qf=stationAt(sFull,.7), qq=stationAt(s,.7), cf=qf[2]-qf[1], c=qq[2]-qq[1], rg=new THREE.CircleGeometry(Math.min(cf*.26,.5),16); rg.rotateX(-Math.PI/2);
+      for(const sg of [-1,1]){ const g=zh&&qq[0]>zh?folds[sg]:null, x=X(qq[1]+c*.4), y=w.y+(naca(.4,tcW)+cam*.96)*c+dyW(qq[0])+.006, z=sg*qq[0];
+        const m=g?add(rg,mark,x-g.position.x,y-g.position.y,z-g.position.z,g):add(rg,mark,x,y,z); m.rotation.x=-sg*Math.atan(slope(qq[0])); } }
     // ailerons: the strip cut from the outer trailing edge, a section of its own, hinged along the cut
     if(ailOn&&wi===0){ const tcA=2*naca(.76,tcW)/.24; for(const sg of [-1,1]){
       const st=[.55,.62,.7,.78,.86,.93].map(f=>{ const v=stationAt(sFull,f); return [v[0],v[1]+(v[2]-v[1])*.76,v[2]]; });
@@ -3966,6 +3979,11 @@ const DROPS=[
     'Crew quarters are a realistic size: about 6 m³ a man, for his bunk and his share of the mess decks and washrooms. They can now go in the hold as well as on the lower decks, as the mess decks on a real carrier’s platform decks did.',
     'Every historical carrier the rivals sail is built to match the real ship: her standard displacement, her draught at full load, her speed, the fuel oil and aviation fuel she carried and her complement, with a hull deep enough to hold it all and her structure as light or heavy as her navy built. A ship whose beam is given over her bulges is measured that way.',
   ]},
+  {at:'2026-11-25T21:00:00+13:00',items:[
+    'The roundels on the wings sit on the wing again. Where the aileron is cut from the trailing edge the wing is a little thinner, and they had been floating above it; they now fold with the outer wing, too.',
+    'The bridge and great funnel island is as Lexington and Saratoga had it: the funnel is a huge slab some 30 m long, standing well above the bridge, and the island is about 45 m long and heavier for it.',
+    'A carrier’s planned air group is what she sails with. Choosing her to sail on the Fleet tab adds her plan to the fleet’s air group (leaving her behind takes it off again), and in battle she takes those aircraft aboard herself. The numbers can still be changed before sailing.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -4108,7 +4126,7 @@ function cvMesh(cv,cs,opt={}){
   // catwalks along the deck edges where nothing else stands, on brackets to the ship's side
   for(const s of [1,-1]) for(const [a,b] of plan.cat[String(s)]){ box(b-a,.25,1.3,X((a+b)/2),yFD-1.1,s*(hw+.65),steel);
     for(let m=a+1;m<b;m+=9){ const zi=hullOut(m,cs.hFD-4)-.1; if(hw+1.2-zi>.6) brace(new THREE.Vector3(X(m),yFD-1.2,s*(hw+1.2)),new THREE.Vector3(X(m),yFD-Math.min(4.5,1.2+(hw+1.2-zi)),s*zi)); } }
-  const isl=cvPart('island',cv.island), sg=cv.iside==='port'?-1:1;
+  const isl=islPart(cv), sg=cv.iside==='port'?-1:1;
   // deck-edge lifts, on the side away from the island
   const lifts=[], liftM=mat(cv.deckArm>0?'#555C61':'#86704F',{roughness:.9}), wellM=mat('#202427',{side:THREE.BackSide,roughness:1});
   for(const l of cv.lifts){
