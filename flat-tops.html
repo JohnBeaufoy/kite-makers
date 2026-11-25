@@ -1047,59 +1047,90 @@ const ROWS2=ROWS1.map(r=>Object.assign({},r,{
 /* ---------- The campaign: one rival fleet a year, 1936–1945 ---------- */
 // Each year caps your carriers by standard displacement (the treaty measure: the ship complete and crewed, without fuel or reserve
 // feed water) and gives a sum for buying aircraft. Both grow with the war: a pair of light carriers in 1936, half a dozen fleet carriers by 1945.
-// d is the fighter the rival's air group flies, which yours is compared against. Their carriers and the rest of their air group come with the fleet battles.
-/* ---------- The campaign: one rival fleet a year, 1936–1945 ---------- */
-// Each year caps your carriers by standard displacement (the treaty measure: the ship complete and crewed, without fuel or reserve
-// feed water) and gives a sum for buying aircraft. Both grow with the war: a pair of light carriers in 1936, half a dozen fleet carriers by 1945.
-// Each rival flies a fighter (d), a dive bomber and a torpedo bomber, styled on the carrier aircraft of the day. Yours is compared with the one
-// in the same role. Their carriers and the size of their air group come with the fleet battles.
-const NAV={layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'split',fold:'none',foldIn:4.6};
-const ALL3={pilot:true,engine:true,fuel:true}, PF={pilot:true,fuel:true};
-const FTR=o=>Object.assign({},NAV,{role:'fighter',crew:'c1',rear:'none',load:'none',brakes:'none'},o);
-const DIVE=o=>Object.assign({},NAV,{role:'dive',crew:'c2',rear:'r1',brakes:'dive'},o);
-const TORP=o=>Object.assign({},NAV,{role:'torpedo',crew:'c3',rear:'r1',brakes:'none'},o);
+// Each rival is a fleet of the year, after a real navy of the day: its carriers (fleet: real classes, built by histCV, with the names its
+// ships sail under), its escort (esc), the escort you sail with against it (mine), how its air group divides between fighters, dive
+// bombers and torpedo bombers (mix), and its three aircraft (d, dive, torp), drawn after the types that navy flew that year. Yours are
+// compared with the one in the same role. The year's aircraft budget (air) is what the rival's own aircraft cost, in its own mix, for the
+// air group each of its carriers really embarked for battle (RIVALHIST G; N is what she could carry with spares), and you get exactly the
+// same sum to buy yours.
 const RIVALS3=[
-  {title:'Commodore Hale',date:1936.5,tons:25000,air:450000,skill:.3,blurb:'Two small carriers and a biplane air group. Cautious, and slow to search.',
-   d:FTR({name:'SG.2',paint:'silver',layout:'bi',planform:'rect',gear:'fixed',frame:'tube',engine:'mer9',arm:'mg4',span:9.8,chord:1.5,gap:1.25,dihedral:3,wingPos:2.05,fusLen:8.4,tailArea:3.2,cockpitPos:3.6,fuelL:380,ammo:600,flaps:'none'}),
-   dive:DIVE({name:'BC.3',paint:'silver',layout:'bi',planform:'rect',engine:'r1535',arm:'mg1',span:10.4,chord:1.55,gap:1.4,dihedral:3,wingPos:2.1,fusLen:8.6,tailArea:3.4,cockpitPos:3.6,fuelL:500,load:'b250'}),
-   torp:TORP({name:'SF.1',paint:'silver',layout:'bi',planform:'rect',gear:'fixed',canopy:'open',frame:'tube',engine:'peg',arm:'mg1',span:13.9,chord:2.2,gap:1.6,dihedral:3,wingPos:2.4,fusLen:10.9,tailArea:4.6,cockpitPos:4.0,fuelL:700,load:'t18',flaps:'none',fold:'back',foldIn:4.7})},
-  {title:'Rear-Admiral Varga',date:1937.5,tons:32000,air:600000,skill:.4,blurb:'One carrier from a converted hull and one built from the keel up. Its fixed-gear monoplane fighters out-turn almost anything.',
-   d:FTR({name:'A.96',frame:'lite',paint:'silver',planform:'ellip',gear:'fixed',canopy:'open',engine:'kotobuki',arm:'mg2',span:11.0,chord:1.65,wingPos:1.95,fusLen:7.6,tailArea:3.0,cockpitPos:3.6,fuelL:330,doctrine:'turn'}),
-   dive:DIVE({name:'D1.A',paint:'silver',layout:'bi',planform:'rect',gear:'fixed',canopy:'open',frame:'tube',engine:'kotobuki',arm:'mg2',span:11.4,chord:1.65,gap:1.4,dihedral:3,wingPos:2.0,fusLen:9.4,tailArea:3.6,cockpitPos:3.8,fuelL:450,load:'b250',flaps:'none'}),
-   torp:TORP({name:'B5.N1',frame:'lite',paint:'silver',engine:'r1820',arm:'mg1',span:15.5,chord:2.43,wingPos:2.4,fusLen:10.3,tailArea:4.4,cockpitPos:3.9,fuelL:1100,load:'t91',fold:'up',foldIn:8.4})},
-  {title:'Rear-Admiral Lindqvist',date:1938.5,tons:40000,air:800000,skill:.45,blurb:'A big, fast pair of carriers that keep their aircraft on deck, ready to launch at once.',
-   d:FTR({name:'F3.B',paint:'silver',layout:'bi',planform:'rect',engine:'r1820',arm:'mg2',span:9.8,chord:1.35,gap:1.3,dihedral:3,wingPos:2.0,fusLen:7.9,tailArea:3.1,cockpitPos:3.7,fuelL:420,flaps:'none'}),
-   dive:DIVE({name:'SB.2U',paint:'silver',engine:'r1535',arm:'mg1',span:12.8,chord:2.21,wingPos:2.2,fusLen:10.4,tailArea:4.0,cockpitPos:4.2,fuelL:950,load:'b500',fold:'up',foldIn:6.0}),
-   torp:TORP({name:'TB.D',paint:'silver',engine:'r1535',arm:'mg1',span:15.2,chord:2.57,wingPos:2.4,fusLen:10.7,tailArea:4.6,cockpitPos:4.2,fuelL:680,load:'t13',fold:'uph',foldIn:7.5})},
-  {title:'Vice-Admiral Moreau',date:1939.5,tons:48000,air:1000000,skill:.5,blurb:'Three carriers and a strong escort. Searches widely and strikes the moment it finds you.',
-   d:FTR({name:'B.39',paint:'seablue',planform:'rect',engine:'r1820',arm:'mg4',span:10.7,chord:1.95,wingPos:1.9,fusLen:7.9,tailArea:3.2,cockpitPos:3.8,fuelL:450}),
-   dive:DIVE({name:'D3.A',frame:'lite',paint:'silver',planform:'ellip',gear:'fixed',engine:'kinsei',arm:'mg2',span:14.4,chord:2.43,wingPos:2.2,fusLen:10.2,tailArea:4.2,cockpitPos:4.0,fuelL:1080,load:'b250',fold:'tips'}),
-   torp:TORP({name:'B5.M',frame:'lite',paint:'silver',engine:'kinsei',arm:'mg1',span:15.5,chord:2.43,wingPos:2.4,fusLen:10.3,tailArea:4.4,cockpitPos:3.9,fuelL:1100,load:'t91',fold:'up',foldIn:8.4})},
+  {title:'Commodore Hale',date:1936.5,tons:25000,air:450000,skill:.3,blurb:'Two small carriers, Hermes and Argus, and a biplane air group. Cautious, and slow to search.',
+   fleet:[{c:'Hermes',name:'Hermes'},{c:'Argus',name:'Argus'}],esc:{CL:1,DD:3},mine:{CL:1,DD:3},mix:[0.35,0.3,0.35],
+   d:{layout:'bi',planform:'rect',airfoil:'std',gear:'fixed',canopy:'hood',frame:'tube',gap:1.25,dihedral:3,fuelPos:'fus',ammo:600,ammoC:100,armour:{},doctrine:'turn',stow:'ext',flaps:'none',fold:'none',foldIn:4.6,drop:'none',role:'fighter',crew:'c1',rear:'none',load:'none',brakes:'none',name:'SG.2',paint:'silver',engine:'mer9',arm:'mg4',span:9.83,chord:1.52,wingPos:2.2,fusLen:8.36,tailArea:3.2,cockpitPos:3.6,fuelL:380},
+   dive:{layout:'bi',planform:'rect',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',gap:1.4,dihedral:3,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'none',fold:'none',foldIn:4.6,drop:'none',role:'dive',crew:'c2',rear:'r1',brakes:'dive',name:'BC.3',paint:'silver',engine:'r1535',arm:'mg1',span:10.36,chord:1.55,wingPos:2.44,fusLen:8.57,tailArea:3.4,cockpitPos:3.6,fuelL:510,load:'b250'},
+   torp:{layout:'bi',planform:'rect',airfoil:'std',gear:'fixed',canopy:'open',frame:'tube',gap:1.6,dihedral:3,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'none',fold:'back',foldIn:4.7,drop:'none',role:'torpedo',crew:'c3',rear:'r1',brakes:'none',name:'SF.1',paint:'silver',engine:'peg',arm:'mg1',span:13.87,chord:2.2,wingPos:3.24,fusLen:10.87,tailArea:4.6,cockpitPos:4,fuelL:705,load:'t18'}},
+  {title:'Rear-Admiral Varga',date:1937.5,tons:32000,air:600000,skill:.4,blurb:'A big carrier converted from a cruiser hull and the small Hosho, built as a carrier from the keel up. Its fixed-gear monoplane fighters out-turn almost anything.',
+   fleet:[{c:'Courageous',name:'Courageous'},{c:'Hosho',name:'Hosho'}],esc:{CA:1,DD:3},mine:{CA:1,DD:3},mix:[0.35,0.3,0.35],
+   d:{layout:'low',planform:'ellip',airfoil:'std',gear:'fixed',canopy:'open',frame:'lite',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'turn',stow:'ext',flaps:'split',fold:'none',foldIn:4.6,drop:'none',role:'fighter',crew:'c1',rear:'none',load:'none',brakes:'none',name:'A.96',paint:'silver',engine:'kotobuki',arm:'mg2',span:11,chord:1.62,wingPos:1.96,fusLen:7.55,tailArea:3,cockpitPos:3.6,fuelL:330},
+   dive:{layout:'bi',planform:'rect',airfoil:'std',gear:'fixed',canopy:'open',frame:'tube',gap:1.4,dihedral:3,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'none',fold:'none',foldIn:4.6,drop:'none',role:'dive',crew:'c2',rear:'r1',brakes:'dive',name:'D1.A',paint:'silver',engine:'kotobuki',arm:'mg2',span:11.4,chord:1.65,wingPos:2.73,fusLen:9.3,tailArea:3.6,cockpitPos:3.8,fuelL:450,load:'b250'},
+   torp:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'lite',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'split',fold:'up',foldIn:8.4,drop:'none',role:'torpedo',crew:'c3',rear:'r1',brakes:'none',name:'B5.N1',paint:'silver',engine:'r1820',arm:'mg1',span:15.52,chord:2.42,wingPos:2.79,fusLen:10.3,tailArea:4.4,cockpitPos:3.9,fuelL:1000,load:'t91'}},
+  {title:'Rear-Admiral Lindqvist',date:1938.5,tons:40000,air:800000,skill:.45,blurb:'A fast pair of Yorktowns, with dive bombers that reach a long way.',
+   fleet:[{c:'Yorktown',name:'Yorktown'},{c:'Yorktown',name:'Enterprise'}],esc:{CA:2,DD:4},mine:{CA:2,DD:4},mix:[0.35,0.35,0.3],
+   d:{layout:'bi',planform:'rect',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',gap:1.3,dihedral:3,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'none',fold:'none',foldIn:4.6,drop:'none',role:'fighter',crew:'c1',rear:'none',load:'none',brakes:'none',name:'F3.B',paint:'silver',engine:'r1820',arm:'mg2',span:9.75,chord:1.35,wingPos:1.87,fusLen:7.06,tailArea:3,cockpitPos:3.5,fuelL:420},
+   dive:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'split',fold:'up',foldIn:6,drop:'none',role:'dive',crew:'c2',rear:'r1',brakes:'dive',name:'SB.2U',paint:'silver',engine:'r1535',arm:'mg1',span:12.77,chord:2.38,wingPos:2.89,fusLen:10.36,tailArea:4,cockpitPos:4.2,fuelL:930,load:'b500'},
+   torp:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'split',fold:'uph',foldIn:7.5,drop:'none',role:'torpedo',crew:'c3',rear:'r1',brakes:'none',name:'TB.D',paint:'silver',engine:'r1535',arm:'mg1',span:15.24,chord:2.57,wingPos:3.25,fusLen:10.67,tailArea:4.6,cockpitPos:4.2,fuelL:680,load:'t13'}},
+  {title:'Vice-Admiral Moreau',date:1939.5,tons:48000,air:1000000,skill:.5,blurb:'Three carriers and a strong escort with a battleship. Searches widely and strikes the moment it finds you.',
+   fleet:[{c:'Soryu',name:'Soryu'},{c:'Hiryu',name:'Hiryu'},{c:'Ryujo',name:'Ryujo'}],esc:{BB:1,CA:2,CL:1,DD:6},mine:{CA:1,CL:1,DD:5},mix:[0.3,0.35,0.35],
+   d:{layout:'low',planform:'rect',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'split',fold:'none',foldIn:4.6,drop:'none',role:'fighter',crew:'c1',rear:'none',load:'none',brakes:'none',name:'B.39',paint:'seablue',engine:'r1820',arm:'mg4',span:10.67,chord:1.82,wingPos:1.99,fusLen:7.92,tailArea:3.2,cockpitPos:3.8,fuelL:450},
+   dive:{layout:'low',planform:'ellip',airfoil:'std',gear:'fixed',canopy:'hood',frame:'lite',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'split',fold:'tips',foldIn:4.6,drop:'none',role:'dive',crew:'c2',rear:'r1',brakes:'dive',name:'D3.A',paint:'silver',engine:'kinsei',arm:'mg2',span:14.36,chord:2.43,wingPos:2.6,fusLen:10.2,tailArea:4.2,cockpitPos:4,fuelL:1080,load:'b250'},
+   torp:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'lite',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'split',fold:'up',foldIn:8.4,drop:'none',role:'torpedo',crew:'c3',rear:'r1',brakes:'none',name:'B5.M',paint:'silver',engine:'kinsei',arm:'mg1',span:15.3,chord:2.43,wingPos:2.81,fusLen:10.3,tailArea:4.4,cockpitPos:3.9,fuelL:1000,load:'t91'}},
   {title:'Vice-Admiral Brandt',date:1940.5,tons:58000,air:1400000,skill:.55,blurb:'Armoured flight decks and a small air group. Hard to sink, slow to hit back.',
-   d:FTR({name:'Fm.1',frame:'rugged',paint:'raf',engine:'mer2',arm:'mg8',crew:'c2',span:14.1,chord:2.25,wingPos:2.3,fusLen:12.2,tailArea:4.4,cockpitPos:4.6,fuelL:700,ammo:750,armour:{pilot:true},fold:'back',foldIn:5.0}),
-   dive:DIVE({name:'Sk.2',paint:'raf',engine:'perseus',arm:'mg4',span:14.1,chord:2.06,wingPos:2.4,fusLen:10.85,tailArea:4.2,cockpitPos:4.0,fuelL:740,load:'b250',fold:'back',foldIn:4.4}),
-   torp:TORP({name:'Ab.1',paint:'raf',layout:'bi',planform:'rect',gear:'fixed',frame:'tube',engine:'taurus',arm:'mg1',rear:'r2',span:15.2,chord:2.05,gap:1.6,dihedral:3,wingPos:2.5,fusLen:12.2,tailArea:5.0,cockpitPos:4.2,fuelL:880,load:'t18',fold:'back',foldIn:5.6})},
-  {title:'Vice-Admiral Castell',date:1941.5,tons:70000,air:2000000,skill:.65,blurb:'A large, well-drilled carrier force with long-ranged, lightly built aircraft that strike from far off.',
-   d:FTR({name:'Z.0',frame:'lite',paint:'silver',engine:'sakae12',arm:'emil',span:12.0,chord:1.85,dihedral:6,wingPos:2.15,fusLen:9.0,tailArea:3.3,cockpitPos:4.0,fuelL:540,drop:'d330',ammoC:60,doctrine:'turn',fold:'tips'}),
-   dive:DIVE({name:'D3.A1',frame:'lite',paint:'silver',planform:'ellip',gear:'fixed',engine:'kinsei',arm:'mg2',span:14.4,chord:2.43,wingPos:2.2,fusLen:10.2,tailArea:4.2,cockpitPos:4.0,fuelL:1080,load:'b250',fold:'tips'}),
-   torp:TORP({name:'B5.N2',frame:'lite',paint:'silver',engine:'sakae12',arm:'mg1',span:15.5,chord:2.43,wingPos:2.4,fusLen:10.3,tailArea:4.4,cockpitPos:3.9,fuelL:1100,load:'t91',fold:'up',foldIn:8.4})},
-  {title:'Admiral Ivers',date:1942.5,tons:85000,air:3000000,skill:.7,blurb:'Rugged aircraft, radar-directed fighter patrols and a damage-control drill that keeps hit carriers afloat.',
-   d:FTR({name:'W.4',frame:'rugged',paint:'seablue',planform:'rect',engine:'r1830',arm:'six50',span:11.6,chord:2.1,wingPos:1.9,fusLen:8.8,tailArea:3.4,cockpitPos:3.9,fuelL:550,ammo:250,armour:PF,fold:'sto',foldIn:3.8}),
-   dive:DIVE({name:'SB.D3',frame:'rugged',paint:'seablue',engine:'r1820g',arm:'b50x2',rear:'r2',span:12.7,chord:2.39,wingPos:2.2,fusLen:10.1,tailArea:4.2,cockpitPos:4.0,fuelL:980,load:'b500',armour:PF}),
-   torp:TORP({name:'TB.F1',frame:'rugged',paint:'seablue',engine:'r2600',arm:'mg1',rear:'t50',span:16.5,chord:2.76,wingPos:2.6,fusLen:12.2,tailArea:5.5,cockpitPos:4.2,fuelL:1270,load:'t13',stow:'bay',fold:'sto',foldIn:5.2,armour:PF})},
-  {title:'Admiral Rourke',date:1943.5,tons:105000,air:4500000,skill:.75,blurb:'New fleet carriers in numbers, each with a big air group of heavy, well-armed aircraft.',
-   d:FTR({name:'H.6',frame:'rugged',paint:'seablue',engine:'r2800n',arm:'six50',span:13.1,chord:2.4,wingPos:1.9,fusLen:10.2,tailArea:4.4,cockpitPos:4.4,fuelL:950,ammo:400,armour:ALL3,fold:'sto',foldIn:4.6}),
-   dive:DIVE({name:'SB.2C',frame:'rugged',paint:'seablue',engine:'r2600',arm:'hisp2',rear:'r2',span:15.2,chord:2.59,wingPos:2.3,fusLen:11.2,tailArea:5.0,cockpitPos:4.2,fuelL:1110,load:'b500',stow:'bay',fold:'uph',foldIn:7.0,armour:PF}),
-   torp:TORP({name:'TB.F1C',frame:'rugged',paint:'seablue',engine:'r2600',arm:'b50x2',rear:'t50',span:16.5,chord:2.76,wingPos:2.6,fusLen:12.2,tailArea:5.5,cockpitPos:4.2,fuelL:1270,load:'t13',stow:'bay',fold:'sto',foldIn:5.2,armour:PF})},
-  {title:'Admiral Seward',date:1944.5,tons:130000,air:7000000,skill:.8,blurb:'Five fleet carriers and a ring of escorts bristling with anti-aircraft guns.',
-   d:FTR({name:'C.4',frame:'rugged',paint:'seablue',engine:'r2800n',arm:'six50',span:12.5,chord:2.1,wingPos:2.0,fusLen:10.2,tailArea:4.2,cockpitPos:4.8,fuelL:890,ammo:400,armour:ALL3,fold:'uph',foldIn:5.2}),
-   dive:DIVE({name:'SB.2C3',frame:'rugged',paint:'seablue',engine:'r2600w',arm:'hisp2',rear:'r2',span:15.2,chord:2.59,wingPos:2.3,fusLen:11.2,tailArea:5.0,cockpitPos:4.2,fuelL:1110,load:'b500',stow:'bay',fold:'uph',foldIn:7.0,armour:PF}),
-   torp:TORP({name:'TB.M3',frame:'rugged',paint:'seablue',engine:'r2600w',arm:'b50x2',rear:'t50',span:16.5,chord:2.76,wingPos:2.6,fusLen:12.2,tailArea:5.5,cockpitPos:4.2,fuelL:1270,load:'t13t',stow:'bay',fold:'sto',foldIn:5.2,armour:PF})},
+   fleet:[{c:'Illustrious',name:'Illustrious'},{c:'Illustrious',name:'Formidable'},{c:'Hermes',name:'Hermes'}],esc:{BB:1,CA:1,CL:2,DD:4},mine:{CA:1,CL:2,DD:4},mix:[0.3,0.2,0.5],
+   d:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',gap:1.2,dihedral:5,fuelPos:'fus',ammo:750,ammoC:100,armour:{pilot:true},doctrine:'energy',stow:'ext',flaps:'split',fold:'back',foldIn:5,drop:'none',role:'fighter',crew:'c2',rear:'none',load:'none',brakes:'none',name:'Fm.1',paint:'raf',engine:'mer2',arm:'mg8',span:14.14,chord:2.25,wingPos:3.27,fusLen:12.24,tailArea:4.4,cockpitPos:4.6,fuelL:705},
+   dive:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'split',fold:'back',foldIn:4.4,drop:'none',role:'dive',crew:'c2',rear:'r1',brakes:'dive',name:'Sk.2',paint:'raf',engine:'perseus',arm:'mg4',span:14.07,chord:2.22,wingPos:2.9,fusLen:10.85,tailArea:4.2,cockpitPos:4,fuelL:740,load:'b250'},
+   torp:{layout:'bi',planform:'rect',airfoil:'std',gear:'fixed',canopy:'hood',frame:'tube',gap:1.6,dihedral:3,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'split',fold:'back',foldIn:5.6,drop:'none',role:'torpedo',crew:'c3',rear:'r2',brakes:'none',name:'Ab.1',paint:'raf',engine:'taurus',arm:'mg1',span:15.24,chord:2.05,wingPos:3.31,fusLen:12.14,tailArea:5,cockpitPos:4.2,fuelL:880,load:'t18'}},
+  {title:'Vice-Admiral Castell',date:1941.5,tons:70000,air:2000000,skill:.65,blurb:'Three carriers working as one, with long-ranged, lightly built aircraft that strike from far off.',
+   fleet:[{c:'Akagi',name:'Akagi'},{c:'Soryu',name:'Soryu'},{c:'Hiryu',name:'Hiryu'}],esc:{BB:2,CA:2,CL:1,DD:8},mine:{BB:1,CA:2,CL:1,DD:6},mix:[0.33,0.33,0.34],
+   d:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'lite',gap:1.2,dihedral:6,fuelPos:'fus',ammo:500,ammoC:60,armour:{},doctrine:'turn',stow:'ext',flaps:'split',fold:'tips',foldIn:4.6,drop:'d330',role:'fighter',crew:'c1',rear:'none',load:'none',brakes:'none',name:'Z.0',paint:'silver',engine:'sakae12',arm:'emil',span:12,chord:1.87,wingPos:2.26,fusLen:9.06,tailArea:3.3,cockpitPos:4,fuelL:525},
+   dive:{layout:'low',planform:'ellip',airfoil:'std',gear:'fixed',canopy:'hood',frame:'lite',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'split',fold:'tips',foldIn:4.6,drop:'none',role:'dive',crew:'c2',rear:'r1',brakes:'dive',name:'D3.A1',paint:'silver',engine:'kinsei',arm:'mg2',span:14.36,chord:2.43,wingPos:2.6,fusLen:10.2,tailArea:4.2,cockpitPos:4,fuelL:1080,load:'b250'},
+   torp:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'lite',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{},doctrine:'energy',stow:'ext',flaps:'split',fold:'up',foldIn:8.4,drop:'none',role:'torpedo',crew:'c3',rear:'r1',brakes:'none',name:'B5.N2',paint:'silver',engine:'sakae12',arm:'mg1',span:15.52,chord:2.42,wingPos:2.87,fusLen:10.3,tailArea:4.4,cockpitPos:3.9,fuelL:1000,load:'t91'}},
+  {title:'Admiral Ivers',date:1942.5,tons:85000,air:3000000,skill:.7,blurb:'Four carriers with rugged aircraft, radar-directed fighter patrols and a damage-control drill that keeps hit carriers afloat.',
+   fleet:[{c:'Yorktown',name:'Yorktown'},{c:'Yorktown',name:'Enterprise'},{c:'Yorktown',name:'Hornet'},{c:'Wasp',name:'Wasp'}],esc:{CA:3,CL:2,DD:8},mine:{CA:2,CL:2,DD:8},mix:[0.35,0.45,0.2],
+   d:{layout:'low',planform:'rect',airfoil:'std',gear:'retract',canopy:'hood',frame:'rugged',gap:1.2,dihedral:5,fuelPos:'fus',ammo:240,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy',stow:'ext',flaps:'split',fold:'sto',foldIn:3.8,drop:'none',role:'fighter',crew:'c1',rear:'none',load:'none',brakes:'none',name:'W.4',paint:'seablue',engine:'r1830',arm:'six50',span:11.58,chord:2.09,wingPos:2.25,fusLen:8.76,tailArea:3.4,cockpitPos:3.9,fuelL:545},
+   dive:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'rugged',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy',stow:'ext',flaps:'split',fold:'none',foldIn:4.6,drop:'none',role:'dive',crew:'c2',rear:'r2',brakes:'dive',name:'SB.D3',paint:'seablue',engine:'r1820g',arm:'b50x2',span:12.66,chord:2.39,wingPos:2.7,fusLen:10.09,tailArea:4.2,cockpitPos:4,fuelL:980,load:'b500'},
+   torp:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'rugged',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy',stow:'bay',flaps:'split',fold:'sto',foldIn:5.2,drop:'none',role:'torpedo',crew:'c3',rear:'t50',brakes:'none',name:'TB.F1',paint:'seablue',engine:'r2600',arm:'mg1',span:16.51,chord:2.76,wingPos:3.05,fusLen:12.48,tailArea:5.5,cockpitPos:4.2,fuelL:1270,load:'t13'}},
+  {title:'Admiral Rourke',date:1943.5,tons:105000,air:4500000,skill:.75,blurb:'The new fast carriers: three big fleet carriers and two light ones, each with heavy, well-armed aircraft.',
+   fleet:[{c:'Essex',name:'Essex'},{c:'Essex',name:'Yorktown'},{c:'Essex',name:'Intrepid'},{c:'Independence',name:'Independence'},{c:'Independence',name:'Princeton'}],esc:{BB:1,CA:2,CL:3,DD:10},mine:{BB:1,CA:2,CL:2,DD:8},mix:[0.4,0.38,0.22],
+   d:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'rugged',gap:1.2,dihedral:5,fuelPos:'fus',ammo:400,ammoC:100,armour:{pilot:true,engine:true,fuel:true},doctrine:'energy',stow:'ext',flaps:'split',fold:'sto',foldIn:4.6,drop:'d570',role:'fighter',crew:'c1',rear:'none',load:'none',brakes:'none',name:'H.6',paint:'seablue',engine:'r2800n',arm:'six50',span:13.06,chord:2.38,wingPos:2.22,fusLen:10.24,tailArea:4.4,cockpitPos:4.4,fuelL:946},
+   dive:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'rugged',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy',stow:'bay',flaps:'split',fold:'up',foldIn:7,drop:'none',role:'dive',crew:'c2',rear:'r2',brakes:'dive',name:'SB.2C',paint:'seablue',engine:'r2600',arm:'hisp2',span:15.15,chord:2.59,wingPos:2.67,fusLen:11.18,tailArea:5,cockpitPos:4.2,fuelL:1110,load:'b500'},
+   torp:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'rugged',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy',stow:'bay',flaps:'split',fold:'sto',foldIn:5.2,drop:'none',role:'torpedo',crew:'c3',rear:'t50',brakes:'none',name:'TB.F1C',paint:'seablue',engine:'r2600',arm:'b50x2',span:16.51,chord:2.76,wingPos:3.03,fusLen:12.48,tailArea:5.5,cockpitPos:4.2,fuelL:1270,load:'t13'}},
+  {title:'Admiral Seward',date:1944.5,tons:130000,air:7000000,skill:.8,blurb:'Five fast carriers, gull-winged fighters and a ring of escorts bristling with anti-aircraft guns.',
+   fleet:[{c:'Essex',name:'Essex'},{c:'Essex',name:'Intrepid'},{c:'Essex',name:'Hornet'},{c:'Essex',name:'Lexington'},{c:'Independence',name:'Cabot'}],esc:{BB:2,CA:2,CL:4,DD:12},mine:{BB:1,CA:2,CL:3,DD:10},mix:[0.55,0.25,0.2],
+   d:{layout:'low',planform:'gull',airfoil:'std',gear:'retract',canopy:'hood',frame:'skin',gap:1.2,dihedral:5,fuelPos:'fus',ammo:400,ammoC:100,armour:{pilot:true,engine:true,fuel:true},doctrine:'energy',stow:'ext',flaps:'slotted',fold:'up',foldIn:5.2,drop:'d570',role:'fighter',crew:'c1',rear:'none',load:'none',brakes:'none',name:'C.4',paint:'seablue',knee:0.6,engine:'r2800n',arm:'six50',span:12.5,chord:2.33,wingPos:2.21,fusLen:10.2,tailArea:4.2,cockpitPos:4.8,fuelL:890},
+   dive:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'rugged',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy',stow:'bay',flaps:'split',fold:'up',foldIn:7,drop:'none',role:'dive',crew:'c2',rear:'r2',brakes:'dive',name:'SB.2C3',paint:'seablue',engine:'r2600w',arm:'hisp2',span:15.15,chord:2.59,wingPos:2.64,fusLen:11.18,tailArea:5,cockpitPos:4.2,fuelL:1110,load:'b500'},
+   torp:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'rugged',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy',stow:'bay',flaps:'split',fold:'sto',foldIn:5.2,drop:'none',role:'torpedo',crew:'c3',rear:'t50',brakes:'none',name:'TB.M3',paint:'seablue',engine:'r2600w',arm:'b50x2',span:16.51,chord:2.76,wingPos:3,fusLen:12.48,tailArea:5.5,cockpitPos:4.2,fuelL:1270,load:'t13t'}},
   {title:'Fleet Admiral Kessler',date:1945.4,tons:165000,air:11000000,skill:.85,blurb:'The largest carrier force of the war, with the best aircraft and the most experienced aircrews.',
-   d:FTR({name:'B.8',frame:'rugged',paint:'seablue',engine:'r2800w',arm:'hisp4',canopy:'bubble',span:10.9,chord:2.0,wingPos:1.65,fusLen:8.6,tailArea:3.6,cockpitPos:3.9,fuelL:700,ammo:400,ammoC:200,armour:ALL3,fold:'tips'}),
-   dive:DIVE({name:'D4.Y',frame:'lite',paint:'silver',engine:'db605',arm:'mg2',span:11.5,chord:2.05,wingPos:2.2,fusLen:10.2,tailArea:3.8,cockpitPos:4.0,fuelL:800,drop:'d330',load:'b500',stow:'bay',armour:PF}),
-   torp:TORP({name:'B7.A',frame:'lite',paint:'silver',engine:'homare',arm:'hisp2',crew:'c2',span:14.4,chord:2.46,wingPos:2.3,fusLen:11.5,tailArea:4.6,cockpitPos:4.2,fuelL:1180,load:'t91',stow:'ext',fold:'up',foldIn:7.9,armour:PF})}];
+   fleet:[{c:'Essex',name:'Essex'},{c:'Essex',name:'Franklin'},{c:'Essex',name:'Hancock'},{c:'Essex',name:'Bennington'},{c:'Taiho',name:'Taiho'},{c:'Implacable',name:'Implacable'}],esc:{BB:2,CA:3,CL:4,DD:14},mine:{BB:2,CA:2,CL:3,DD:12},mix:[0.6,0.2,0.2],
+   d:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'bubble',frame:'rugged',gap:1.2,dihedral:5,fuelPos:'fus',ammo:400,ammoC:200,armour:{pilot:true,engine:true,fuel:true},doctrine:'energy',stow:'ext',flaps:'split',fold:'uph',foldIn:7.2,drop:'d570',role:'fighter',crew:'c1',rear:'none',load:'none',brakes:'none',name:'B.8',paint:'seablue',engine:'r2800w',arm:'hisp4',span:10.92,chord:2.08,wingPos:1.76,fusLen:8.61,tailArea:3.6,cockpitPos:3.9,fuelL:700},
+   dive:{layout:'low',planform:'taper',airfoil:'std',gear:'retract',canopy:'hood',frame:'lite',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy',stow:'bay',flaps:'fowler',fold:'none',foldIn:4.6,drop:'d330',role:'dive',crew:'c2',rear:'r1',brakes:'dive',name:'D4.Y',paint:'silver',engine:'db605',arm:'mg2',span:11.5,chord:2.05,wingPos:2.49,fusLen:10.22,tailArea:3.8,cockpitPos:4,fuelL:730,load:'b500'},
+   torp:{layout:'low',planform:'gull',airfoil:'std',gear:'retract',canopy:'hood',frame:'lite',gap:1.2,dihedral:5,fuelPos:'fus',ammo:500,ammoC:100,armour:{pilot:true,fuel:true},doctrine:'energy',stow:'ext',flaps:'fowler',fold:'up',foldIn:7.9,drop:'none',role:'torpedo',crew:'c2',rear:'r1',brakes:'dive',name:'B7.A',paint:'silver',knee:0.5,engine:'homare',arm:'hisp2',span:14.4,chord:2.46,wingPos:2.53,fusLen:11.49,tailArea:4.6,cockpitPos:4.2,fuelL:1180,load:'t91m3'}}
+];
+// The rivals' carriers: real classes, given as their builders gave them (waterline length and beam, standard displacement, trial speed,
+// machinery, hangars, deck, lifts as [centre from the bow as a fraction of length, length, width, deck-edge], guns and the usual air
+// group N). histCV makes each into a design in the carrier designer's terms the first time a battle needs it: the hull depth is found
+// that gives her displacement (keeping a sound metacentric height), any weight the designer does not count goes in as ballast, and the
+// fineness is found that gives her speed. They keep the gear their real ships had (cv.rival), whatever you have unlocked: rivals may be
+// up to about 15% over their own tonnage limit, where the real ships came out that way.
+const RIVALHIST=[{name:'Yorktown',nat:'US',year:1937,L:234.7,B:25.4,std:19875,kn:32.5,shp:120000,shafts:'4',boiler:'b36',fore:'open',hside:'open',hangars:1,hH:5.3,hFrom:0.14,hTo:0.82,deckL:244,deckW:26.2,deckOv:4,belt:102,hdArm:38,tps:2.5,tpsk:'internal',island:'small',istyle:'tower',iside:'stbd',islX:0.4,funnel:'island',lifts:[[0.2,14.6,13.4,0],[0.47,14.6,13.4,0],[0.73,14.6,13.4,0]],cats:2,cat:'c38',wire:'w37',wires:9,aaH:'h1',nH:8,aaM:'m1',nM:4,aaL:'l1',nL:24,radar:'r1',N:90,G:75},{name:'Wasp',nat:'US',year:1940,L:210.3,B:25.1,std:14700,kn:29.5,shp:70000,shafts:'2',boiler:'b36',fore:'open',hside:'open',hangars:1,hH:5.2,hFrom:0.15,hTo:0.85,deckL:225,deckW:28,deckOv:4,belt:16,hdArm:32,tps:0,island:'small',istyle:'lattice',iside:'stbd',islX:0.37,funnel:'island',lifts:[[0.3,13.4,13.4,0],[0.6,13.4,13.4,0],[0.5,13,11,1]],cats:2,cat:'c38',wire:'w37',wires:9,aaH:'h1',nH:8,aaM:'m1',nM:4,aaL:'l1',nL:24,radar:'r1',N:76,G:71},{name:'Essex',nat:'US',year:1942.9,L:249.9,B:28.3,std:27100,kn:32.7,shp:150000,shafts:'4',boiler:'b40',fore:'open',hside:'open',hangars:1,hH:5.3,hFrom:0.12,hTo:0.86,deckL:262,deckW:32.9,deckOv:6,belt:102,hdArm:64,tps:3.5,tpsk:'internal',island:'small',istyle:'tower',iside:'stbd',islX:0.4,funnel:'island',lifts:[[0.2,14.6,13.4,0],[0.74,14.6,13.4,0],[0.45,18.3,10.4,1]],cats:1,cat:'c40',wire:'w37',wires:9,aaH:'h3',nH:6,aaM:'m2',nM:8,aaL:'l2',nL:46,radar:'r2',dc:'dc2',avgas:'saddle',N:90,G:94},{name:'Independence',nat:'US',year:1943,L:182.9,B:21.8,std:11000,kn:31.6,shp:100000,shafts:'4',boiler:'b36',fore:'open',hside:'open',hangars:1,hH:5.3,hFrom:0.22,hTo:0.76,deckL:168,deckW:22.3,deckOv:2,belt:127,hdArm:50,tps:1,tpsk:'bulge',island:'small',istyle:'compact',iside:'stbd',islX:0.12,funnel:'stacks',lifts:[[0.3,12.8,11.6,0],[0.7,12.8,11.6,0]],cats:1,cat:'c40',wire:'w37',wires:8,aaH:'h1',nH:0,aaM:'m2',nM:6,aaL:'l2',nL:16,radar:'r2',dc:'dc2',avgas:'saddle',N:33,G:33},{name:'Hosho',nat:'JP',year:1923,L:155.5,B:17.8,std:7470,kn:25,shp:30000,shafts:'2',boiler:'b25',fore:'open',hside:'closed',hangars:1,hH:4.5,hFrom:0.22,hTo:0.78,deckL:158,deckW:22.7,deckOv:2,belt:0,hdArm:0,tps:0,island:'none',funnel:'down',lifts:[[0.3,10.4,9,0],[0.67,10.4,9,0]],cats:0,wire:'w30',wires:6,aaH:'h1',nH:0,aaM:'m1',nM:4,aaL:'l1',nL:0,radar:'none',N:15,G:15},{name:'Akagi',nat:'JP',year:1938,L:250.4,B:31.3,std:36500,kn:31.2,shp:133000,shafts:'4',boiler:'b25',fore:'open',hside:'closed',hangars:2,hH:4.6,hFrom:0.14,hTo:0.88,deckL:249,deckW:30.5,deckOv:3,belt:152,hdArm:79,tps:2.5,tpsk:'bulge',island:'small',istyle:'bridge',iside:'port',islX:0.4,funnel:'down',lifts:[[0.17,13,11.8,0],[0.45,13,12,0],[0.8,13,8.4,0]],cats:0,wire:'w37',wires:9,aaH:'h2',nH:6,aaM:'m1',nM:14,aaL:'l1',nL:0,radar:'none',N:91,G:63},{name:'Ryujo',nat:'JP',year:1936,L:175.4,B:20.3,std:10600,kn:29,shp:65000,shafts:'2',boiler:'b32',fore:'open',hside:'closed',hangars:2,hH:4.3,hFrom:0.22,hTo:0.8,deckL:156.5,deckW:23,deckOv:2,belt:25,hdArm:25,tps:0,island:'none',funnel:'down',lifts:[[0.32,11,15.7,0],[0.62,11,8,0]],cats:0,wire:'w30',wires:6,aaH:'h2',nH:4,aaM:'m1',nM:12,radar:'none',N:48,G:33},{name:'Soryu',nat:'JP',year:1937.9,L:222,B:21.3,std:15900,kn:34.5,shp:152000,shafts:'4',boiler:'b36',fore:'open',hside:'closed',hangars:2,hH:4.6,hFrom:0.14,hTo:0.86,deckL:216.9,deckW:26,deckOv:3,belt:46,hdArm:25,tps:0,island:'small',istyle:'compact',iside:'stbd',islX:0.2,funnel:'down',lifts:[[0.22,11.5,16,0],[0.48,11.5,12,0],[0.78,11.5,10,0]],cats:0,wire:'w37',wires:9,aaH:'h2',nH:6,aaM:'m1',nM:14,radar:'none',N:63,G:57},{name:'Hiryu',nat:'JP',year:1939.5,L:222,B:22.3,std:17300,kn:34.4,shp:153000,shafts:'4',boiler:'b36',fore:'open',hside:'closed',hangars:2,hH:4.6,hFrom:0.14,hTo:0.86,deckL:216.9,deckW:27,deckOv:3,belt:90,hdArm:55,tps:0,island:'small',istyle:'compact',iside:'port',islX:0.45,funnel:'down',lifts:[[0.22,11.5,16,0],[0.48,11.5,12,0],[0.78,11.5,10,0]],cats:0,wire:'w37',wires:9,aaH:'h2',nH:6,aaM:'m1',nM:12,radar:'none',N:64,G:57},{name:'Taiho',nat:'JP',year:1944.2,L:253,B:27.7,std:29300,kn:33.3,shp:160000,shafts:'4',boiler:'b36',fore:'closed',hside:'closed',hangars:2,hH:5,hFrom:0.14,hTo:0.86,deckL:257.5,deckW:30,deckOv:4,deckArm:75,belt:55,hdArm:32,tps:3,tpsk:'internal',island:'small',istyle:'stepped',iside:'stbd',islX:0.32,funnel:'island',lifts:[[0.18,14,14,0],[0.8,14,14,0]],cats:0,wire:'w37',wires:14,aaH:'h2',nH:6,aaM:'m1',nM:17,radar:'r2',dc:'dc1',N:53,G:60},{name:'Argus',nat:'UK',year:1918,L:170,B:20.7,std:14000,kn:20.5,shp:20000,shafts:'4',boiler:'b25',fore:'closed',hside:'closed',hangars:1,hH:6.1,hFrom:0.25,hTo:0.75,deckL:168,deckW:20.7,deckOv:2,belt:0,hdArm:0,tps:0,island:'none',funnel:'stacks',lifts:[[0.3,9,11,0],[0.62,9,11,0]],cats:0,wire:'w30',wires:4,barrier:false,aaH:'h1',nH:2,aaM:'m1',nM:0,radar:'none',N:20,G:15},{name:'Hermes',nat:'UK',year:1924,L:170,B:21.4,std:10850,kn:25,shp:40000,shafts:'2',boiler:'b25',fore:'closed',hside:'closed',hangars:1,hH:4.9,hFrom:0.25,hTo:0.78,deckL:173,deckW:27.4,deckOv:3,belt:76,hdArm:25,tps:0,island:'small',istyle:'tower',iside:'stbd',islX:0.35,funnel:'island',lifts:[[0.3,13,10,0],[0.65,13,10,0]],cats:0,wire:'w30',wires:4,aaH:'h1',nH:3,aaM:'m1',nM:2,radar:'none',N:20,G:15},{name:'Courageous',nat:'UK',year:1928,L:228.6,B:27.6,std:24200,kn:30,shp:90000,shafts:'4',boiler:'b25',fore:'open',hside:'closed',hangars:2,hH:4.6,hFrom:0.18,hTo:0.82,deckL:175,deckW:30.5,deckOv:0,belt:76,hdArm:25,tps:2,tpsk:'bulge',island:'small',istyle:'long',iside:'stbd',islX:0.45,funnel:'island',lifts:[[0.3,14.6,14,0],[0.7,14.6,14,0]],cats:0,wire:'w30',wires:4,aaH:'h1',nH:16,aaM:'m1',nM:3,radar:'none',N:48,G:48},{name:'Illustrious',nat:'UK',year:1940.4,L:205.1,B:29.2,std:23000,kn:30.5,shp:111000,shafts:'3',boiler:'b36',fore:'closed',hside:'box',hangars:1,hH:4.9,hFrom:0.2,hTo:0.78,deckL:225.6,deckW:29.2,deckOv:8,deckArm:76,belt:114,hdArm:64,tps:3,tpsk:'internal',island:'small',istyle:'long',iside:'stbd',islX:0.42,funnel:'island',lifts:[[0.2,13.7,6.7,0],[0.82,13.7,6.7,0]],cats:1,cat:'c38',wire:'w37',wires:6,aaH:'h2',nH:8,aaM:'m1',nM:6,radar:'r1',dc:'dc0',N:36,G:36},{name:'Implacable',nat:'UK',year:1944.7,L:216,B:29.2,std:23450,kn:32,shp:148000,shafts:'4',boiler:'b40',fore:'closed',hside:'box',hangars:2,hH:4.3,hFrom:0.18,hTo:0.8,deckL:232,deckW:29.2,deckOv:10,deckArm:76,belt:114,hdArm:51,tps:3,tpsk:'internal',island:'small',istyle:'stream',iside:'stbd',islX:0.4,funnel:'island',lifts:[[0.2,13.7,10,0],[0.8,13.7,10,0]],cats:1,cat:'c43',wire:'w43',wires:9,aaH:'h2',nH:8,aaM:'m1',nM:6,aaL:'l2',nL:38,radar:'r2',dc:'dc2',N:72,G:81}];
+const HISTCV=new Map();
+function histCV(name){ if(HISTCV.has(name)) return HISTCV.get(name); const h=RIVALHIST.find(q=>q.name===name); if(!h) return null;
+  const cv=newCV(h.std), keys=['L','B','shp','shafts','boiler','turbine','bow','fore','hside','hangars','hH','deckL','deckW','deckOv','deckArm','belt','hdArm','tps','tpsk','island','istyle','iside','islX','funnel','cats','cat','wire','wires','barrier','aaH','nH','aaM','nM','aaL','nL','radar','dc','avgas'];
+  // gear the real ship's figures do not give is the best of her own year, not of whatever date your campaign has reached
+  for(const c of ['boiler','cat','wire','aaH','aaM','aaL','dc','avgas']){ const ok=CVP[c].filter(p=>p.from<=h.year+1e-6); if(ok.length) cv[c]=ok[ok.length-1].id; }
+  for(const k of keys) if(h[k]!=null) cv[k]=h[k]; cv.hFrom=Math.round(h.hFrom*h.L); cv.hTo=Math.round(h.hTo*h.L); cv.lifts=h.lifts.map(([x,l,w,e])=>({x:Math.round(x*h.L),l,w,edge:!!e}));
+  for(const l of cv.lifts) if(!l.edge){ cv.hFrom=Math.min(cv.hFrom,Math.floor(l.x-l.l/2-1)); cv.hTo=Math.max(cv.hTo,Math.ceil(l.x+l.l/2+1)); }
+  cv.n=Math.round(Math.min(26,Math.max(14,h.L/10))); if(cv.island==='none'&&cv.funnel==='island') cv.funnel='down';
+  const set=(k,v)=>{ cv[k]=v; autoLayout(cv); return computeCV(cv); };
+  const fit=(k,lo,hi,get,want,up)=>{ for(let i=0;i<22;i++){ const m=(lo+hi)/2, st=set(k,m); (get(st)<want)===up?lo=m:hi=m; } set(k,Math.round((lo+hi)/2*100)/100); };
+  cv.ballast=0; for(let it=0;it<7;it++){ fit('D',8,22,st=>st.std,h.std,true); if(computeCV(cv).GM<1.2) fit('D',8,cv.D,st=>st.GM,1.2,false); const short=h.std-computeCV(cv).std; if(short>h.std*.01) cv.ballast=Math.round(Math.min(12000,(cv.ballast||0)+short)/50)*50; fit('Cb',.4,.65,st=>st.speed,h.kn,false); }
+  // where the hull came out too small for what she carries, deepen it (shedding ballast) until it is not, keeping her speed
+  for(let k=0;k<20;k++){ const st=computeCV(cv), F=cvFaults(cv,st); if(!F.notes.some(n=>!/untried/.test(n))) break; cv.D=Math.round((cv.D+.3)*100)/100; if(cv.ballast) cv.ballast=Math.max(0,cv.ballast-600); autoLayout(cv); fit('Cb',.4,.65,q=>q.speed,h.kn,false); }
+  const out={cv,N:h.N,G:h.G||h.N}; HISTCV.set(name,out); return out; }
 RIVALS3.forEach((r,i)=>{r.id=i;});
+// The budget is worked out the first time it is needed, once the aircraft and carriers can be costed and built.
+function rivalHistAir(r){ const ds=[r.d,r.dive,r.torp], avg=r.mix.reduce((t,m,k)=>t+m*fieldCost(ds[k],r.date),0), N=r.fleet.reduce((n,f)=>n+(histCV(f.c)||{G:0}).G,0);
+  return Math.ceil(N*avg/1000)*1000; }
+RIVALS3.forEach(r=>{ let c=null; delete r.air; Object.defineProperty(r,'air',{get(){ if(c==null) c=rivalHistAir(r); return c; },enumerable:true,configurable:true}); });
 const rivalD=(r,role)=>role==='dive'?r.dive:role==='torpedo'?r.torp:r.d;
 const VJDAY=1945.62;
 ROWS2.splice(ROWS2.findIndex(r=>r.k==='endur')+1,0,
@@ -1303,9 +1334,12 @@ function cvVolumes(cv){
 }
 const VITAL=new Set(['boiler','engine','mag','avgas']);
 function protRange(cv){ const v=(cv.hold||[]).map((h,i)=>VITAL.has(h)?i:-1).filter(i=>i>=0); return v.length?[Math.min(...v),Math.max(...v)]:[1,0]; }
-// Hangar area on each hangar deck: the hull's width at hangar level less the side structure, over the hangar's length.
+// Hangar area on each hangar deck: the hull's width at hangar level less the side structure, over the hangar's length. The hangar deck
+// stands well above the waterline, where the sides flare out and the hull is much fuller than at the waterline, so its width at each
+// station is the waterline fraction f(x) raised to the power HFLARE (full amidships, narrowing only toward the ends).
+const HFLARE=.2;
 function hangarArea(cv){ const f=hullShape(cv), cut=cvPart('hside',cv.hside).cut, a=clamp(cv.hFrom,0,cv.L), b=clamp(cv.hTo,a,cv.L); let s=0;
-  for(let x=a;x<b;x+=1) s+=Math.max(0,Math.min(cv.B,f(x+.5)*cv.B*1.15)-cut)*Math.min(1,b-x); return s*.95; }
+  for(let x=a;x<b;x+=1) s+=Math.max(0,Math.min(cv.B,Math.pow(f(x+.5),HFLARE)*cv.B*1.15)-cut)*Math.min(1,b-x); return s*.95; }
 // Nominal air group, for sizing magazines, avgas, workshops and the aviation crew: fighter-sized aircraft folded, in the hangar and a deck park.
 function nominalAir(cv){ const isl=cvPart('island',cv.island); return Math.round(hangarArea(cv)*cv.hangars/65+Math.max(0,(cv.deckL-110)*cv.deckW*.8-isl.len*isl.bw)/80); }
 function cvNeeds(cv){
@@ -1373,9 +1407,9 @@ function computeCV(cv){
     {k:'crew',label:'Crew quarters',need:need.crewQ,have:have('crew')},{k:'stores',label:'Stores',need:need.stores,have:have('stores')},{k:'shops',label:'Workshops',need:need.shops,have:have('shops')}];
   const errs=[], warns=[];
   for(const c of ['boiler','turbine','bow','hside','island','cat','wire','aaH','aaM','aaL','radar','dc','avgas']){ const p=cvPart(c,cv[c]);
-    if(p.from>cvNow()+1e-6&&(c!=='cat'||cv.cats)) errs.push(`${p.name}: not available until ${dateText(p.from)}.`); }
+    if(!cv.rival&&p.from>cvNow()+1e-6&&(c!=='cat'||cv.cats)) errs.push(`${p.name}: not available until ${dateText(p.from)}.`); }
   if(cv.island==='none'&&cvPart('funnel',cv.funnel).id==='island') errs.push('A flush deck has no island to carry the funnel: choose side funnels.');
-  if(cv.lifts.some(l=>l.edge)&&cvNow()<1940-1e-6) errs.push('Deck-edge lifts: not available until 1940.');
+  if(!cv.rival&&cv.lifts.some(l=>l.edge)&&cvNow()<1940-1e-6) errs.push('Deck-edge lifts: not available until 1940.');
   for(const r of reqs) if(r.have<r.need*.995) (r.k==='shops'||r.k==='stores'?warns:errs).push(`${r.label}: ${f0(r.have)} m³ of the ${f0(r.need)} m³ needed.`);
   if(len<8&&cv.hold.includes('boiler')) errs.push(`Compartments are only ${f1(len)} m long: too short for boilers. Use fewer bulkheads.`);
   const ers=cv.hold.filter(h=>h==='engine').length; if(ers<Math.ceil(Sh.n/2)) errs.push(`${Sh.n} shafts need at least ${Math.ceil(Sh.n/2)} engine rooms.`);
@@ -1414,13 +1448,15 @@ function cvFaults(cv,cs){ cs=cs||cvStats(cv); const F={notes:[],speedK:1,maxKn:9
     else if((m=e.match(/^(?:Deck-edge )?[Ll]ift (\d+) (?:is not over the hangar|needs an open hangar side)/))){ F.broken.push(+m[1]-1); F.notes.push(`Lift ${m[1]} cannot reach the hangar, so it is never used.`); }
     else { F.handleK*=1.1; F.notes.push(e); } }
   return F; }
+// Hangar floor each aircraft takes, as a multiple of its folded span times its length: room to move round it and to wheel it past others.
+const HPACK=1.1;
 function cvSea(cv){ const cs=Object.assign({},cvStats(cv)), F=cvFaults(cv,cs); cs.speed=Math.min(cs.speed*F.speedK,F.maxKn); cs.hArea2*=F.hangarK; cs.faults=F; return cs; }
 // How one aircraft design suits one carrier: does it fit the hangar and a lift, can it take off from the deck or a catapult, and can it land on?
 // The wind over the deck is the carrier's top speed plus a light natural wind.
 function cvAircraft(cv,cs,a,d){
   const wod=(cs.speed+5)*KN, run=Math.max(0,a.vlof-wod)**2/(2*a.acc)+15, eng=a.approach/3.6-wod;
   const lift=cv.lifts.some(l=>l.edge?a.foldSpan<=l.w+4&&d.fusLen<=l.l+1:(a.foldSpan<=l.w&&d.fusLen<=l.l)||(a.foldSpan<=l.l&&d.fusLen<=l.w));
-  const tall=a.foldHeight>cv.hH, foot=a.foldSpan*d.fusLen*1.3;
+  const tall=a.foldHeight>cv.hH, foot=a.foldSpan*d.fusLen*HPACK;
   const catOK=cv.cats>0&&(a.massTO||a.mass)<=cs.cat.kg&&a.vlof<=cs.cat.v/3.6+wod;
   const deckOK=run<=cv.deckL-60, landOK=cv.wires>0&&a.landMass<=cs.wire.kg&&eng<=cs.wire.v/3.6&&cv.deckL>=110;
   const hangar=tall||!lift?0:Math.floor(cs.hArea2/foot);
@@ -1801,7 +1837,7 @@ function renderRivals(){
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn ghost" data-pick="${i}" aria-pressed="${S.selected===i}">${S.selected===i?'Selected':'Select'}</button>
         <button class="btn ghost" data-plan="${i}">Plan fleet</button>
-        <button class="btn" disabled>${!open?'Beat '+RIVALS[i-1].title+' first':'Fleet battles not built yet'}</button>
+        ${(()=>{ const ok=open&&!fleetChecks(r).some(c=>c.bad); return `<button class="btn" data-fight="${i}"${ok?'':' disabled'}>${!open?'Beat '+RIVALS[i-1].title+' first':ok?(won?'Fight again':'Sail into battle'):'Plan a fleet to sail'}</button>`; })()}
       </div></article>`;
   }).join('');
   document.querySelectorAll('[data-rc]').forEach(cv=>drawGA(cv,RIVALS[+cv.dataset.rc].d,{annotate:false,plan:false}));
@@ -1835,21 +1871,38 @@ const airCost=r=>airRows().reduce((t,x)=>t+x.n*fieldCost(x.d,r.date),0);
 function setAir(name,n){ const a=S.air.find(x=>x.name===name); n=clamp(Math.round(n)||0,0,999); if(a) a.n=n; else S.air.push({name,n}); S.air=S.air.filter(x=>x.n>0); save(); }
 // Find a place for every aircraft in the sailing carriers: in a hangar if it fits the hangar and a lift, otherwise parked on deck,
 // and only on a carrier it can take off from and land on. The types that suit the fewest carriers are placed first.
-function stowAir(){
-  const ships=sailing().map(s=>{ const c=clsOf(s.cls), cv=c.cv, cs=cvStats(cv); return {s,cv,cs,hangar:cs.hArea2,park:Math.max(0,(cv.deckL-100)*cv.deckW*.85-cs.island.len*cs.island.bw)}; });
-  const rows=airRows().filter(x=>x.n).map(x=>{ const a=compute(x.d), fits=ships.map(sh=>cvAircraft(sh.cv,sh.cs,a,x.d)); return {x,a,fits,ok:fits.filter(f=>f.ok).length}; }).sort((p,q)=>p.ok-q.ok);
+function stowAir(){ const r=stowOn(sailing().map(s=>clsOf(s.cls).cv),airRows().filter(x=>x.n)); r.total=airCount(); return r; }
+// The same for any carriers (cvs) and rows of {d, n}: each carrier's list of {d, a, f} as the trials take an air group, how many found a
+// place, and which did not and why. Each aircraft goes to the first carrier with room, which spreads them in the order the ships are given.
+function stowOn(cvs,rows){
+  // how many each carrier can park on deck is found by stowing her as she will be at sea (trStow): only what fits ahead of the barrier
+  // with room left to land on. A carrier that cannot take what she was given is capped at what she can, and the rest goes to the next.
+  const cap=cvs.map(()=>Infinity); let P;
+  for(let pass=0;pass<=cvs.length+1;pass++){ P=stowPass(cvs,rows,cap); let again=false;
+    P.ships.forEach((sh,i)=>{ const L=sh.list.map(x=>Object.assign({},x)), r=trStow(sh.cv,sh.cs,L); if(r.left){ cap[i]=Math.max(0,sh.nPark-r.left); again=true; } });
+    if(!again) break; }
+  // anything still over (it should not be) stays ashore
+  for(const sh of P.ships){ const L=sh.list.map(x=>Object.assign({},x,{src:x})); trStow(sh.cv,sh.cs,L);
+    for(const x of L){ if(x.where) continue; P.placed--; const q=P.left.find(l=>l.name===x.d.name&&l.why==='no room left'); if(q) q.n++; else P.left.push({name:x.d.name,n:1,why:'no room left'}); }
+    sh.list=L.filter(x=>x.where).map(x=>x.src); }
+  return {placed:P.placed,left:P.left,lists:P.ships.map(sh=>sh.list)};
+}
+function stowPass(cvs,rows,cap){
+  const ships=cvs.map(cv=>{ const cs=cvStats(cv); return {cv,cs,hangar:cs.hArea2,park:cv.deckL*cv.deckW*1.2,nPark:0,list:[]}; });   // the deck park here is only a ceiling: trStow settles it
+  const rs=rows.map(x=>{ const a=compute(x.d), fits=ships.map(sh=>cvAircraft(sh.cv,sh.cs,a,x.d)); return {x,a,fits,ok:fits.filter(f=>f.ok).length}; }).sort((p,q)=>p.ok-q.ok);
   let placed=0; const left=[];
-  for(const r of rows){ const fh=r.a.foldSpan*r.x.d.fusLen*1.3, fp=r.a.foldSpan*r.x.d.fusLen*1.15; let k=0;
+  for(const r of rs){ const fh=r.a.foldSpan*r.x.d.fusLen*HPACK, fp=r.a.foldSpan*r.x.d.fusLen*1.15; let k=0;
     for(;k<r.x.n;k++){ let put=false;
-      for(let i=0;i<ships.length&&!put;i++){ const f=r.fits[i], sh=ships[i]; if(!f.ok) continue;
-        if(!f.tall&&f.lift&&sh.hangar>=fh){ sh.hangar-=fh; put=true; } else if(sh.park>=fp){ sh.park-=fp; put=true; } }
+      // each type spread across the carriers in turn, so every air group is mixed: below in any hangar with room first, then on deck
+      for(let w=0;w<2&&!put;w++) for(let j=0;j<ships.length&&!put;j++){ const i=(k+j)%ships.length, f=r.fits[i], sh=ships[i]; if(!f.ok) continue;
+        if(w===0){ if(!f.tall&&f.lift&&sh.hangar>=fh){ sh.hangar-=fh; put=true; } } else if(sh.park>=fp&&sh.nPark<cap[i]){ sh.park-=fp; sh.nPark++; put=true; }
+        if(put) sh.list.push({d:r.x.d,a:r.a,f}); }
       if(!put) break; placed++; }
     if(k<r.x.n) left.push({name:r.x.d.name,n:r.x.n-k,why:r.ok?'no room left':(r.fits.find(f=>!f.ok)||{why:['no carrier sailing']}).why.join('; ')||'no carrier sailing'}); }
-  return {placed,left,total:airCount()};
+  return {placed,left,ships};
 }
 // Tonnage left unused under the limit is paid back into the aircraft budget, at 60% of the year's money for each ton the treaty allows.
-const tonBonus=r=>{ const t=fleetTons(); return sailing().length&&t<r.tons?Math.round((r.tons-t)*r.air/r.tons*.6/100)*100:0; };
-const airBudget=r=>r.air+tonBonus(r);
+const airBudget=r=>r.air;   // the same sum the rival has, whatever tonnage you leave unused
 function fleetChecks(r){
   const out=[], ships=sailing(), tons=fleetTons(), n=airCount(), cost=airCost(r);
   if(!S.classes.length) out.push({bad:true,t:'Design a carrier class on the Carriers tab.'});
@@ -1858,12 +1911,12 @@ function fleetChecks(r){
   else out.push(tons>r.tons?{bad:true,t:`${fmtK(tons-r.tons)} t over the ${fmtK(r.tons)} t limit.`}:{t:`${ships.length} carrier${ships.length>1?'s':''}, ${fmtK(tons)} t, within the limit.`});
   for(const s of ships){ const c=clsOf(s.cls), F=cvFaults(c.cv); if(F.notes.length) out.push({t:`${s.name} sails with ${F.notes.length} design fault${F.notes.length>1?'s':''}: ${F.notes.join(' ')}`}); }
   if(!n) out.push({bad:true,t:'No aircraft in the air group.'});
-  const tb=tonBonus(r), ab=r.air+tb; if(tb) out.push({t:`${fmtK(r.tons-tons)} t of the tonnage limit unused: £${fmtK(tb)} added to the aircraft budget.`});
+  const ab=r.air;
   if(n){ out.push(cost>ab?{bad:true,t:`£${fmtK(cost-ab)} over the aircraft budget.`}:{t:`${n} aircraft for £${fmtK(cost)}, within the budget.`});
     if(ships.length){ const st=stowAir(); if(st.left.length) for(const l of st.left) out.push({bad:true,t:`${l.n} × ${l.name} will not fit: ${l.why}.`}); else out.push({t:`All ${n} aircraft have a place aboard.`}); } }
   for(const x of airRows()) if(x.n&&compute(x.d).sm<-.04) out.push({bad:true,t:`${x.d.name} is unflyable.`});
   if(ships.length) out.push({note:true,t:`Fleet speed ${f1(Math.min(...ships.map(s=>cvStats(clsOf(s.cls).cv).speed)))} knots, set by the slowest carrier.`});
-  out.push({note:true,t:'Fleet battles are not built yet, so this fleet cannot sail.'});
+  if(!out.some(c=>c.bad)) out.push({note:true,t:`Ready to sail against ${r.title}.`});
   return out;
 }
 function renderClassList(){
@@ -1880,10 +1933,12 @@ function renderFleet(){
   const r=RIVALS[S.selected], tons=fleetTons(), n=airCount(), cost=airCost(r), st=sailing().length?stowAir():{placed:0,total:n};
   $('#fleethead').textContent=`Fleet against ${r.title} · ${dateText(r.date)}`;
   const g=(label,v,max,fmt,over)=>`<div class="gauge${over??v>max?' over':''}"><span>${label}</span><span class="v">${fmt(v)} of ${fmt(max)}</span><div class="g"><i style="width:${max>0?clamp(v/max*100,0,100):v>0?100:0}%"></i></div></div>`;
-  $('#gauges').innerHTML=g('Carrier tonnage',tons,r.tons,v=>`${fmtK(v)} t`)+g(tonBonus(r)?`Aircraft budget, with £${fmtK(tonBonus(r))} for unused tonnage`:'Aircraft budget',cost,airBudget(r),v=>`£${fmtK(v)}`)+g('Aircraft with a place aboard',st.placed,n,v=>String(v),st.placed<n);
+  $('#gauges').innerHTML=g('Carrier tonnage',tons,r.tons,v=>`${fmtK(v)} t`)+g('Aircraft budget',cost,airBudget(r),v=>`£${fmtK(v)}`)+g('Aircraft with a place aboard',st.placed,n,v=>String(v),st.placed<n);
   $('#fships').innerHTML=S.ships.length?S.ships.map(s=>{ const c=clsOf(s.cls), cs=cvStats(c.cv); return `<label class="toggle"><input type="checkbox" data-son="${s.id}"${s.on?' checked':''}> <strong>${esc(s.name)}</strong> <span class="mono muted" style="font-size:12px">${esc(c.name)} class · ${fmtK(cs.std)} t · ${f1(cs.speed)} kn</span></label>`; }).join('')
     :'<span class="muted">No ships yet. Lay some down on the Carriers tab.</span>';
-  $('#checks').innerHTML=fleetChecks(r).map(c=>`<li class="${c.bad?'bad':c.note?'note':'ok'}">${esc(c.t)}</li>`).join('');
+  const fc=fleetChecks(r); $('#checks').innerHTML=fc.map(c=>`<li class="${c.bad?'bad':c.note?'note':'ok'}">${esc(c.t)}</li>`).join('');
+  { let g=$('#fleetgo'); if(!g){ g=document.createElement('div'); g.id='fleetgo'; g.style.margin='10px 0'; $('#checks').after(g); }
+    const ok=rivalOpen(S.selected)&&!fc.some(c=>c.bad); g.innerHTML=`<button class="btn" data-fight="${S.selected}"${ok?'':' disabled'}>${rivalOpen(S.selected)?`Sail into battle against ${esc(r.title)}`:`Beat ${esc(RIVALS[S.selected-1].title)} first`}</button>`; }
   const rows=airRows();
   $('#airgroup').innerHTML=rows.length?rows.map((x,i)=>{ const st=compute(x.d), each=fieldCost(x.d,r.date);
     return `<div class="sqrow"><div><strong>${esc(x.d.name||'Untitled')}</strong><div class="st">${part('role',navalise(x.d).role).name} · £${fmtK(each)} each · ${f0(st.speed)} km/h · folded ${f1(st.foldSpan)} × ${f1(x.d.fusLen)} × ${f1(st.foldHeight)} m</div></div>
@@ -2298,6 +2353,7 @@ $('#dname').addEventListener('input',e=>{S.design.name=e.target.value; save(); r
 $('#stats').addEventListener('click',e=>{const b=e.target.closest('[data-why]'); if(!b) return; const k=b.dataset.why; whyOpen.has(k)?whyOpen.delete(k):whyOpen.add(k); renderSheet();});
 $('#pin').addEventListener('click',()=>{S.pinned=S.pinned?null:clone(S.design); save(); renderSheet(); toast(S.pinned?'Numbers pinned. Changes now show against them.':'Pin removed.');});
 $('#ghost').addEventListener('change',e=>{S.ghost=e.target.checked; save(); renderSheet();});
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-fight]'); if(!b||b.disabled) return; if(battleStart(+b.dataset.fight)){ showTab('trials'); renderTrials(); $('#tabs').scrollIntoView({block:'start'}); } });
 $('#rivals').addEventListener('click',e=>{
   const pick=e.target.closest('[data-pick]'), plan=e.target.closest('[data-plan]');
   if(pick){ S.selected=+pick.dataset.pick; save(); renderSheet(); renderRivals(); renderFleet(); }
@@ -3801,6 +3857,20 @@ const DROPS=[
     'Engines look like the engines they are. A radial’s cowling is round, sized to that engine (a Sakae or Twin Wasp Junior makes a slim nose, a Pegasus or Cyclone 14 a fat one), and shows its cylinders as they are: nine in one row, or fourteen or eighteen in two staggered rows. A V12 sits high in the nose: an upright Merlin, Allison, Griffon or Klimov with the cowling running close over the spinner and deepening below it, an inverted Daimler-Benz or Jumo with an almost flat top and its exhausts low on the sides, and the Sabre deeper still with two rows of exhausts. In 2D and 3D alike.',
     'A radial’s cowling has a real lip: its skin turns in at the front and runs back inside to the engine, so it is no longer a paper-thin edge, and the engine’s face and back wall now fill the cowling all the way round, so it can no longer be seen through from some angles. Its cylinder heads sit inside the cowling behind the lip, the back row behind the front one, instead of poking out into the propeller.',
   ]},
+  {at:'2026-11-25T11:30:00+13:00',items:[
+    'Fleet battles. Each rival can now be fought: when your fleet passes the checks on the Fleet tab, Sail into battle (on the Fleet tab or the rival’s card). Your sailing carriers carry the air group you planned, with an escort of the day, against the rival’s carriers, escort and air group, bought from the same budget.',
+    'A battle starts with the two fleets beyond each other’s reach. Intelligence gives a rough bearing and distance, and contact reports every three hours, marked on the chart, until you find the enemy. The fog of war is always on. The battle is fought on the Trials page with all its orders: scouts, strikes, fighter patrols and the deck.',
+    'There is no time limit. A rival that has had enough (half its carriers sunk, its carriers badly damaged, more than half its aircraft lost, or nothing left to strike with) breaks off, lands its fighters and steams out of the area, away from you. You win when it leaves the area or every one of its ships is sunk; you lose when every one of yours is sunk, or if you take your fleet off the edge of the chart, which is how you break off a battle yourself. A first win moves the calendar on to the next rival. Each side knows the other’s rough position from the start: a veteran admiral’s intelligence is better than a cautious one’s.',
+    'Every rival is redesigned. Each fleet now follows a real navy of its year: Hermes and Argus with Sea Gladiators, Helldiver-type biplanes and Swordfish in 1936; Courageous and Hosho; two Yorktowns; Soryu, Hiryu and Ryujo; armoured-deck carriers; Akagi, Soryu and Hiryu with Zeros; the Midway-era Yorktowns and Wasp; Essexes and Independences with Hellcats; five fast carriers with gull-winged Corsairs; and in 1945 six fleet carriers with Bearcats, Judys and gull-winged Ryusei. Their aircraft use bomb bays, the right wing folds, drop tanks and armour, and all fly with a healthy static margin. Their carriers are built from the real ships’ figures, so a fleet may run a little over its tonnage, and may carry equipment you have not unlocked yet. A rival’s air group is cut down evenly, keeping its mix, when its budget buys more than its carriers can stow.',
+    'Carriers turn into the wind only while they launch or land, and then come back to the course they were on, so a fleet flying patrols all day still gets where it is going. A course ordered while she is flying is the one she returns to.',
+    'A fleet searching for an enemy it has a report of flies its scouts across a 120° sector toward it, instead of all round.',
+    'The Fleet tab’s air-group plan now stows aircraft exactly as the carriers do at sea, so what you plan is what sails (before, about a third of a big air group was paid for but stayed ashore), and each type is spread across the carriers so every ship sails with a mixed group.',
+    'Carriers hold real air groups. The forward deck park is packed as deck crews packed it, rows nested into each other and tails out over the deck edge, and the barrier stands a little further aft. What will not fit forward or below stands in a deck park aft: it launches first, straight from where it stands, and nothing can land until it has been launched, struck forward or sent below. A full carrier has to fly off its deck-load before it can take its aircraft back aboard.',
+    'Each year’s aircraft budget is now what the rival’s own aircraft cost for the air group each of its carriers really embarked for battle (a 1942 Yorktown 75, Akagi 63, an Essex 94), and you get exactly the same sum. There is no longer a bonus for leaving tonnage unused. Each rival carrier sails with her own historical group, of the types she can carry.',
+    'The Bearcat in the 1945 rival fleet now folds its outer wings, as the real one did.',
+    'Hangars are as big as the real ships’ were. The hangar deck stands high in the hull, where the sides flare out, so it now keeps nearly the full width of the ship along its length instead of narrowing like the waterline: a Yorktown’s hangar grows from about 1,800 m² to 2,800 m². Your own carriers’ hangars grow the same way.',
+    'Fixes: a fleet at the edge of the battle area that needs to turn into the wind to launch or land now does so, sliding along the edge, instead of being turned back and left unable to fly; a front aircraft that cannot get off is moved to the back of the range, where its run is longest; and the Back to the fleet button and the battle result now show when a battle ends.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -4212,39 +4282,65 @@ function shipDmgText(T){ if(T.status!=='afloat') return {sinking:'Sinking',capsi
   return [h.bomb&&`${h.bomb} bomb${h.bomb>1?'s':''}`,h.torp&&`${h.torp} torpedo${h.torp>1?'es':''}`,h.near&&`${h.near} near miss${h.near>1?'es':''}`,T.flood>1&&`${fmtK(T.flood)} t of water`,Math.abs(T.list)>.5&&`list ${f1(Math.abs(T.list))}°`,T.fires&&`${T.fires} fire${T.fires>1?'s':''}`,T.deckHoles&&`${T.deckHoles} hole${T.deckHoles>1?'s':''} in the flight deck`,shipSys(T)].filter(Boolean).join(' · '); }
 function trAirList(cv,cs){ const ts=trS(), out=[]; for(const d of trLib()){ const a=compute(d), f=cvAircraft(cv,cs,a,d), n=f.ok?(ts.air[d.name]||0):0; for(let i=0;i<n;i++) out.push({d,a,f}); } return out; }
 // Where everything goes at the start: the hangar first (if the aircraft fits it and a lift), then the forward deck.
-function trStow(cv,cs,list){ let area=cs.hArea2, hangar=0, deck=0, left=0;
-  const fwd=[]; for(const x of list){ const fh=x.a.foldSpan*x.d.fusLen*1.3; if(!x.f.tall&&x.f.lift&&area>=fh){ area-=fh; hangar++; x.where='hangar'; } else if(cv.barrier||!x.f.tall&&x.f.lift) fwd.push(x); else { left++; x.where=null; } }   // with no barrier, everything parked forward must be able to go below before anything lands
+function trStow(cv,cs,list){ let area=cs.hArea2, hangar=0, deck=0, aft=0, left=0;
+  const fwd=[]; for(const x of list){ const fh=x.a.foldSpan*x.d.fusLen*HPACK; if(!x.f.tall&&x.f.lift&&area>=fh){ area-=fh; hangar++; x.where='hangar'; } else if(cv.barrier||!x.f.tall&&x.f.lift) fwd.push(x); else { left++; x.where=null; } }   // with no barrier, everything parked forward must be able to go below before anything lands
+  // the forward park is spotted type by type, widest folded first, so each row is of one kind and packs tight; the list is put in that order
+  fwd.sort((p,q)=>q.a.foldSpan-p.a.foldSpan||(p.d.name<q.d.name?-1:p.d.name>q.d.name?1:0));
+  { const fs=new Set(fwd); const rest=list.filter(x=>!fs.has(x)); list.splice(0,list.length,...rest.filter(x=>x.where==='hangar'),...fwd,...rest.filter(x=>x.where!=='hangar')); }
   // the forward park leaves room ahead of the barrier for four aircraft to land, or nothing could ever come aboard
   const P=fwd.map(x=>({d:x.d,st:x.a})), big=P.slice().sort((a,b)=>b.st.foldSpan*b.d.fusLen-a.st.foldSpan*a.d.fusLen)[0]; let cap=trFwdLayout(cv,P).fit;
   if(big) while(cap>0&&trFwdLayout(cv,[...P.slice(0,cap),big,big,big,big]).fit<cap+4) cap--;
-  for(let i=0;i<fwd.length;i++){ if(i<cap){ deck++; fwd[i].where='fwd'; } else { left++; fwd[i].where=null; } }
-  return {hangar,deck,left}; }
+  for(let i=0;i<cap&&i<fwd.length;i++){ deck++; fwd[i].where='fwd'; }
+  // what will not fit forward stands in a deck park aft of the barrier, as carriers kept one: it is the first to launch, and nothing can
+  // land until it has been launched or struck forward
+  const A=fwd.slice(cap), af=cv.barrier&&A.length?trAftLayout(cv,A.map(x=>({d:x.d,st:x.a}))).fit:0;
+  A.forEach((x,i)=>{ if(i<af){ aft++; x.where='aft'; } else { left++; x.where=null; } });
+  return {hangar,deck:deck+aft,fwd:deck,aft,left}; }
 // The deck in plan. The barrier stands a little over halfway aft; the landing area is behind it, the forward park in front of it.
-const trBar=cv=>cv.deckL*.55;
+const trBar=cv=>cv.deckL*.6;
 // Aircraft ranged aft for a launch stand wings spread in staggered rows from the stern forward. Each one's take-off run is the deck
 // ahead of it, so the first to go has the shortest run.
 // The range of centrelines a row of aircraft can use across the deck, with wingtips kept clear of the island where the row runs past it.
 function trRowBand(ib,xa,xb,Wd,sp,gap){ let cl=-(Wd-sp*gap)/2, ch=(Wd-sp*gap)/2;
   if(ib&&xb>ib.x0&&xa<ib.x1){ if(ib.side<0) cl=Math.max(cl,-ib.inner+sp/2+.4); else ch=Math.min(ch,ib.inner-sp/2-.4); } return [cl,ch]; }
-function trPackLayout(cv,pack){ const out=[], ib=islBand(cv), Wd=cv.deckW*.92; let x=cv.deckL-2, i=pack.length-1;
+function trPackLayout(cv,pack){ const out=[], ib=islBand(cv), Wd=cv.deckW*.92; let x=TR&&TR.cv===cv&&TR.aft&&TR.aft.length?trAftLayout(cv,TR.aft).front-1.5:cv.deckL-2, i=pack.length-1;   // ahead of any deck park aft
   while(i>=0){ const p0=pack[i], sp=p0.d.span, [cl,ch]=trRowBand(ib,x-p0.d.fusLen,x,Wd,sp,.62);
     if(cl>ch){ x=ib.x0-.5; continue; }   // the island leaves no room for even one: start the row just ahead of it
     const row=[]; let rd=0, ms=0;   // side by side only where the wings clear each other, with a metre between the tips
     while(i>=0){ const q=pack[i], m=Math.max(ms,q.d.span); if(row.length&&row.length*(m+1)>ch-cl+1e-9) break; row.push(q); ms=m; rd=Math.max(rd,q.d.fusLen); i--; }
     row.forEach((p,k)=>{ p.dx=x-p.d.fusLen; p.dy=row.length>1?cl+(ch-cl)*k/(row.length-1):(cl+ch)/2; out.push(p); }); x-=rd+1.2; }
   return {front:x+1.2,len:cv.deckL-2-(x+1.2)}; }
-// Aircraft parked forward stand folded in rows from the bow aft, up to the barrier, clear of the island.
-function trFwdLayout(cv,list){ const lim=cv.barrier?trBar(cv)-3:cv.deckL*.45, ib=islBand(cv), Wd=cv.deckW*.88; let x=8, fit=0, i=0;
+// Aircraft parked forward stand folded in rows from the bow aft, up to the barrier, clear of the island, packed as tight as deck crews
+// packed them: tails hanging out over the deck edge, and every other row nested into the one ahead, each aircraft set between two of
+// the other's, so the rows overlap by a seventh of a fuselage.
+function trFwdLayout(cv,list){ const lim=cv.barrier?trBar(cv)-3:cv.deckL*.45, ib=islBand(cv), Wd=cv.deckW*1.06; let x=6, fit=0, i=0, prev=null;
   while(i<list.length){ const p0=list[i], fs=p0.st.foldSpan; if(x+p0.d.fusLen>lim) break;
-    const [cl,ch]=trRowBand(ib,x,x+p0.d.fusLen,Wd,fs,1); if(cl>ch){ x=ib.x1+.5; continue; }
+    const [cl,ch]=trRowBand(ib,x,x+p0.d.fusLen,Wd,fs,1); if(cl>ch){ x=ib.x1+.5; prev=null; continue; }
+    // a nested row takes the gaps of the row ahead, where they are wide enough and inside the deck; otherwise a plain row, spread evenly
+    let slots=null; if(prev&&prev.length>1){ slots=[]; for(let k=0;k+1<prev.length;k++){ const y=(prev[k]+prev[k+1])/2; if(prev[k+1]-prev[k]>=fs+.45-1e-9&&y>=cl-1e-9&&y<=ch+1e-9) slots.push(y); } if(!slots.length) slots=null; }
     const row=[]; let rd=0, ms=0;
-    while(i<list.length&&x+list[i].d.fusLen<=lim){ const m=Math.max(ms,list[i].st.foldSpan); if(row.length&&row.length*(m+.8)>ch-cl+1e-9) break; row.push(list[i]); ms=m; rd=Math.max(rd,list[i].d.fusLen); i++; fit++; }
+    while(i<list.length&&x+list[i].d.fusLen<=lim){ const m=Math.max(ms,list[i].st.foldSpan); if(slots?row.length>=slots.length:row.length&&row.length*(m+.45)>ch-cl+1e-9) break; row.push(list[i]); ms=m; rd=Math.max(rd,list[i].d.fusLen); i++; fit++; }
     if(!row.length) break;
-    row.forEach((p,k)=>{ p.dx=x; p.dy=row.length>1?cl+(ch-cl)*k/(row.length-1):(cl+ch)/2; }); x+=rd+1; }
+    const ys=slots?slots.slice(0,row.length):row.map((p,k)=>row.length>1?cl+(ch-cl)*k/(row.length-1):(cl+ch)/2);
+    row.forEach((p,k)=>{ p.dx=x; p.dy=ys[k]; }); x+=slots?rd*.86+.3:rd*.86+.3; prev=slots?null:ys; }
+  if(fit) x+=list[fit-1].d.fusLen*.14;
   return {fit,end:x}; }
+// The deck park aft stands folded in rows from the stern forward, packed as the forward park is, no further forward than just behind the
+// barrier. list[0] is aftmost. front is where the park ends forward.
+function trAftLayout(cv,list){ const lim=trBar(cv)+3, ib=islBand(cv), Wd=cv.deckW*1.06; let x=cv.deckL-2, fit=0, i=0, prev=null;
+  while(i<list.length){ const p0=list[i], fs=p0.st.foldSpan; if(x-p0.d.fusLen<lim) break;
+    const [cl,ch]=trRowBand(ib,x-p0.d.fusLen,x,Wd,fs,1); if(cl>ch){ x=ib.x0-.5; prev=null; continue; }
+    let slots=null; if(prev&&prev.length>1){ slots=[]; for(let k=0;k+1<prev.length;k++){ const y=(prev[k]+prev[k+1])/2; if(prev[k+1]-prev[k]>=fs+.45-1e-9&&y>=cl-1e-9&&y<=ch+1e-9) slots.push(y); } if(!slots.length) slots=null; }
+    const row=[]; let rd=0, ms=0;
+    while(i<list.length&&x-list[i].d.fusLen>=lim){ const m=Math.max(ms,list[i].st.foldSpan); if(slots?row.length>=slots.length:row.length&&row.length*(m+.45)>ch-cl+1e-9) break; row.push(list[i]); ms=m; rd=Math.max(rd,list[i].d.fusLen); i++; fit++; }
+    if(!row.length) break;
+    const ys=slots?slots.slice(0,row.length):row.map((p,k)=>row.length>1?cl+(ch-cl)*k/(row.length-1):(cl+ch)/2);
+    row.forEach((p,k)=>{ p.dx=x-p.d.fusLen; p.dy=ys[k]; }); x-=rd*.86+.3; prev=slots?null:ys; }
+  if(fit) x-=list[fit-1].d.fusLen*.14;
+  return {fit,front:fit?x:cv.deckL-2}; }
 // Each carrier at sea, yours or an enemy's, keeps its own deck, lifts, aircraft, flights and orders. TR always holds the one being
 // worked on (the one you are looking at, between steps); the others wait in TR.cvs and are swapped in to be stepped.
-const CK=['cls','cv','cs','lifts','planes','pack','fwd','circuit','flights','orders','ops','nextLaunch','nextLand','teams','ship','stats','avgas','warned','mot','motT','sq','sorties','sqid','soid','auto','track','launchStart','recWarn','side','name','tf'];
+const CK=['cls','cv','cs','lifts','planes','pack','fwd','aft','circuit','flights','orders','ops','nextLaunch','nextLand','teams','ship','stats','avgas','warned','mot','motT','sq','sorties','sqid','soid','auto','track','launchStart','recWarn','side','name','tf'];
 function trUse(C){ for(const k of CK) TR[k]=C[k]; TR.cur=C; }
 function trKeep(){ const C=TR.cur; if(C) for(const k of CK) C[k]=TR[k]; }
 function withC(C,fn){ const c0=TR.cur; if(C===c0) return fn(); trKeep(); trUse(C); try{ return fn(); } finally{ trKeep(); trUse(c0); } }
@@ -4255,7 +4351,7 @@ function trCarrier(cls,o){ const R=TR, cv=JSON.parse(JSON.stringify(cls.cv)), cs
   const lifts=cv.lifts.map((l,i)=>({i,x:l.x-deckStart(cv),l:l.l,w:l.w,edge:l.edge,busy:0,load:null,broken:cs.faults.broken.includes(i)}));
   const planes=list.filter(x=>x.where).map(x=>({id:++R.pid,d:x.d,st:x.a,f:x.f,role:navalise(x.d).role,state:x.where,armed:true,warm:false,t:0,fuel:x.a.range/x.a.cruise*3600*.92,fl:null}));
   const ship=o.T||{x:o.x,y:o.y,hdg:o.hdg,kn:12,ordHdg:o.hdg,ordKn:12}; if(o.T) Object.assign(o.T,{kn:12,ordHdg:o.T.hdg,ordKn:12});
-  const C={cls,cv,cs,lifts,planes,pack:[],fwd:planes.filter(p=>p.state==='fwd'),circuit:[],flights:[],orders:[],ops:'idle',nextLaunch:0,nextLand:0,teams:Array(4+Math.floor(cs.N/25)).fill(0),ship,
+  const C={cls,cv,cs,lifts,planes,pack:[],fwd:planes.filter(p=>p.state==='fwd'),aft:planes.filter(p=>p.state==='aft'),circuit:[],flights:[],orders:[],ops:'idle',nextLaunch:0,nextLand:0,teams:Array(4+Math.floor(cs.N/25)).fill(0),ship,
     stats:{launched:0,landed:0,lost:0,crashes:0,waveoffs:0,launchT:[],landT:[],turn:[]},avgas:cs.avgasM3*1000,warned:{},mot:null,motT:-1e9,sq:[],sorties:[],sqid:0,soid:0,auto:true,track:[],launchStart:null,recWarn:false,
     side:o.side||'blue',name:o.name||cls.name,tf:o.tf||null,gone:false};
   if(o.T) o.T.cvC=C; return C; }
@@ -4287,7 +4383,7 @@ function laneBlocks(L,t){ if(L.edge) return false; for(const p of TR.planes){ co
     const u=clamp((t-n.t0)/Math.max(1,n.t1-n.t0)-.25,0,1), cur=n.from+(n.to-n.from)*u; if(laneOver(cur,n.to,L,p.d.fusLen/2+1.5)) return true; } return false; }
 const pathClear=(a,b,t,p,skip)=>TR.lifts.every(L=>L===skip||!liftDown(L,t)||!laneOver(a,b,L,p.d.fusLen/2+1));
 const setLane=(p,a,b,t0,t1)=>{ p.lane={from:a,to:b,t0,t1}; };
-function trLiftOK(L,p,down){ const cv=TR.cv; if(L.busy>TR.t||L.broken) return false;
+function trLiftOK(L,p,down,park){ const cv=TR.cv; if(L.busy>TR.t||L.broken) return false;
   if(L.hold&&L.hold.state==='deckq'&&L.hold.lift===L.i) return false;   // an aircraft is still standing on it
   if(laneBlocks(L,TR.t)) return false;
   // an aircraft already up that has to cross this lift to reach the range has it kept up until it has gone by
@@ -4296,14 +4392,15 @@ function trLiftOK(L,p,down){ const cv=TR.cv; if(L.busy>TR.t||L.broken) return fa
     // nor with an aircraft standing on it, parked or arriving at its spot (the one going down on it excepted)
     const over=q=>q!==p&&q.dx<L.x+L.l/2&&q.dx+q.d.fusLen>L.x-L.l/2&&Math.abs(q.dy)<L.w/2+(q.state==='ranged'||q.state==='spotting'?q.d.span:q.st.foldSpan)/2;
     const occ=[...TR.planes.filter(q=>q.state==='spotting').sort((a,b)=>b.t-a.t),...TR.pack]; trPackLayout(cv,occ); if(occ.some(over)) return false;
-    const fo=[...TR.fwd,...TR.planes.filter(q=>q.state==='spotfwd').sort((a,b)=>a.t-b.t)]; trFwdLayout(cv,fo); if(fo.some(over)) return false; }
+    const fo=[...TR.fwd,...TR.planes.filter(q=>q.state==='spotfwd').sort((a,b)=>a.t-b.t)]; trFwdLayout(cv,fo); if(fo.some(over)) return false;
+    if(TR.aft.length&&!park){ trAftLayout(cv,TR.aft); if(TR.aft.some(over)) return false; } }   // (park: the deck crew shifts the park aft to let one of its own down)
   if(!L.edge){ if(TR.ops==='recover'&&L.x+L.l/2>trBar(cv)) return false; const pk=trPackLayout(cv,TR.pack); if(TR.pack.length&&L.x+L.l/2>pk.front) return false;
     if(!down&&TR.fwd.length){ const fl=trFwdLayout(cv,TR.fwd); if(L.x-L.l/2<fl.end) return false; } }
   const a=p.st, d=p.d; return L.edge?a.foldSpan<=L.w+4&&d.fusLen<=L.l+1:(a.foldSpan<=L.w&&d.fusLen<=L.l)||(a.foldSpan<=L.l&&d.fusLen<=L.w); }
 const trCanBelow=p=>!p.f.tall&&p.f.lift;
 // The deck an aircraft needs ahead of it to fly off with this wind over the deck: 40 m for a catapult shot, or its take-off run.
 function trRunNeed(p,W){ const cv=TR.cv, cs=TR.cs; if(cv.cats>0&&!TR.ship.catsOut&&(p.st.massTO||p.st.mass)<=cs.cat.kg&&p.st.vlof<=cs.cat.v/3.6+W.head) return 40; return Math.max(0,p.st.vlof-W.head)**2/(2*p.st.acc)+15; }
-const trHangarFree=()=>TR.cs.hArea2-TR.planes.filter(p=>p.state==='hangar'||p.state==='liftdown').reduce((s,p)=>s+p.st.foldSpan*p.d.fusLen*1.3,0);
+const trHangarFree=()=>TR.cs.hArea2-TR.planes.filter(p=>p.state==='hangar'||p.state==='liftdown').reduce((s,p)=>s+p.st.foldSpan*p.d.fusLen*HPACK,0);
 function trRearmTime(p){ return TRK.rearm[p.role]*(p.state==='fwd'&&!trCanBelow(p)?1.5:1)*((TR.cs.faults&&TR.cs.faults.rearmK)||1); }
 // A ship turning at about two of her lengths' radius and gathering or losing way slowly, toward the course and speed she has been
 // given: steerHdg and steerKn when she keeps station or takes evasive action, otherwise ordHdg and ordKn.
@@ -4340,14 +4437,14 @@ function cvHold(T){ const t=TR.t; if(T.status==='burnt') return 'Consumed by fir
   return null; }
 // A carrier going down: what is aboard goes with her; what is aloft lands on another carrier of hers if there is one, or ditches when its fuel runs out.
 function cvLost(){ const R=TR, C=R.cur; if(C.lostDone) return; C.lostDone=true; R.ops='idle';
-  let n=0; for(const p of R.planes) if(p.state!=='air'&&p.state!=='circuit'&&p.state!=='lost'){ p.state='lost'; n++; } R.pack=[]; R.fwd=[];
+  let n=0; for(const p of R.planes) if(p.state!=='air'&&p.state!=='circuit'&&p.state!=='lost'){ p.state='lost'; n++; } R.pack=[]; R.fwd=[]; R.aft=[];
   const up=R.planes.filter(p=>p.state==='air'||p.state==='circuit'), o=R.cvs.find(q=>q!==C&&q.side===C.side&&!q.gone&&q.ship.status==='afloat');
   if(up.length&&o){ const fl=R.flights.filter(f=>f.planes.length); for(const f of fl){ f.mission='home'; f.phase=''; f.atk=null; }
     const circ=up.filter(p=>p.state==='circuit'); if(circ.length){ const f={id:++R.fid,x:R.ship.x,y:R.ship.y,planes:circ,tx:0,ty:0,phase:'',t0:R.t,role:roleMix(circ),name:`${C.name}'s circuit`,mission:'home'}; for(const p of circ){ p.state='air'; p.fl=f; } fl.push(f); }
     for(const p of up){ p.atk=null; p.task=null; p.sq=null; } o.flights.push(...fl); o.planes.push(...up); R.planes=R.planes.filter(p=>!up.includes(p)); R.flights=[]; R.circuit=[];
     trLog(`${n?`${n} aircraft were lost with her. `:''}${up.length} aloft will land on ${o.name}.`,true); }
   else trLog(`${n?`${n} aircraft were lost with her.`:''}${up.length?` ${up.length} aloft have nowhere to land and will ditch when their fuel runs out.`:''}`,true); }
-function trStep(dt){ const R=TR; R.t+=dt; const nb=R.cvs.filter(q=>q.side==='blue').length;
+function trStep(dt){ if(TR.battle&&!TR.battle.over) battleStep(); const R=TR; R.t+=dt; const nb=R.cvs.filter(q=>q.side==='blue').length;
   for(const C of R.cvs){ if(C.gone) continue; withC(C,()=>{ R.pfx=C.side==='red'?`Enemy carrier ${C.name}: `:nb>1?`${C.name}: `:''; R.quiet=C.side==='red'; trStepCV(dt); }); }
   R.pfx=''; R.quiet=false;
   for(const T of R.tgts) tgtStep(T,dt);
@@ -4361,7 +4458,7 @@ function trStepCV(dt){
   if(sh.comps&&sh.status!=='afloat') cvLost();
   const hold=sh.comps?cvHold(sh):null; if(hold) m=Object.assign({},m,{stop:hold});
   // her stern's track, for the wake in 3D
-  if(Math.abs(sh.x)>BOXKM-4||Math.abs(sh.y)>BOXKM-4){ sh.x=clamp(sh.x,-BOXKM+4,BOXKM-4); sh.y=clamp(sh.y,-BOXKM+4,BOXKM-4); const back=Math.round(bearing(-sh.x,-sh.y));
+  if(!R.battle&&(Math.abs(sh.x)>BOXKM-4||Math.abs(sh.y)>BOXKM-4)){ sh.x=clamp(sh.x,-BOXKM+4,BOXKM-4); sh.y=clamp(sh.y,-BOXKM+4,BOXKM-4); const back=Math.round(bearing(-sh.x,-sh.y));
     if(Math.abs(angN(sh.ordHdg-back))>60){ sh.ordHdg=back; trWarn('box','She has reached the edge of the trials area and turns back.',600); } }
   const tk=R.track||(R.track=[]); if(!tk.length||t-tk[0].t>=2){ tk.unshift({e:sh.x*1000-vx*cv.L*.46,n:sh.y*1000-vy*cv.L*.46,t}); if(tk.length>80) tk.pop(); }
   const W=trWOD(), into=Math.abs(W.rel)<=20, flyable=!m.stop;
@@ -4386,14 +4483,31 @@ function trStepCV(dt){
     if(p.state==='fwd'){ trFwdLayout(cv,R.fwd); p.fx=p.dx; p.fy=p.dy; p.fromLift=null; R.fwd=R.fwd.filter(q=>q!==p); } else p.fromLift=p.lift;
     p.state='spotting'; p.t0=t; p.dur=dur; p.t=t+dur; p.order=false; p.respot=false; setLane(p,fromC,toC,t,t+dur); const HL=R.lifts[p.lift]; if(HL&&HL.hold===p) HL.hold=null; }
   for(const p of R.planes) if(p.state==='spotting'&&p.t<=t){ p.state='ranged'; R.pack.unshift(p); if(!p.warm) p.warmT=t; }
-  for(const p of R.pack.filter(q=>q.unrange)){ if(R.ops==='launch') break; if(trFwdLayout(cv,[...R.fwd,p]).fit<R.fwd.length+1){ trWarn('unr','No room forward to push the range into.',120); break; }
+  // from the deck park aft, aftmost first, each joins the back of the range where it stands, so long as the range still leaves the front
+  // aircraft its take-off run (the park behind it shrinks as it goes, and the range with it)
+  if(R.ops!=='recover') for(const p of R.aft.filter(q=>q.respot&&q.armed)){ const a0=R.aft, fe=R.fwd.length?trFwdLayout(cv,R.fwd).end:0; R.aft=a0.filter(q=>q!==p);
+    const pk=trPackLayout(cv,[...R.pack,p]), lead=R.pack[0]||p;
+    if(pk.front<Math.max(Math.min(cv.deckL*.6,trRunNeed(lead,W)),fe+2)){ R.aft=a0; trWarn('packfull','The range is as big as it can be and still leave the first aircraft room to take off.',600); break; }
+    p.respot=false; p.order=false; p.state='ranged'; R.pack.push(p); if(!p.warm) p.warmT=t; }
+  { const due=R.circuit.length||R.flights.some(f=>f.mission==='home'&&Math.hypot(f.x-R.ship.x,f.y-R.ship.y)<60)||R.planes.some(p=>p.state==='air'&&p.fuel<3000);   // begun in good time: clearing the park takes a while
+    if(due&&R.aft.length&&R.ops!=='launch') for(const p of R.aft.slice().reverse()){   // the forward rows of the park first
+      const fo=[...R.fwd,...R.planes.filter(q=>q.state==='spotfwd')];
+      if(trFwdLayout(cv,[...fo,p,p,p]).fit<fo.length+3){
+        // no room forward: down to the hangar, if there is room there (aircraft that went up from it leave some)
+        const L=trCanBelow(p)&&trHangarFree()>=p.st.foldSpan*p.d.fusLen*HPACK?R.lifts.find(L=>trLiftOK(L,p,true,true)):null;
+        if(L&&trTeam(TRK.taxi*m.handle)){ trAftLayout(cv,R.aft); p.fx=p.dx; p.fy=p.dy; L.busy=t+(TRK.taxi+TRK.lift)*m.handle; L.load=p; L.t0=t; L.dur=(TRK.taxi+TRK.lift)*m.handle; L.taxi=TRK.taxi*m.handle; L.dir='down'; p.lift=L.i;
+          p.state='liftdown'; p.respot=false; R.aft=R.aft.filter(q=>q!==p); setLane(p,p.fx+p.d.fusLen/2,L.x,t,t+L.taxi); continue; }
+        R.aftStuck=t; trWarn('aftfull','No room forward or below to strike the deck park aft into: it must be launched before aircraft can land.',600); break; }
+      trAftLayout(cv,R.aft); const fromC=p.dx+p.d.fusLen/2; trFwdLayout(cv,[...fo,p]); const toC=p.dx+p.d.fusLen/2; if(!pathClear(fromC,toC,t,p)) break;
+      if(!trTeam(TRK.spot*m.handle)) break; trAftLayout(cv,R.aft); p.fx=p.dx; p.fy=p.dy; R.aft=R.aft.filter(q=>q!==p); p.state='spotfwd'; p.t0=t; p.dur=TRK.spot*m.handle; p.t=t+p.dur; setLane(p,fromC,toC,t,p.t); } }
+  for(const p of R.pack.filter(q=>q.unrange)){ if(R.ops==='launch') break; if(trFwdLayout(cv,[...R.fwd,p]).fit<R.fwd.length+1){ trWarn('unr','No room forward to push the range into.',120); if(R.auto) for(const q of R.pack) q.unrange=false; break; }
     trPackLayout(cv,R.pack); const fromC=p.dx+p.d.fusLen/2; trFwdLayout(cv,[...R.fwd,...R.planes.filter(q=>q.state==='spotfwd'),p]); const toC=p.dx+p.d.fusLen/2; if(!pathClear(fromC,toC,t,p)) break;
     if(!trTeam(TRK.spot*m.handle)) break; trPackLayout(cv,R.pack); p.fx=p.dx; p.fy=p.dy; R.pack=R.pack.filter(q=>q!==p); p.unrange=false; p.state='spotfwd'; p.t0=t; p.dur=TRK.spot*m.handle; p.t=t+p.dur; setLane(p,fromC,toC,t,p.t); }
   for(const p of R.planes) if(p.state==='spotfwd'&&p.t<=t){ p.state='fwd'; R.fwd.push(p); }
   for(const p of R.pack) if(!p.warm&&t-p.warmT>=TRK.warm) p.warm=true;
   // struck below from the forward park
   for(const p of R.fwd.filter(q=>q.below)){ if(!trCanBelow(p)){ p.below=false; trLog(`${p.d.name} cannot go below: ${p.f.tall?'too tall for the hangar':'fits no lift'}.`); continue; }
-    if(trHangarFree()<p.st.foldSpan*p.d.fusLen*1.3){ trWarn('hfull','The hangar is full.',900); break; }
+    if(trHangarFree()<p.st.foldSpan*p.d.fusLen*HPACK){ trWarn('hfull','The hangar is full.',900); break; }
     const L=R.lifts.find(L=>trLiftOK(L,p,true)); if(!L) continue; trFwdLayout(cv,R.fwd); if(!pathClear(p.dx+p.d.fusLen/2,L.x,t,p,L)) continue; if(!trTeam(TRK.taxi*m.handle)) break;
     trFwdLayout(cv,R.fwd); p.fx=p.dx; p.fy=p.dy; L.busy=t+(TRK.taxi+TRK.lift)*m.handle; L.load=p; L.t0=t; L.dur=(TRK.taxi+TRK.lift)*m.handle; L.taxi=TRK.taxi*m.handle; L.dir='down'; p.lift=L.i;
     p.state='liftdown'; p.below=false; R.fwd=R.fwd.filter(q=>q!==p); setLane(p,p.fx+p.d.fusLen/2,L.x,t,t+L.taxi); }
@@ -4408,8 +4522,11 @@ function trStepCV(dt){
       const cat=cv.cats>0&&!TR.ship.catsOut&&run>=40&&(p.st.massTO||p.st.mass)<=cs.cat.kg&&p.st.vlof<=cs.cat.v/3.6+W.head;
       if(!p.warm) trWarn('warm',`Launch waiting: ${p.d.name} is still warming up.`,1e9);
       else if(!pathClear(0,run+p.d.fusLen,t,p)) trWarn('liftL','Launch waiting: a lift is down on the deck run.',60);
-      else if(run<need&&!cat){ trWarn('run'+p.id,`${p.d.name} cannot get off: it needs ${f0(need)} m with ${f0(W.head/KN)} knots over the deck, and has ${f0(run)} m. More wind over the deck, or a smaller range, gives it more.`,240); }
-      else { R.pack.shift(); p.state='air'; p.warm=false; R.stats.launched++; const byCat=run<need; trClear('xwind','stopL','warm');
+      else if(run<need&&!cat){ trWarn('run'+p.id,`${p.d.name} cannot get off: it needs ${f0(need)} m with ${f0(W.head/KN)} knots over the deck, and has ${f0(run)} m. More wind over the deck, or a smaller range, gives it more.`,240);
+        // the deck crew moves it to the back of the range, where its run is longest, and the next goes; if none of them can get off, the
+        // range is struck forward so that aircraft can still land
+        if(R.auto){ p.noRun=true; if(R.pack.some(q=>!q.noRun)) R.pack.push(R.pack.shift()); else { for(const q of R.pack){ q.noRun=false; q.unrange=true; } R.ops='idle'; trWarn('norun','Deck officer: nothing in the range can get off with this wind; striking it forward.',600); } } }
+      else { R.pack.shift(); for(const q of R.pack) q.noRun=false; p.state='air'; p.warm=false; R.stats.launched++; const byCat=run<need; trClear('xwind','stopL','warm');
         p.launchT=t; p.runDx=run; p.runDy=p.dy||0; p.wod=W.head; p.byCat=byCat; setLane(p,run+p.d.fusLen/2,-20,t,t+14);
         if(!byCat&&run<need*1.1&&Math.random()<.08){ p.state='lost'; p.lostKind='bow'; p.lostT=t; R.stats.lost++; R.stats.crashes++; trLog(`${p.d.name} went off the bow on take-off: too little deck.`); }
         else { const fl=trJoinFlight(p); fl.planes.push(p); p.fl=fl; }
@@ -4454,6 +4571,7 @@ function trStepCV(dt){
     const p=R.circuit[0], fl=trFwdLayout(cv,[...R.fwd,p]);
     if(!flyable) trWarn('stopR',`Landing held: ${m.stop.toLowerCase()}`,1e9);
     else if(R.pack.length) trWarn('packR','Landing held: aircraft are ranged aft in the landing area. Launch them or strike them forward first.',1e9);
+    else if(R.aft.length) trWarn('aftR','Landing held: the deck park aft is in the landing area. Launch it or strike it forward first.',1e9);
     else if(!into) trWarn('xwindR',`Landing held: the wind is ${f0(Math.abs(W.rel))}° on the ${W.rel>0?'starboard':'port'} bow. Turn into the wind.`,1e9);
     else if(!cv.barrier&&R.fwd.length) trWarn('nobar','Landing held: with no crash barrier, each aircraft must be struck below before the next lands.',1e9);
     else if(cv.barrier&&fl.fit<R.fwd.length+1) trWarn('fwdfull','Landing held: the forward deck is full. Strike some aircraft below.',1e9);
@@ -4502,20 +4620,146 @@ function tfSpawnRed(x,y){ const R=TR, e=etfOf(); if(R.tfs.filter(q=>q.side==='re
   const hdg=Math.round((bearing(-x,-y)+(Math.random()-.5)*140+360)%360), id=R.tfs.length+1, tf={id,side:'red',name:`Enemy task force ${R.tfs.filter(q=>q.side==='red').length+1}`,ships:[],gx:x,gy:y,ghdg:hdg,gkn:16,ordHdg:hdg,ordKn:16,known:null,nextSearch:R.t+300,nextStrike:0};
   const cls=etfCls(); let planes=0;
   for(let i=0;i<(e.CV||0)&&cls;i++){ const T=tgtMake('CV',x,y,hdg,{side:'red',cv:cls.cv,cs:cvStats(cls.cv)}); const C=trCarrier(cls,{T,side:'red',name:T.name,tf,list:etfAir(cls)}); R.tgts.push(T); tf.ships.push(T); R.cvs.push(C); planes+=C.planes.length;
-    withC(C,()=>{ const fs=TR.planes.filter(p=>p.role==='fighter'); if(fs.length){ const sq={id:++TR.sqid,name:'Fighter patrol',task:'cap'}; for(const p of fs.slice(0,Math.ceil(fs.length*.4))){ p.sq=sq.id; p.task='cap'; } TR.sq.push(sq); } }); }
+    withC(C,()=>{ const fs=TR.planes.filter(p=>p.role==='fighter').sort((a,b)=>(b.state==='aft')-(a.state==='aft')); if(fs.length){ const sq={id:++TR.sqid,name:'Fighter patrol',task:'cap'}; for(const p of fs.slice(0,Math.ceil(fs.length*.4))){ p.sq=sq.id; p.task='cap'; } TR.sq.push(sq); } }); }
   for(const ty of ['BB','BC','CA','CL','DD']) for(let i=0;i<(e[ty]||0);i++){ const T=tgtMake(ty,x,y,hdg,{side:'red'}); R.tgts.push(T); tf.ships.push(T); }
   tfPlace(tf); R.tfs.push(tf); if(sightOn()){ for(const T of tf.ships) T.vis=false; sightSnap(tf,tf.ships); tf.contact=false; }
   trLog(`${tf.name} placed ${f0(Math.hypot(x-R.ship.x,y-R.ship.y))} km from you: ${shipMix(tf.ships.map(T=>T.type))}${planes?`, ${planes} aircraft`:''}, steaming ${String(hdg).padStart(3,'0')}° at 16 knots. It does not know where you are.${sightOn()?' You saw it for a moment as it came on: the chart marks where it was.':''}`); trPanels(true); }
+/* ---------- Fleet battles: the campaign's fight against each year's rival ---------- */
+// Your fleet (the carriers you set to sail on the Fleet tab, with the air group you planned and an escort of the day) meets the rival's
+// (its carriers, escort and air group, from the same budget). Neither knows where the other is: intelligence gives each a bearing
+// and a rough distance, a little beyond the reach of either side's bombers, and both must find the other, helped by contact reports
+// every three hours until they do. There is no time limit: a battle ends only when one fleet leaves the area or is sunk to the last
+// ship, escorts and all. The rival fights on until it has had enough: half its carriers sunk, its carriers badly damaged (on average
+// about two and a half bomb hits each, a torpedo counting as two and heavy flooding as more), more than half its aircraft lost (a
+// bolder admiral takes a little more of each), or nothing left to strike with. Then it breaks off, lands its fighter patrols and steams out
+// of the area, away from you. You win when it leaves the area, or when every one of its ships is sunk. You lose when every one of
+// yours is sunk, or if you take your fleet off the edge of the area yourself: that is how you break off a battle. (A ship sinking,
+// capsizing, blown up, or burnt out and abandoned counts as sunk.)
+// The rival's air groups: what its budget buys in its own mix, and, given its carriers (cvs), no more than they can stow, cut down evenly
+// so the mix holds (stowing fighters first would otherwise leave a big fleet with nothing to strike with).
+// Each rival carrier sails with her own historical air group (G) in the rival's mix, or as much of it as she can stow.
+function rivalStow(r,xs){ const ds=[r.d,r.dive,r.torp], lists=[]; let placed=0;
+  for(const x of xs){ const can=ds.map(d=>stowOn([x.cv],[{d,n:1}]).placed===1), tot=r.mix.reduce((t,m,k)=>t+(can[k]?m:0),0)||1;
+    const rows=n=>ds.map((d,k)=>({d,n:can[k]?Math.round(n*r.mix[k]/tot):0})).filter(q=>q.n); let n=x.G; while(n>3&&stowOn([x.cv],rows(n)).left.length) n--; const st=stowOn([x.cv],rows(n)); lists.push(st.lists[0]); placed+=st.placed; }
+  return {placed,left:[],lists}; }
+function rivalAirRows(r,cvs){ const ds=[r.d,r.dive,r.torp], cost=ds.map(d=>fieldCost(d,r.date)), avg=r.mix.reduce((t,m,k)=>t+m*cost[k],0);
+  const rows=n=>ds.map((d,k)=>({d,n:Math.round(n*r.mix[k])})).filter(x=>x.n);
+  let n=Math.floor(r.air/avg); if(cvs) while(n>3&&stowOn(cvs,rows(n)).left.length) n=Math.floor(n*.97);
+  return rows(n); }
+function battleStart(rid){
+  const r=RIVALS[rid]; if(!r||!rivalOpen(rid)||fleetChecks(r).some(c=>c.bad)) return false;
+  S.selected=rid; save();
+  const sea=seaOf([3,4,4,4,5,5,6][Math.floor(Math.random()*7)]), wind=Math.round(Math.random()*36)*10;
+  TR={sea,wx:wxMake(sea),t:0,speed:5,pause:false,log:[],wind:{from:wind,kn:sea.wind},zoom:1,pick:null,fid:0,pid:0,view:{follow:true,x:0,y:0,km:30,d3:false},tgts:[],torps:[],bombs:[],fx:[],tid:0,spawn:null,
+    cvs:[],tfs:[],adv:true,pfx:'',quiet:false,eng:[],battle:{rid,over:false,res:null,next:0}};
+  const ships=sailing(), mine=stowOn(ships.map(s=>clsOf(s.cls).cv),airRows().filter(x=>x.n));
+  const theirs=r.fleet.map(f=>{ const h=histCV(f.c); return Object.assign({},f,h,{cv:Object.assign(JSON.parse(JSON.stringify(h.cv)),{rival:true})}); }), rl=rivalStow(r,theirs);
+  // how far apart: a little beyond the reach of the shorter-ranged side's bombers, so both must close or search
+  const reach=lists=>{ const b=lists.flat().filter(q=>q.d.role!=='fighter').map(q=>q.a.radius); return b.length?Math.max(...b):200; };
+  const D=clamp(Math.min(reach(mine.lists),reach(rl.lists))*.95,180,400), brg=Math.random()*360, [ux,uy]=hdgV(brg);
+  const bx=-ux*D/2, by=-uy*D/2, rx=ux*D/2, ry=uy*D/2, hb=Math.round((brg+(Math.random()-.5)*40+360)%360), hr=Math.round((brg+180+(Math.random()-.5)*70+360)%360);
+  // yours
+  const tf={id:1,side:'blue',name:'Your task force',ships:[],gx:bx,gy:by,ghdg:hb,gkn:16,ordHdg:hb,ordKn:16}; TR.tfs.push(tf);
+  ships.forEach((s,i)=>{ const c=clsOf(s.cls), T=tgtMake('CV',bx,by,hb,{side:'blue',cv:c.cv,cs:cvStats(c.cv),name:s.name}); TR.tgts.push(T); tf.ships.push(T); TR.cvs.push(trCarrier(c,{T,side:'blue',name:s.name,tf,list:mine.lists[i]})); });
+  for(const [ty,n] of Object.entries(r.mine||{})) for(let i=0;i<n;i++){ const T=tgtMake(ty,bx,by,hb,{side:'blue'}); TR.tgts.push(T); tf.ships.push(T); }
+  tfPlace(tf); trUse(TR.cvs.find(C=>C.side==='blue'));
+  // theirs
+  const et={id:2,side:'red',name:r.title+"'s fleet",ships:[],gx:rx,gy:ry,ghdg:hr,gkn:16,ordHdg:hr,ordKn:16,known:null,nextSearch:Math.round(1800-1500*r.skill),nextStrike:0};
+  theirs.forEach((x,i)=>{ const cls={id:'rv'+rid+'-'+i,name:x.name,cv:x.cv}, T=tgtMake('CV',rx,ry,hr,{side:'red',cv:x.cv,cs:cvStats(x.cv),name:x.name}); TR.tgts.push(T); et.ships.push(T);
+    const C=trCarrier(cls,{T,side:'red',name:x.name,tf:et,list:rl.lists[i]}); TR.cvs.push(C);
+    withC(C,()=>{ const fs=TR.planes.filter(p=>p.role==='fighter').sort((a,b)=>(b.state==='aft')-(a.state==='aft')); if(fs.length){ const sq={id:++TR.sqid,name:'Fighter patrol',task:'cap'}; for(const p of fs.slice(0,Math.ceil(fs.length*.4))){ p.sq=sq.id; p.task='cap'; } TR.sq.push(sq); } }); });
+  for(const [ty,n] of Object.entries(r.esc||{})) for(let i=0;i<n;i++){ const T=tgtMake(ty,rx,ry,hr,{side:'red'}); TR.tgts.push(T); et.ships.push(T); }
+  tfPlace(et); TR.tfs.push(et); for(const T of et.ships) T.vis=false;
+  const ie=140*(1.2-r.skill); et.aim={x:bx+(Math.random()-.5)*ie,y:by+(Math.random()-.5)*ie}; et.ie=ie;   // the rival is told roughly where you are, as you are told where it is: a cautious admiral as roughly as you, a veteran much better
+  TR.battle.nextIntel=3*3600; battleReport(et,70,false);
+  trUse(TR.cvs.find(C=>C.side==='blue'));   // yours again, after making theirs
+  TR.battle.start={mine:TR.cvs.filter(C=>C.side==='blue').reduce((n,C)=>n+C.planes.length,0),theirs:TR.cvs.filter(C=>C.side==='red').reduce((n,C)=>n+C.planes.length,0)};
+  // what each side is told: a bearing and a distance, both rough
+  const eb=Math.round((brg+(Math.random()-.5)*30+360)%360), ed=Math.round(D*(.8+Math.random()*.4)/10)*10;
+  trLog(`Your fleet puts to sea against ${r.title}: ${ships.length} carrier${ships.length>1?'s':''}, ${tf.ships.length-ships.length} escorts and ${TR.battle.start.mine} aircraft. Wind ${sea.wind} knots from ${String(wind).padStart(3,'0')}°, ${sea.name.toLowerCase()} sea, ${wxText(TR.wx)}.`,true);
+  trLog(`Intelligence puts ${r.title}'s carriers somewhere about ${ed} km away to the ${compass(eb)} (${String(eb).padStart(3,'0')}°), give or take a good deal. Find them before they find you. The battle goes on until one fleet is beaten: a fleet that has had enough breaks off and steams out of the area. To break off yourself, take your fleet off the edge of the chart.`,true);
+  return true; }
+// In a battle a fleet that knows where you are closes to about 70% of its bombers' reach and holds there, backing off if it comes within
+// 40%; until it knows, it steams for where intelligence put you (tf.aim), then quarters the sea around it.
+function battleSteer(tf,cs){ const t=TR.t, k=tf.known&&t-tf.known.t<4*3600?tf.known:null; if(tf.side==='blue'&&cs.some(C=>C.ops!=='idle')) return;   // tfStep holds the fleet into the wind while she flies
+  tf.reach=tf.reach||Math.max(150,...cs.flatMap(C=>C.planes).filter(p=>p.role!=='fighter').map(p=>p.st.radius));
+  const IN=BOXKM-30, cx=v=>clamp(v,-IN,IN);   // it never chases anything out of the area
+  let want=null; if(k){ const d=Math.hypot(k.x-tf.gx,k.y-tf.gy), b=bearing(cx(k.x)-tf.gx,cx(k.y)-tf.gy); want=d>tf.reach*.7?b:d<tf.reach*.4?b+180:null; }
+  else if(tf.aim){ const ax=cx(tf.aim.x), ay=cx(tf.aim.y), d=Math.hypot(ax-tf.gx,ay-tf.gy), b=bearing(ax-tf.gx,ay-tf.gy); want=d>40?b:b+90+t/60; }
+  if(want!=null&&(Math.abs(tf.gx)>IN||Math.abs(tf.gy)>IN)) want=bearing(-tf.gx,-tf.gy);
+  if(want!=null){ want=Math.round(((want%360)+360)%360); if(tf.side==='red'){ tf.ordHdg=want; tf.ordKn=20; } else for(const C of cs){ C.ship.ordHdg=want; C.ship.ordKn=20; } } }
+// A contact report on the enemy fleet (a submarine's or flying boat's): its rough position (err km either way) and course, marked on your
+// chart as where it was last seen, and logged.
+function battleReport(et,err,log){ const t=TR.t, ex=(Math.random()-.5)*2*err, ey=(Math.random()-.5)*2*err, live=et.ships.filter(T=>T.status==='afloat'); if(!live.length) return;
+  et.last={t,report:true,ships:live.map(T=>({id:T.id,type:T.type,name:T.name,x:T.x+ex,y:T.y+ey,hdg:T.hdg,L:T.L,B:T.B,t})),x:et.gx+ex,y:et.gy+ey,hdg:et.ghdg,kn:et.gkn};
+  if(log){ const tf=TR.tfs.find(q=>q.side==='blue'), d=Math.hypot(et.last.x-tf.gx,et.last.y-tf.gy), b=bearing(et.last.x-tf.gx,et.last.y-tf.gy);
+    trLog(`Contact report: enemy carriers about ${Math.round(d/10)*10} km to the ${compass(b)} of you (${String(Math.round(b)).padStart(3,'0')}°), steering ${String(Math.round(et.ghdg)).padStart(3,'0')}°. The chart marks where they were reported.`,true); } }
+const compass=b=>['north','north-east','east','south-east','south','south-west','west','north-west'][Math.round(((b%360)+360)%360/45)%8];
+// A fleet breaking off picks its way out once and holds it: of the eight points of the compass, the one that reaches the edge of the area
+// soonest without heading back toward the enemy (more than 100° from the bearing to it).
+function battleExit(tf,foe){ const toFoe=bearing(foe.gx-tf.gx,foe.gy-tf.gy); let best=null, bd=1e9;
+  for(let h=0;h<360;h+=45){ if(Math.abs(angN(h-toFoe))<=100) continue; const [hx,hy]=hdgV(h), d=Math.min(hx>1e-6?(BOXKM-tf.gx)/hx:hx<-1e-6?(-BOXKM-tf.gx)/hx:1e9,hy>1e-6?(BOXKM-tf.gy)/hy:hy<-1e-6?(-BOXKM-tf.gy)/hy:1e9);
+    if(d<bd){ bd=d; best=h; } }
+  return best??Math.round((toFoe+180)%360); }
+// A fleet breaking off lands its fighter patrols and keeps them down: each relaunch would swing it back into the wind and hold it there.
+function battleRecallCap(tf){ for(const C of TR.cvs.filter(q=>q.tf===tf&&!q.gone)) withC(C,()=>{ const R=TR;
+  for(const sq of R.sq.filter(q=>q.task==='cap')){ sq.task=null; const ps=sqPlanes(sq); for(const p of ps){ p.task=null; p.order=false; p.respot=false; }
+    const up=ps.filter(p=>p.state==='air'); if(up.length) trRegroup(up,{role:roleMix(up),name:sq.name,mission:'home'}); } }); }
+// How badly a side's carriers still afloat are hurt, in bomb hits: a torpedo counts as two, and flooding up to three more as it nears what
+// she can take.
+const battleCvDamage=side=>TR.tgts.filter(T=>T.side===side&&T.type==='CV'&&T.status==='afloat').reduce((t,T)=>t+T.hits.bomb+2*T.hits.torp+3*clamp((T.flood||0)/(T.reserve||1),0,1),0);
+// What each side has lost: ships sunk (sinking, capsizing, blown up or abandoned count) and their tonnage, and aircraft.
+function battleLosses(side){ const out=T=>T.status!=='afloat', sh=TR.tgts.filter(T=>T.side===side), cvs=TR.cvs.filter(C=>C.side===side);
+  const gone=sh.filter(out), lostP=cvs.reduce((n,C)=>n+C.planes.filter(p=>p.state==='lost').length,0), lostC=cvs.reduce((n,C)=>n+C.planes.filter(p=>p.state==='lost'&&!['barrier','bow','fuel'].includes(p.lostKind)).length,0);
+  return {ships:sh.length,gone,cvGone:gone.filter(T=>T.type==='CV'),cvs:sh.filter(T=>T.type==='CV').length,tons:gone.reduce((t,T)=>t+(T.type==='CV'?2:1)*T.disp,0),planes:cvs.reduce((n,C)=>n+C.planes.length,0),lostP,lostC}; }
+function battleStep(){ const B=TR.battle; if(TR.t<B.next) return; B.next=TR.t+5;
+  if(TR.t>=B.nextIntel){ B.nextIntel=TR.t+3*3600; const et=TR.tfs.find(q=>q.side==='red'), tf=TR.tfs.find(q=>q.side==='blue');
+    if(!(et.known&&TR.t-et.known.t<3*3600)) et.aim={x:tf.gx+(Math.random()-.5)*et.ie*.6,y:tf.gy+(Math.random()-.5)*et.ie*.6};
+    if(!et.contact&&!(et.last&&!et.last.report&&TR.t-et.last.t<3*3600)) battleReport(et,40,true); }
+  const me=battleLosses('blue'), them=battleLosses('red'), r=RIVALS[B.rid], et=TR.tfs.find(q=>q.side==='red'), tf=TR.tfs.find(q=>q.side==='blue');
+  if(them.gone.length===them.ships) return battleEnd('win',`Every ship of ${r.title}'s fleet is sunk.`);
+  if(me.gone.length===me.ships) return battleEnd('loss','Every ship of your fleet is sunk.');
+  const off=q=>Math.abs(q.gx)>BOXKM||Math.abs(q.gy)>BOXKM;
+  if(off(tf)) return battleEnd('loss','You took your fleet off the edge of the battle area and broke off the fight.');
+  if(Math.abs(tf.gx)>BOXKM-40||Math.abs(tf.gy)>BOXKM-40) trWarn('edge','Your fleet is near the edge of the battle area. Steaming off it breaks off the battle, and the battle is lost.',1800);
+  if(et.leaving&&off(et)) return battleEnd('win',`${r.title}'s fleet has left the battle area, beaten.`);
+  // has the rival had enough?
+  if(!et.leaving){ const bombers=TR.cvs.filter(C=>C.side==='red'&&C.ship.status==='afloat').reduce((n,C)=>n+C.planes.filter(p=>p.state!=='lost'&&p.role!=='fighter').length,0);
+    const why=them.cvGone.length>=Math.ceil(them.cvs/2)?`${them.cvGone.length===1?'a carrier':them.cvGone.length+' carriers'} sunk`:battleCvDamage('red')>=2.5*them.cvs*(.8+.4*r.skill)?'its carriers badly damaged':them.lostP>(.5+.2*r.skill)*them.planes?`${them.lostP} of its ${them.planes} aircraft lost`:!bombers?'nothing left to strike with':null;
+    if(why){ et.leaving=true; et.leaveT=TR.t; et.known=null; et.exitHdg=battleExit(et,tf); battleRecallCap(et); trLog(`Radio intelligence: ${r.title} has broken off the battle (${why}) and is steaming for home. Catch the fleet before it leaves the area, or let it go: either way the battle is yours once it is gone.`,true); } }
+  if(et.leaving){ et.ordHdg=et.exitHdg; et.ordKn=40; } }   // out of the area by the way it chose, as fast as it can go
+function battleEnd(res,why){ const B=TR.battle; if(B.over) return; B.over=true; B.res=res; B.why=why; B.t=TR.t; TR.pause=true;
+  const r=RIVALS[B.rid], first=!S.beaten.includes(r.id), pts=reward(r.id,res);
+  S.plays=S.plays||{}; S.plays[r.id]=(S.plays[r.id]||0)+1; if(res==='win'&&first) S.beaten.push(r.id); S.points+=pts; S.career+=pts;
+  if(res==='win'&&first&&r.id<RIVALS.length-1) S.selected=r.id+1; save();
+  B.pts=pts; B.first=first; B.me=battleLosses('blue'); B.them=battleLosses('red');
+  trLog(`${res==='win'?'Victory':res==='loss'?'Defeat':'Drawn'}: ${why}`,true); renderTrials(); renderRivals(); renderMeta(); }
+// The result, over the chart once the battle is decided.
+function battleShow(){ let el=$('#trresult'); const B=TR&&TR.battle;
+  if(!el){ el=document.createElement('div'); el.id='trresult'; el.className='panel'; el.style.cssText='margin:0 0 12px'; $('#trrun').prepend(el); }
+  if(!B||!B.over||B.shown){ el.hidden=!(B&&B.over&&B.shown===1); if(!B||!B.over) return; }
+  B.shown=1; el.hidden=false; const r=RIVALS[B.rid], me=B.me, them=B.them;
+  const side=(L,who)=>`<li><strong>${who}</strong> lost ${L.cvGone.length} of ${L.cvs} carriers${L.cvGone.length?' ('+L.cvGone.map(T=>esc(T.name)).join(', ')+')':''}, ${L.gone.length-L.cvGone.length} other ships, and ${L.lostP} of ${L.planes} aircraft.</li>`;
+  const next=B.res==='win'&&B.first?(r.id<RIVALS.length-1?` The calendar moves to ${dateText(RIVALS[r.id+1].date)}, and ${RIVALS[r.id+1].title} will take you on next.`:` ${ERA.endText||''}`):B.pts===0&&B.res!=='loss'?' Battles against this rival no longer pay points.':'';
+  el.innerHTML=`<h3 style="margin:0 0 6px">${B.res==='win'?'Victory':B.res==='loss'?'Defeat':'A drawn battle'} against ${esc(r.title)}</h3><p style="margin:0 0 8px">${esc(B.why)} After ${f1(B.t/3600)} hours.${B.pts?` You earn ${B.pts} points.`:''}${next}</p>
+    <ul style="margin:0 0 10px;padding-left:20px">${side(me,'You')}${side(them,esc(r.title))}</ul><span class="trbtns"><button class="btn" id="trend2" data-trback>Look over the battlefield</button></span>`; }
 // Orders from the ship panel or the chart go to every carrier of yours, so the task force follows them whichever carrier you are looking at.
-function trOrder(h,kn){ for(const C of (TR.adv?cvAll().filter(q=>q.side==='blue'):[TR.cur])){ if(h!=null) C.ship.ordHdg=(h+360)%360; if(kn!=null) C.ship.ordKn=kn; } }
+function trOrder(h,kn){ if(TR.adv){ const tf=TR.tfs.find(q=>q.side==='blue'); if(tf){ if(h!=null){ tf.ordHdg=(h+360)%360; tf.youHdg=tf.ordHdg; } if(kn!=null) tf.ordKn=kn; } }   // with no carrier left, the escorts steer by this
+  for(const C of (TR.adv?cvAll().filter(q=>q.side==='blue'):[TR.cur])){ if(h!=null){ C.ship.ordHdg=(h+360)%360; if(C.ship.baseHdg!=null) C.ship.baseHdg=C.ship.ordHdg; } if(kn!=null){ C.ship.ordKn=kn; if(C.ship.baseKn!=null) C.ship.baseKn=kn; } } }
 function tfStep(tf,dt){ const R=TR, t=R.t, live=tf.ships.filter(T=>T.status==='afloat'); if(!live.length) return;
   const cvs=live.filter(T=>T.cvC&&!T.cvC.gone).map(T=>T.cvC), lead=cvs[0];
   let oh=tf.side==='blue'&&lead?lead.ship.ordHdg:tf.ordHdg, ok=tf.side==='blue'&&lead?lead.ship.ordKn:tf.ordKn;
-  if(cvs.some(C=>C.ops!=='idle'||C.pack.length||C.circuit.length)){ oh=R.wind.from; ok=Math.max(ok,clamp(28-R.wind.kn,8,40)); }
-  if(Math.abs(tf.gx)>BOXKM-15||Math.abs(tf.gy)>BOXKM-15){ const back=bearing(-tf.gx,-tf.gy); if(Math.abs(angN(oh-back))>80){ oh=back; if(tf.side==='red') tf.ordHdg=Math.round(back); else trOrder(back); } }
+  const flying=cvs.some(C=>C.ops!=='idle'); if(flying){ oh=R.wind.from; ok=Math.max(ok,clamp(28-R.wind.kn,8,40)); }
+  // at the edge of the area a fleet turns back, unless in a battle it is breaking off: a rival that has had enough, or yours when the
+  // last course you ordered (not a turn into the wind to fly, nor any steering of the fleet's own) points out of the area
+  const outward=h=>{ const [ux,uy]=hdgV(h); return (Math.abs(tf.gx)>BOXKM-15&&ux*Math.sign(tf.gx)>.3)||(Math.abs(tf.gy)>BOXKM-15&&uy*Math.sign(tf.gy)>.3); };
+  const out=R.battle&&(tf.leaving||(tf.side==='blue'&&tf.youHdg!=null&&outward(tf.youHdg)));
+  // (while her carriers fly she keeps into the wind, sliding along the edge rather than over it: below)
+  if(!out&&!flying&&(Math.abs(tf.gx)>BOXKM-15||Math.abs(tf.gy)>BOXKM-15)){ const back=bearing(-tf.gx,-tf.gy); if(Math.abs(angN(oh-back))>80){ oh=back; if(tf.side==='red') tf.ordHdg=Math.round(back); else trOrder(back); } }
   const able=live.filter(T=>spdF(T)>.35), vmax=Math.min(...(able.length?able:live).map(T=>(T.cvC?T.cvC.cs.speed:T.maxKn)*spdF(T)))*.88;
   tf.ghdg=(tf.ghdg+clamp(angN(oh-tf.ghdg),-1.2*dt,1.2*dt)+360)%360; tf.gkn=Math.max(0,tf.gkn+clamp(Math.min(ok,vmax)-tf.gkn,-.08*dt,.05*dt));
   const [hx,hy]=hdgV(tf.ghdg); tf.gx+=hx*tf.gkn*KN*dt/1000; tf.gy+=hy*tf.gkn*KN*dt/1000;
+  if(!out){ tf.gx=clamp(tf.gx,-BOXKM+2,BOXKM-2); tf.gy=clamp(tf.gy,-BOXKM+2,BOXKM-2); }   // only a fleet meaning to leave crosses the edge
   for(const T of live){ const mx=T.cvC?T.cvC.cs.speed:T.maxKn;
     if(T.ev&&T.ev.until>t){ T.steerHdg=T.ev.hdg; T.steerKn=mx; continue; } T.ev=null;
     const s=tfSpot(tf,T), dx=(s.x-T.x)*1000, dy=(s.y-T.y)*1000, eu=dx*hx+dy*hy, ev=dx*hy-dy*hx;
@@ -4599,17 +4843,21 @@ function advEnemy(){ const R=TR, t=R.t, blues=R.tgts.filter(T=>T.side==='blue'&&
     if(seen){ const B=blues.filter(q=>q.type==='CV'&&Math.hypot(q.x-seen.x,q.y-seen.y)<30)[0]||seen, first=!tf.known||t-tf.known.t>1800;
       tf.known={x:B.x,y:B.y,hdg:B.hdg,kn:B.kn,t,g:grpOf(B)}; if(first) trLog(`An enemy ${by} has sighted your ${B.spec.name.toLowerCase()} ${B.name}. ${tf.name} knows where you are.`,true); }
     if(!cs.length) continue;
+    if(R.battle&&tf.leaving) continue;
+    if(R.battle) battleSteer(tf,cs);
     if((!tf.known||t-tf.known.t>7200)&&t>=tf.nextSearch){ tf.nextSearch=t+1.5*3600; advSearch(tf,cs); }
     if(tf.known&&t-tf.known.t<1800&&t>=tf.nextStrike){ if(advStrike(tf,cs)) tf.nextStrike=t+2*3600; } }
 }
-function advSearch(tf,cs){ let k=0, n=Math.min(11,5+cs.length*3); const off=Math.random()*360;
-  for(const C of cs){ withC(C,()=>{ const R=TR; R.quiet=true; const ps=R.planes.filter(p=>p.armed&&!p.task&&!p.sq&&(p.state==='hangar'||p.state==='fwd')&&p.role!=='fighter').sort((a,b)=>b.st.radius-a.st.radius);
+// The scouts fan out evenly all round; or, when the fleet has an idea where the enemy is (tf.aim, from a contact report or intelligence),
+// across a 120° sector toward it, as real searches were flown.
+function advSearch(tf,cs){ let k=0, n=Math.min(11,5+cs.length*3); const sector=tf.aim?120:360, off=tf.aim?bearing(tf.aim.x-tf.gx,tf.aim.y-tf.gy)-60+Math.random()*10:Math.random()*360;
+  for(const C of cs){ withC(C,()=>{ const R=TR; R.quiet=true; const ps=R.planes.filter(p=>p.armed&&!p.task&&!p.sq&&(p.state==='hangar'||p.state==='fwd'||p.state==='aft')&&p.role!=='fighter').sort((a,b)=>b.st.radius-a.st.radius);
     const sq={id:++R.sqid,name:`Squadron ${R.sqid}`}; let j=0;
-    for(const p of ps.slice(0,Math.ceil(n/cs.length))){ const b=off+k*360/n, leg=Math.min(p.st.radius*.85,320), [hx,hy]=hdgV(b); k++; j++;
+    for(const p of ps.slice(0,Math.ceil(n/cs.length))){ const b=off+(sector<360?(k+.5)*sector/n:k*360/n), leg=Math.min(p.st.radius*.85,320), [hx,hy]=hdgV(b); k++; j++;
       p.task='scout'; p.scout={x:clamp(R.ship.x+hx*leg,-BOXKM,BOXKM),y:clamp(R.ship.y+hy*leg,-BOXKM,BOXKM),key:`es${sq.id}-${j}`,name:`${sq.name}, flight ${j}`}; if(p.state==='hangar') p.order=true; else p.respot=true; } R.quiet=false; }); }
   if(k) trLog(`${tf.name} sends out ${k} scouts to look for you.`,true); }
 function advStrike(tf,cs){ const R0=TR, k=tf.known, age=TR.t-k.t, [hx,hy]=hdgV(k.hdg), ex=k.x+hx*k.kn*KN*age/1000, ey=k.y+hy*k.kn*KN*age/1000; let sent=0;
-  for(const C of cs){ withC(C,()=>{ const R=TR; R.quiet=true; R.pfx=`Enemy carrier ${C.name}: `; try{ const d=Math.hypot(ex-R.ship.x,ey-R.ship.y), ok=p=>p.armed&&!p.task&&(p.state==='hangar'||p.state==='fwd')&&p.st.radius>=d*1.05;
+  for(const C of cs){ withC(C,()=>{ const R=TR; R.quiet=true; R.pfx=`Enemy carrier ${C.name}: `; try{ const d=Math.hypot(ex-R.ship.x,ey-R.ship.y), ok=p=>p.armed&&!p.task&&(p.state==='hangar'||p.state==='fwd'||p.state==='aft')&&p.st.radius>=d*1.05;
     const bom=R.planes.filter(p=>ok(p)&&p.role!=='fighter'&&loadKind(p)), fig=R.planes.filter(p=>ok(p)&&p.role==='fighter'&&p.sq==null), esc=fig; if(bom.length<2) return;
     const sq={id:++R.sqid,name:`Squadron ${R.sqid}`}; for(const p of [...bom,...esc]) p.sq=sq.id; R.sq.push(sq);
     const so={id:++R.soid,sqs:[sq.id],state:'pick',tgt:null,tgtG:k.g||null,tx:ex,ty:ey}; R.sorties.push(so); trSortieGo(so); sent+=bom.length+esc.length;
@@ -4631,7 +4879,7 @@ function advStep(dt){ const R=TR, t=R.t;
 // escorts from mid-1942) finds ships at 30 km (22 from a destroyer) whatever the weather. Aircraft see 40 km round them in clear
 // weather (scouts, flying for it, 45), less under cloud and much less in rain, when they must fly low under it. The enemy's eyes
 // work the same way, sight on or off.
-const sightOn=()=>!!(TR&&TR.adv&&trS().sight!==false);
+const sightOn=()=>!!(TR&&TR.adv&&(TR.battle||trS().sight!==false));
 const wxVisF=()=>{ const w=trWx(); return clamp(w.vis/30,.12,1)*(1-.3*w.cloud); };
 function shipEye(T){ const w=trWx(), big=T.type!=='DD', vis=Math.min(w.vis,big?26:20), rad=(T.cvm?T.cvm.radar&&T.cvm.radar!=='none':techDate()>=1942.5)?(big?30:22):0; return Math.max(vis,rad); }
 const airEye=f=>{ const w=trWx(); return Math.min(f.mission==='scout'?45:40,w.vis*1.2)*(1-.3*w.cloud); };
@@ -4930,7 +5178,7 @@ function trChase(p,f){ const v=TR.view; v.chase={pid:p.id,fid:f.id}; v.follow=fa
   if(!v.d3){ v.km=KM3D*.95; trEnter3D(); } else trZoomLabel(); trLog(`Following ${p.d.name} of ${f.name}.`); }
 function trChaseStep(k){ const q=trChaseList(), v=TR.view; if(!q.length){ trChaseStop(); return; } const i=q.findIndex(p=>p.id===v.chase.pid), p=q[((i<0?0:i+k)%q.length+q.length)%q.length]; v.chase.pid=p.id; TR3.chaseCam=null; trZoomLabel(); }
 function trChaseStop(){ const v=TR.view; if(!v.chase) return; const c=trFocus(); v.chase=null; v.x=c.x; v.y=c.y; v.follow=false; TR3.dist=1300; TR3.pitch=.3; trZoomLabel(); }
-function trMapClick(x,y){ const R=TR; if(Math.abs(x)>BOXKM||Math.abs(y)>BOXKM){ toast('That is outside the trials area.'); return; }
+function trMapClick(x,y){ const R=TR; if(!R.battle&&(Math.abs(x)>BOXKM||Math.abs(y)>BOXKM)){ toast('That is outside the trials area.'); return; }   // in a battle you may steer off the edge to break off
   if(R.spawn==='TF'){ R.spawn=null; trSpawnBtns(); tfSpawnRed(x,y); return; }
   if(R.spawn){ tgtSpawn(R.spawn,x,y); return; }
   if(SCP){ if(SCP.legs.length>=SCP.max){ toast(`No more than ${SCP.max} lines: one for each aircraft.`); return; } SCP.legs.push({kind:'area',x,y,r:12}); scoutPanel(); trDrawMap(); return; }
@@ -5190,9 +5438,10 @@ function deckPlanesHit(T,w,how){ const C=T.cvC; if(!C||C.gone) return 0; let los
 function deckPlaneSpots(){ const R=TR, cv=R.cv, out=[], port=cv.iside==='port';
   trPackLayout(cv,R.pack); for(const p of R.pack) out.push({p,x:p.dx+p.d.fusLen/2,y:p.dy,r:p.d.span*.4});
   trFwdLayout(cv,R.fwd); for(const p of R.fwd) out.push({p,x:p.dx+p.d.fusLen/2,y:p.dy,r:p.st.foldSpan*.4});
+  trAftLayout(cv,R.aft); for(const p of R.aft) out.push({p,x:p.dx+p.d.fusLen/2,y:p.dy,r:p.st.foldSpan*.4});
   for(const L of R.lifts) if(L.load) out.push({p:L.load,x:L.x,y:L.edge?(port?-cv.deckW/2-L.w/2:cv.deckW/2+L.w/2):0,r:L.load.st.foldSpan*.4});
   return out.filter(q=>q.p.state!=='lost'); }
-function deckPlaneLose(p,why){ const R=TR; p.state='lost'; p.lostKind=why; R.stats.lost++; R.pack=R.pack.filter(q=>q!==p); R.fwd=R.fwd.filter(q=>q!==p); for(const L of R.lifts) if(L.load===p){ L.load=null; L.busy=0; } if(p.fl) p.fl.planes=p.fl.planes.filter(q=>q!==p); }
+function deckPlaneLose(p,why){ const R=TR; p.state='lost'; p.lostKind=why; R.stats.lost++; R.pack=R.pack.filter(q=>q!==p); R.fwd=R.fwd.filter(q=>q!==p); R.aft=R.aft.filter(q=>q!==p); for(const L of R.lifts) if(L.load===p){ L.load=null; L.busy=0; } if(p.fl) p.fl.planes=p.fl.planes.filter(q=>q!==p); }
 // A carrier listing: aircraft on deck are chocked and lashed, but past a few degrees they start to slide, the forward park (lashed down)
 // holding a little longer than the range ready to take off. Each slides to the low side, and over it.
 function deckSlide(T,dt){ const C=T.cvC; if(!C||C.gone) return; const a=Math.abs(T.list||0); if(a<8) return; let lost=0;
@@ -5419,6 +5668,7 @@ function deckPlanesDraw(c,k){ const R=TR, cv=R.cv, dS=deckStart(cv), port=cv.isi
     c.fillRect(cx-p.d.fusLen*.07*k,cy,p.d.fusLen*.14*k,p.d.fusLen*k); c.fillRect(cx-sp/2*k,cy+p.d.fusLen*.22*k,sp*k,Math.max(1,p.d.chord*.9*k)); c.fillRect(cx-sp*.18*k,cy+p.d.fusLen*.85*k,sp*.36*k,p.d.fusLen*.12*k); c.globalAlpha=1; };
   trPackLayout(cv,R.pack); for(const p of R.pack) plane(p,p.dx,p.dy,true);
   trFwdLayout(cv,R.fwd); for(const p of R.fwd) plane(p,p.dx,p.dy,false);
+  trAftLayout(cv,R.aft); for(const p of R.aft) plane(p,p.dx,p.dy,false);
   for(const L of R.lifts){ if(L.busy>R.t){ const y=L.edge?(port?-cv.deckW/2-L.w:cv.deckW/2):-L.w/2, [x0,y0]=at(L.x-L.l/2,y+L.w); c.fillStyle='rgba(217,178,60,.45)'; c.fillRect(x0,y0,L.w*k,L.l*k); }
     if(L.load) plane(L.load,L.x-L.load.d.fusLen/2,L.edge?(port?-cv.deckW/2-L.w/2:cv.deckW/2+L.w/2):0,false); } }
 function burstGlyph(c,x,y,r,col,op){ if(!(op>.02)||!(r>0)) return; op=Math.min(1,op); c.save(); c.translate(x,y); c.fillStyle=`rgba(${col},${op})`; c.beginPath();
@@ -5455,13 +5705,14 @@ function trDrawDeck(){
     if(!p.warm&&spread){ c.fillStyle='rgba(255,255,255,.7)'; c.fillRect(X(x)-2,Y(y)-1,2,2); } c.globalAlpha=1; };
   trPackLayout(cv,TR.pack); for(const p of TR.pack) plane(p,p.dx,p.dy,true);
   trFwdLayout(cv,TR.fwd); for(const p of TR.fwd) plane(p,p.dx,p.dy,false);
+  trAftLayout(cv,TR.aft); for(const p of TR.aft) plane(p,p.dx,p.dy,false);
   for(const L of TR.lifts) if(L.load) plane(L.load,L.x-L.load.d.fusLen/2,L.edge?(port?-cv.deckW/2-L.w/2:cv.deckW/2+L.w/2):0,false);
   c.fillStyle=T.muted; c.font='500 11px "IBM Plex Mono", monospace'; c.textAlign='left';
   const moving=TR.planes.filter(p=>p.state==='spotting'||p.state==='deckq'||p.state==='spotfwd').length;
   c.fillText(`BOW ◂   ${TR.pack.length} RANGED AFT · ${TR.fwd.length} PARKED FORWARD${moving?` · ${moving} BEING MOVED`:''}`,10,14);
 }
-function trTypeRows(){ const by=new Map(); for(const p of TR.planes){ const k=p.d.name; if(!by.has(k)) by.set(k,{d:p.d,role:p.role,hangar:0,ready:0,fwd:0,ranged:0,air:0,lost:0,moving:0});
-    const b=by.get(k); if(p.state==='hangar'){ b.hangar++; if(p.armed) b.ready++; } else if(p.state==='fwd') b.fwd++; else if(p.state==='ranged') b.ranged++; else if(p.state==='air'||p.state==='circuit') b.air++; else if(p.state==='lost') b.lost++; else b.moving++; }
+function trTypeRows(){ const by=new Map(); for(const p of TR.planes){ const k=p.d.name; if(!by.has(k)) by.set(k,{d:p.d,role:p.role,hangar:0,ready:0,fwd:0,aft:0,ranged:0,air:0,lost:0,moving:0});
+    const b=by.get(k); if(p.state==='hangar'){ b.hangar++; if(p.armed) b.ready++; } else if(p.state==='fwd') b.fwd++; else if(p.state==='aft') b.aft++; else if(p.state==='ranged') b.ranged++; else if(p.state==='air'||p.state==='circuit') b.air++; else if(p.state==='lost') b.lost++; else b.moving++; }
   return [...by.values()]; }
 // The flight deck's orders, for the carrier swapped in: shown in her box on the Airgroups screen.
 function trDeckHTML(){ const R=TR;
@@ -5504,7 +5755,9 @@ function trPanelsHTML(){
 function renderTrials(){
   const run=!!TR; $('#trsetup').hidden=run; $('#trrun').hidden=!run;
   if(!run){ $('#trsetup').innerHTML=trSetupHTML(); return; }
-  $('#trtitle').textContent=`${TR.name} on trials`; $('#trtfbtn').hidden=!TR.adv; if(!TR.adv) $('#trtf').hidden=true;
+  const BT=TR.battle; $('#trtitle').textContent=BT?`Battle against ${RIVALS[BT.rid].title}`:`${TR.name} on trials`; $('#trtfbtn').hidden=!TR.adv||!!BT; if(!TR.adv||BT) $('#trtf').hidden=true;
+  $('#trspawn').hidden=!!BT; { const intro=document.querySelector('#tab-trials > p.muted'); if(intro) intro.hidden=!!BT; }
+  $('#trend').hidden=!!(BT&&!BT.over); $('#trend').textContent=BT?'Back to the fleet':'End trials'; battleShow();
   for(const b of document.querySelectorAll('[data-trspeed]')) b.setAttribute('aria-pressed',String(TR.pause?b.dataset.trspeed==='0':+b.dataset.trspeed===TR.speed));
   trZoomLabel();
   trPanels(true); trDrawMap(); trDrawDeck(); trView();
@@ -6019,6 +6272,7 @@ function tr3Frame(){
   // where every aircraft stands, from the same deck layouts as the plan
   trPackLayout(cv,[...R.planes.filter(q=>q.state==='spotting').sort((a,b)=>b.t-a.t),...R.pack]);
   trFwdLayout(cv,[...R.fwd,...R.planes.filter(q=>q.state==='spotfwd').sort((a,b)=>a.t-b.t)]);
+  trAftLayout(cv,R.aft);
   const CX=(p,dx)=>cv.L/2-dS-dx-p.d.fusLen/2;
   const liftAt=(p,i,onDeck)=>{ const L=R.lifts[i??p.lift??0]||R.lifts[0], v=L&&TR3.lifts[L.i]; if(!L||!v) return {x:CX(p,cv.deckL*.4),z:0,y:yD};
     const x=cv.L/2-dS-L.x; return onDeck?{x,z:L.edge?v.z:0,y:yD}:{x,z:v.z,y:v.o.position.y+(L.edge?.25:.2)}; };
@@ -6045,7 +6299,7 @@ function tr3Frame(){
     const tx=p.dx??8, ty=p.dy??0, dist=Math.hypot(stop-tx,ty)+1e-6, dur=dist/5+6, f=(tau-4.5)/dur; if(f>=1) return null;
     return {...taxi({x:CX(p,stop),z:0},{x:CX(p,tx),z:-ty},f),fold:1,spin:true,snap:true}; };
   const barrier=(p,rec)=>{ const tau=t-p.lostT-14, vc=vc0(p); if(tau<0) return approach(p,tau,rec.h); if(tau>70) return {vis:false};
-    const D=cv.deckL*(.76-.55)+2, a=vc*vc*.84/(2*D), tb=(vc-Math.sqrt(Math.max(0,vc*vc-2*a*D)))/a;
+    const D=cv.deckL*.76-trBar(cv)+2, a=vc*vc*.84/(2*D), tb=(vc-Math.sqrt(Math.max(0,vc*vc-2*a*D)))/a;
     if(tau<tb) return {x:CX(p,cv.deckL*.76-(vc*tau-.5*a*tau*tau)),z:0,fold:0,spin:true,snap:true};
     const k=Math.min(1,(tau-tb)/.8); return {x:CX(p,cv.deckL*.76-D),y:yD+rec.h-.5*k,z:.6*k,pitch:-32*DEG*k,roll:.12*k,fold:0,spin:false,snap:true}; };
   const waveoff=(p,rec)=>{ const tau=t-p.woT-14; if(tau<-1.5) return approach(p,tau,rec.h); const u=tau+1.5, a0=approach(p,-1.5,rec.h);
@@ -6093,6 +6347,7 @@ function tr3Frame(){
     if(s==='spotting'){ const a=rec.from||(p.fromLift!=null||p.fx==null?{...liftAt(p,p.fromLift,true),yaw:Math.PI}:{x:CX(p,p.fx),z:-p.fy}), ft=foldTime(p), f=clamp((t-p.t0)/Math.max(1,p.dur-ft),0,1);
       return {...taxi(a,{x:CX(p,p.dx),z:-p.dy},f),fold:p.t-t>ft?1:0,spin:false,snap:true}; }   // pushed by the deck crew; the engine starts on the spot
     if(s==='ranged') return {x:CX(p,p.dx),z:-p.dy,fold:0,spin:true};
+    if(s==='aft') return {x:CX(p,p.dx),z:-p.dy,fold:1};
     if(s==='spotfwd'){ const f=clamp((t-p.t0)/Math.max(1,p.dur),0,1); return {...taxi(rec.from||{x:CX(p,p.fx),z:-p.fy},{x:CX(p,p.dx),z:-p.dy},f),fold:1,spin:false,snap:true}; }
     if(s==='fwd'){ if(p.tdT!=null&&t-p.tdT<120){ const l=landing(p,rec); if(l) return l; } return {x:CX(p,p.dx),z:-p.dy,fold:1}; }
     if(s==='liftdown'){ const L=R.lifts[p.lift], f=L&&L.t0!=null?clamp((t-L.t0)/L.dur,0,1):1, ft=L?L.taxi/L.dur:.3, q=liftAt(p,p.lift,false);
@@ -6583,7 +6838,7 @@ function tgt3Frame(FE,FN,t,dt,jump){ const R=TR, W=(x,z)=>waveH(FE+x,z-FN,t);
 // A squadron is any set of aircraft you pick. Squadrons go together on a sortie, which is ranged, launched and formed up over the ship,
 // then flies to its target at the speed of the slowest aircraft; or they protect the carrier, circling over her and coming down to
 // refuel and going up again for as long as the order stands.
-const AGCOL=[['hangar','Hangar',s=>s==='hangar'||s==='liftdown'],['deck','On deck',s=>['liftup','deckq','spotting','ranged','fwd','spotfwd'].includes(s)],['air','Airborne',s=>s==='air'||s==='circuit']];
+const AGCOL=[['hangar','Hangar',s=>s==='hangar'||s==='liftdown'],['deck','On deck',s=>['liftup','deckq','spotting','ranged','fwd','spotfwd','aft'].includes(s)],['air','Airborne',s=>s==='air'||s==='circuit']];
 const planeSVG=(col,big)=>`<svg viewBox="0 0 24 24" width="${big?26:24}" height="${big?26:24}" aria-hidden="true"><path fill="${col}" stroke="rgba(0,0,0,.35)" stroke-width=".5" d="M12 1.6c.9 0 1.3.9 1.3 2.2V9h8.9v3.4h-8.9v4.7h3.6v2.2h-3.4L12 21.8l-1.5-2.5H7.1v-2.2h3.6v-4.7H1.8V9h8.9V3.8c0-1.3.4-2.2 1.3-2.2z"/></svg>`;
 const AG={sel:new Set(),ssel:new Set(),open:false,by:new Map()};
 const trSq=id=>TR.sq.find(q=>q.id===id);
@@ -6640,7 +6895,7 @@ function trRegroup(ps,o){ const R=TR; if(!ps.length) return null;
   for(const p of ps){ if(p.fl) p.fl.planes=p.fl.planes.filter(q=>q!==p); if(p.state==='air'){ f.planes.push(p); p.fl=f; p.atk=null; } } R.flights.push(f); R.flights=R.flights.filter(q=>q===f||q.planes.length); return f; }
 const roleMix=ps=>ps.some(p=>p.role==='torpedo')?'torpedo':ps.some(p=>p.role==='dive')?'dive':'fighter';
 function trSortieGo(so){ const R=TR, ps=trSortiePlanes(so); so.state='ranging'; so.t0=R.t;
-  for(const p of ps){ p.task='so'+so.id; if(p.state==='hangar') p.order=true; if(p.state==='fwd') p.respot=true; }
+  for(const p of ps){ p.task='so'+so.id; if(p.state==='hangar') p.order=true; if(p.state==='fwd'||p.state==='aft') p.respot=true; }
   const up=ps.filter(p=>p.state==='air'); if(up.length) trRegroup(up,{role:roleMix(ps),name:`Sortie ${so.id}`,mission:'form',sortie:so.id});
   trLog(`Sortie ${so.id}: ${ps.length} aircraft of ${so.sqs.map(id=>trSq(id).name).join(', ')} to be ranged and launched${R.auto?'':'. Launch them from the flight deck'}.`); }
 function trSorties(){ const R=TR, t=R.t;
@@ -6654,19 +6909,22 @@ function trSorties(){ const R=TR, t=R.t;
         trLog(`${R.side==='red'?'A strike':`Sortie ${so.id}`} sets off with ${f.planes.length} aircraft at ${f0(slow.st.cruise)} km/h, the cruising speed of its slowest, the ${slow.d.name}.${up.length<alive.length?` ${alive.length-up.length} could not be got up in time and stay behind.`:''}`,true); } }
     else if(!f||f.mission==='home'){ so.state='done'; for(const p of ps) if(p.task==='so'+so.id) p.task=null; } } }
 // The deck officer: ranges and launches what is ordered up, keeps patrols going, recovers aircraft when they come back, sends bombers
-// below to rearm, keeps room forward to land on, and turns the ship into the wind to fly.
+// below to rearm, keeps room forward to land on, and turns the ship into the wind to launch or land, bringing her back to the course
+// she was on (baseHdg) when the deck is quiet again.
 function trDeckOfficer(){ const R=TR, t=R.t, sh=R.ship, cv=R.cv;
-  for(const p of R.planes) if(p.task&&p.armed&&!p.order&&!p.respot&&(p.state==='hangar'||p.state==='fwd')){ if(p.task==='cap'||p.task==='scout'||R.sorties.some(so=>'so'+so.id===p.task&&so.state==='ranging')){ if(p.state==='hangar') p.order=true; else p.respot=true; } else p.task=null; }
-  const coming=R.planes.some(p=>p.state==='liftup'||p.state==='deckq'||p.state==='spotting'||(p.order&&p.state==='hangar'&&p.armed)||(p.respot&&p.state==='fwd'&&p.armed));
+  if(R.circuit.length&&R.aft.length&&R.aftStuck!=null&&t-R.aftStuck<5&&R.ops==='idle'){ const sq=R.sq.find(q=>q.task==='cap'); if(sq) for(const p of R.aft) if(p.role==='fighter'&&!p.task&&p.armed){ p.sq=sq.id; p.task='cap'; } }
+  for(const p of R.planes) if(p.task&&p.armed&&!p.order&&!p.respot&&(p.state==='hangar'||p.state==='fwd'||p.state==='aft')){ if(p.task==='cap'||p.task==='scout'||R.sorties.some(so=>'so'+so.id===p.task&&so.state==='ranging')){ if(p.state==='hangar') p.order=true; else p.respot=true; } else p.task=null; }
+  const coming=R.planes.some(p=>p.state==='liftup'||p.state==='deckq'||p.state==='spotting'||(p.order&&p.state==='hangar'&&p.armed)||(p.respot&&(p.state==='fwd'||p.state==='aft')&&p.armed));
   const full=R.warned.packfull!=null&&t-R.warned.packfull<3, low=R.circuit.some(p=>p.fuel<900);
   if(R.ops==='idle'){
-    if(R.pack.length&&(!coming||full||low)){ R.ops='launch'; R.launchStart=t; R.nextLaunch=t; trLog('Deck officer: launching the range.'); }
-    else if(R.circuit.length&&!R.pack.length&&!coming){ R.ops='recover'; R.nextLand=Math.max(R.nextLand,t); trLog('Deck officer: the deck is open to land aircraft.'); } }
+    if(R.pack.some(q=>!q.unrange)&&(!coming||full||low)){ R.ops='launch'; R.launchStart=t; R.nextLaunch=t; trLog('Deck officer: launching the range.'); }
+    else if(R.circuit.length&&!R.pack.length&&!R.aft.length&&!coming){ R.ops='recover'; R.nextLand=Math.max(R.nextLand,t); trLog('Deck officer: the deck is open to land aircraft.'); } }
   else if(R.ops==='recover'&&!R.circuit.length&&!R.flights.some(f=>f.mission==='home'&&Math.hypot(f.x-sh.x,f.y-sh.y)<40)){ R.ops='idle'; trLog('Deck officer: recovery complete.'); }
   if(R.ops!=='recover') for(const p of R.fwd) if(!p.armed&&!p.rearm&&!p.below&&p.role!=='fighter'&&trCanBelow(p)) p.below=true;
   if(R.ops==='recover'&&cv.barrier&&R.circuit.length&&trFwdLayout(cv,[...R.fwd,...R.circuit.slice(0,2)]).fit<R.fwd.length+2){ const q=R.fwd.find(p=>trCanBelow(p)&&!p.below&&!p.armed)||R.fwd.find(p=>trCanBelow(p)&&!p.below); if(q) q.below=true; }
   if(R.ops==='recover'&&!cv.barrier&&R.circuit.length&&R.fwd.length&&!R.fwd.some(p=>p.below)){ const q=R.fwd.find(p=>trCanBelow(p)); if(q) q.below=true; }
-  if(R.ops!=='idle'||R.pack.length||R.circuit.length){ if(Math.abs(angN(sh.ordHdg-R.wind.from))>3) sh.ordHdg=R.wind.from; sh.ordKn=Math.max(sh.ordKn,clamp(28-R.wind.kn,8,Math.floor(R.cs.speed))); } }
+  if(R.ops!=='idle'){ if(sh.baseHdg==null){ sh.baseHdg=sh.ordHdg; sh.baseKn=sh.ordKn; } if(Math.abs(angN(sh.ordHdg-R.wind.from))>3) sh.ordHdg=R.wind.from; sh.ordKn=Math.max(sh.ordKn,clamp(28-R.wind.kn,8,Math.floor(R.cs.speed))); }
+  else if(sh.baseHdg!=null){ sh.ordHdg=sh.baseHdg; sh.ordKn=sh.baseKn; sh.baseHdg=null; sh.baseKn=null; } }   // back on her course once the deck is quiet
 function agStatus(sq){ const R=TR, ps=sqPlanes(sq), c={}; for(const p of ps){ const k=AGCOL.find(x=>x[2](p.state)); const n=k?k[1].toLowerCase():p.state==='lost'?'lost':'moving'; c[n]=(c[n]||0)+1; }
   const where=Object.entries(c).map(([k,n])=>`${k} ${n}`).join(' · '), so=R.sorties.find(q=>q.sqs.includes(sq.id)&&(q.state==='ranging'||q.state==='out'));
   const scouting=ps.some(p=>(p.task==='scout'&&p.scout)||(p.fl&&p.fl.mission==='scout'));
@@ -6771,13 +7029,14 @@ $('#tab-trials').addEventListener('keydown',e=>{ if(e.target.id==='scbear'&&e.ke
 function trDeckAct(b){
   if(b.dataset.trops){ const o=b.dataset.trops; if(o==='launch'&&!TR.pack.length){ toast('Nothing is ranged for launch. Range some aircraft first.'); return; }
     if(o==='recover'&&TR.pack.length){ toast('Aircraft are ranged in the landing area. Launch them first.'); return; }
+    if(o==='recover'&&TR.aft.length){ toast('The deck park aft is in the landing area. Launch it or strike it forward first.'); return; }
     TR.ops=o; if(o==='launch'){ TR.launchStart=TR.t; TR.nextLaunch=TR.t; } if(o==='recover') TR.nextLand=Math.max(TR.nextLand,TR.t); trLog({launch:'Launching the range.',recover:'The deck is open to land aircraft.',idle:'Flight deck closed.'}[o]); trPanels(true); agRender(true); return; }
   if(b.dataset.trfwd){ const k=b.dataset.trfwd; if(k==='unrange'){ for(const p of TR.pack) p.unrange=true; trLog('Pushing the range forward.'); trPanels(true); agRender(true); return; }
     if(k==='respot'&&TR.ops==='recover'){ toast('Not while recovering aircraft: the landing area must stay clear.'); return; }
     for(const p of TR.fwd){ if(k==='below') p.below=true; else p.respot=true; } trLog(k==='below'?'Striking the forward park below.':'Respotting the forward park aft for launch.'); trPanels(true); agRender(true); return; }
   if(b.dataset.trrange){ if(TR.ops==='recover'){ toast('Not while recovering aircraft: the landing area must stay clear.'); return; }
-    const want=+b.dataset.k, list=TR.planes.filter(p=>p.d.name===b.dataset.trrange&&!p.order&&((p.state==='hangar'&&p.armed)||(p.state==='fwd'&&p.armed)));
-    let n=0; for(const p of list){ if(n>=want) break; if(p.state==='fwd') p.respot=true; else p.order=true; n++; }
+    const want=+b.dataset.k, list=TR.planes.filter(p=>p.d.name===b.dataset.trrange&&!p.order&&((p.state==='hangar'&&p.armed)||((p.state==='fwd'||p.state==='aft')&&p.armed)));
+    let n=0; for(const p of list){ if(n>=want) break; if(p.state==='fwd'||p.state==='aft') p.respot=true; else p.order=true; n++; }
     trLog(n?`Ranging ${n} × ${b.dataset.trrange} for launch.`:`No ${b.dataset.trrange} is fuelled and armed to range.`); trPanels(true); agRender(true); return; }
 }
 { let sw=null; const at=el=>{ const b=el&&el.closest&&el.closest('.agp'), box=b&&b.closest('[data-agcv]'); return b&&box?{b,C:TR&&TR.cvs[+box.dataset.agcv]}:null; };
@@ -6797,6 +7056,8 @@ $('#tab-trials').addEventListener('click',e=>{
   if(b.dataset.adv){ const ad=ts.adv||(ts.adv={}), i=b.dataset.adv.indexOf(':'), k=b.dataset.adv.slice(0,i), id=b.dataset.adv.slice(i+1), o=k==='cv'?(ad.cvs=ad.cvs||{}):(ad.esc=ad.esc||{}); o[id]=clamp((o[id]||0)+ +b.dataset.d,0,k==='cv'?5:12); save(); renderTrials(); return; }
   if(b.id==='trstart'){ trStart(); return; }
   if(!TR) return;
+  if(b.id==='trend'&&TR&&TR.battle){ TSND.silence(); trFull(false); TR=null; TR3.key=null; AG.open=false; $('#agd').hidden=true; renderTrials(); showTab('fleet'); return; }
+  if(b.dataset.trback!=null){ $('#trresult').hidden=true; return; }
   if(b.id==='trend'){ TSND.silence(); trFull(false); TR=null; TR3.key=null; AG.open=false; $('#agd').hidden=true; renderTrials(); return; }
   if(b.dataset.trspeed!=null){ const v=+b.dataset.trspeed; if(v===0) TR.pause=!TR.pause; else { TR.speed=v; TR.pause=false; } renderTrials(); return; }
   if(b.id==='trzin'||b.id==='trzout'){ const k=b.id==='trzout'?1.8:1/1.8; if(TR.view.d3) tr3Dist(TR3.dist*k); else trZoom(k); return; }
@@ -7064,6 +7325,6 @@ function numEdit(o){ if(o.querySelector('input')) return; const d=o.closest('.di
 document.addEventListener('click',e=>{ const o=e.target.closest('.dim output'); if(o) numEdit(o); });
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches&&e.target.matches('.dim output')){ e.preventDefault(); numEdit(e.target); } });
 // for testing only: ?debug exposes the inner state to the console
-if(/[?&]debug\b/.test(location.search)) window.FT={mergeStatic,tgt3Make,trPanels,agRender,flightOrder,capSpot,formSlots,flightDoing,flightMix,trFull,strafeHit,deckPlanesHit,liftHit,deckSlide,cvPlanImg,TSND,scoutAdd,scoutGo,scoutPanel,trDeckHTML,newCV,autoLayout,cvVolumes,cvFaults,cvSea,CVP,cvPart,deckStart,clsOf,renderCV,cvChanged,CVCACHE,CVFIRE,tgtShaft,SPREAD,BOMBFX,hangarHere,hangarK,advFight,advAA,advAir,trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
+if(/[?&]debug\b/.test(location.search)) window.FT={rivalStow,trStow,trFwdLayout,cvAircraft,battleRecallCap,battleCvDamage,battleExit,histCV,fleetChecks,battleStart,battleLosses,battleEnd,battleSteer,stowOn,rivalAirRows,fieldCost,advSearch,advStrike,sideEyes,inEyes,grpOf,renderRivals,renderFleet,mergeStatic,tgt3Make,trPanels,agRender,flightOrder,capSpot,formSlots,flightDoing,flightMix,trFull,strafeHit,deckPlanesHit,liftHit,deckSlide,cvPlanImg,TSND,scoutAdd,scoutGo,scoutPanel,trDeckHTML,newCV,autoLayout,cvVolumes,cvFaults,cvSea,CVP,cvPart,deckStart,clsOf,renderCV,cvChanged,CVCACHE,CVFIRE,tgtShaft,SPREAD,BOMBFX,hangarHere,hangarK,advFight,advAA,advAir,trChase,trChaseStep,tgtHit,tgtSecondary,tgtBlow,tgtStep,tgtSpawn,tgtMake,shipCollide,shipAvoid,tfSpawnRed,trMapClick,trFocus,trDrawMap,cvLines,cvStats,cvMesh,S,CV3,TR3,VW3,get TR(){return TR;},trStep,cv3Build,tr3Build,tr3Frame,showTab,THREE,setFold,meshFor,animParts,viewerBuild,compute,PARTS,part,fixDesign,RIVALS,rivalD,get F(){return F;},startSortie,simStep,RGS,tgtSpawn,tgtHit,trMapClick,tfSpawnRed,advStep,withC,trUse,trKeep,cvAll,etfOf,trZoom,trEnter3D,trLeave3D,tr3Dist,trDrawMap,renderTrials,agOpen,AG,trSortieGo};
 })();
 </script>
