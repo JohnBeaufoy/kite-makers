@@ -4671,7 +4671,8 @@ function trStepCV(dt){
     let spd=Math.min(...f.planes.map(p=>p.st.cruise))/3600; const home=Math.hypot(sh.x-f.x,sh.y-f.y), need=home/spd+600;
     if(f.mission!=='home'&&Math.min(...f.planes.map(p=>p.fuel))<need){ f.mission='home'; trLog(`${f.name} is short of fuel and turns for home.`); }
     let tx=sh.x, ty=sh.y, orbit=f.mission==='form'||f.mission==='cap'||f.mission==='home';
-    if(f.mission==='strike'&&f.tgtG&&(f.phase==='out'||f.phase==='search')){ orbit=false; const live=grpLive(f.tgtG), seen=grpSeen(f.tgtG,R.side);
+    // a strike goes on what it can see itself: until its own crews sight the enemy it flies to where it was sent, then searches there
+    if(f.mission==='strike'&&f.tgtG&&(f.phase==='out'||f.phase==='search')){ orbit=false; const live=grpLive(f.tgtG), eye=airEye(f), seen=f.tgtG.k==='t'?live:live.filter(T=>Math.hypot(T.x-f.x,T.y-f.y)<eye);
       if(!live.length){ f.phase='back'; f.t0=t; trLog(`${f.name}: ${grpName(f.tgtG)} has gone. It turns for home.`,true); }
       else if(seen.length){ const c=ctr(seen); f.tx=c.x; f.ty=c.y; tx=c.x; ty=c.y; if(f.phase==='search'){ f.phase='out'; trLog(`${f.name} has found ${grpName(f.tgtG)} and closes up to attack.`,true); }
         if(Math.min(...seen.map(T=>Math.hypot(T.x-f.x,T.y-f.y)))<14) atkBegin(f); }
@@ -4919,8 +4920,11 @@ function tfStep(tf,dt){ const R=TR, t=R.t, live=tf.ships.filter(T=>T.status==='a
     T.steerHdg=(tf.ghdg+clamp(Math.atan2(ev,900)*180/Math.PI,-70,70)+360)%360; T.steerKn=clamp(tf.gkn+eu/180,3,mx); } }
 // Everything in the air that can be shot at or can shoot: its side, where it is and how high.
 const FALT={form:450,cap:1200,scout:900,strike:1500,home:600};
+// How high an aircraft of a flight flies: the flight's height, except that dive bombers going out to strike fly at the height they
+// will dive from, as they did, so they need not climb over the target.
+const flAlt=(f,p)=>f.mission==='strike'&&f.phase!=='back'&&p.role==='dive'&&p.armed&&!p.dropped?3550:(FALT[f.mission]||800);
 function advAir(){ const out=[]; for(const C of cvAll()) for(const f of C.flights) for(const p of f.planes){ if(p.state!=='air') continue;
-    out.push(p.atk?{p,f,C,side:C.side,x:p.ax,y:p.ay,alt:p.alt}:{p,f,C,side:C.side,x:f.x,y:f.y,alt:FALT[f.mission]||800}); } return out; }
+    out.push(p.atk?{p,f,C,side:C.side,x:p.ax,y:p.ay,alt:p.alt}:{p,f,C,side:C.side,x:f.x,y:f.y,alt:flAlt(f,p)}); } return out; }
 const advLoss=(it,why)=>{ const p=it.p; if(p.state==='lost') return; p.state='lost'; p.lostKind=why; it.C.stats.lost++; const k=TR.aaLog||(TR.aaLog={}); const q=k[it.side]||(k[it.side]={flak:0,air:0,off:0}); q[why]++; };
 // The ships' guns. Heavy (dual-purpose) guns reach out to about 7 km at any height; light guns about 2.5 km, below 2,500 m. A torpedo bomber
 // on its run, low and straight, is the easiest target; a fighter circling high over the target the hardest. Proximity fuzes and
@@ -4979,7 +4983,10 @@ function advAA(air,dt){ const R=TR, t=R.t, guns=R.tgts.filter(T=>T.aa&&T.status=
 // One tracer: from a gun somewhere along her to near the aircraft, at the speed of the shell; light tracer burns on a little past.
 function trcAdd(T,it,light){ const R=TR, [hx,hy]=hdgV(T.hdg), u=(Math.random()-.5)*T.L*.7, sc=(light?.07:.13)*(techDate()<1943.5?1:.7);   // gunners hosing at a crossing target: most streams go well wide
   const x0=T.x+hx*u/1000, y0=T.y+hy*u/1000, a0=T.D-T.T+3+Math.random()*6, x1=it.x+gauss()*sc, y1=it.y+gauss()*sc, a1=Math.max(20,it.alt+gauss()*(light?25:60));
-  const d=Math.hypot((x1-x0)*1000,(y1-y0)*1000,a1-a0); (R.trc||(R.trc=[])).push({x0,y0,a0,x1,y1,a1,t:R.t,dur:d/(light?850:700),ext:light?1.35:1,light}); if(R.trc.length>700) R.trc.splice(0,R.trc.length-700); }
+  // a burst: a light mount fires for two to four seconds, its rounds following one another out along the same line (a quadruple
+  // 40 mm about 8 a second, a 20 mm about 5); a heavy gun one shell
+  const d=Math.hypot((x1-x0)*1000,(y1-y0)*1000,a1-a0), burst=light?2+Math.random()*2:0, rps=light?(Math.random()<.5?8:5):1;
+  (R.trc||(R.trc=[])).push({x0,y0,a0,x1,y1,a1,t:R.t,dur:d/(light?850:700),ext:light?1.35:1,light,burst,rps,D:d}); if(R.trc.length>700) R.trc.splice(0,R.trc.length-700); }
 // Evasive action: a ship being attacked swings toward torpedo bombers to meet them bows-on, combs torpedoes in the water by turning
 // parallel to their tracks, and throws the wheel hard over against dive bombers. Her station waits until it is over.
 function advEvade(air){ const R=TR, t=R.t;
@@ -5024,7 +5031,13 @@ function advFight(dt){ const R=TR, visF=wxVisF(), all=[];
     // an enemy scout jumped by your fighter patrol radios that it has met carrier fighters: he guesses your carriers are not far off
     for(const [S,Q] of [[A,B],[B,A]]) if(S.side==='red'&&S.f.mission==='scout'&&Q.f.mission==='cap'&&S.C.tf){ const tf=S.C.tf; if(!tf.known||R.t-tf.known.t>1200){ const e=12+Math.random()*18, ea=Math.random()*2*Math.PI;
       tf.known={x:S.pos.x+e*Math.cos(ea),y:S.pos.y+e*Math.sin(ea),hdg:0,kn:0,t:R.t,g:grpOf(Q.C.ship),guess:true}; trLog(`An enemy scout jumped by your fighters radioed that it had met carrier fighters: ${tf.name} will guess you are near there.`,true); } } }
-  for(const it of down) advLoss(it,'air'); }
+  for(const it of down) advLoss(it,'air');
+  // Fighters that have fired all their ammunition are no more use up there: they come home to land and rearm (a patrol's fighters
+  // go back up when rearmed, as the patrol order stands). A whole flight dry turns for home; the dry ones of a mixed flight leave it.
+  if(Math.floor(R.t/10)!==Math.floor((R.t-dt)/10)) for(const C of cvAll()) withC(C,()=>{ const Q=TR;
+    for(const f of [...Q.flights]){ if(f.mission==='home'||f.phase==='attack') continue; const up=f.planes.filter(p=>p.state==='air'), dry=up.filter(p=>p.role==='fighter'&&p.ammoS!=null&&p.ammoS<=0); if(!dry.length) continue;
+      if(dry.length===up.length){ f.mission='home'; f.intc=null; f.itgt=null; f.phase=''; if(C.side!=='red') trLog(`${f.name} is out of ammunition and turns for home to rearm.`); }
+      else { trRegroup(dry,{role:'fighter',name:`${f.name.replace(/, flight \d+$/,'')} (out of ammunition)`,mission:'home'}); if(C.side!=='red') trLog(`${dry.length} fighter${dry.length>1?'s':''} of ${f.name} ${dry.length>1?'are':'is'} out of ammunition and turn${dry.length>1?'':'s'} for home.`); } } }); }
 // The enemy commander: looks for you with his scouts, ships and patrols; when he knows where you are, sends every bomber that can
 // reach you with all his spare fighters as escort; and his strikes, arriving where you were reported, hunt for you in sight of it.
 function advEnemy(){ const R=TR, t=R.t, blues=R.tgts.filter(T=>T.side==='blue'&&T.status==='afloat'); if(!blues.length) return; const eyes=sideEyes('red');
@@ -5212,7 +5225,7 @@ function leadPt(T,x,y,v){ const [hx,hy]=hdgV(T.hdg), s=(T.kn||0)*KN, dx=(T.x-x)*
   return isFinite(tau)&&tau>0?{x:T.x+vx*tau/1000,y:T.y+vy*tau/1000}:{x:T.x,y:T.y}; }
 const shipLead=(T,s)=>T&&T.kn?hdgV(T.hdg).map(q=>q*T.kn*KN*s/1000):[0,0];
 function atkBegin(f){ const R=TR, t=R.t; let ships=[];
-  if(f.tgtG){ ships=grpSeen(f.tgtG,R.side).filter(T=>Math.hypot(T.x-f.x,T.y-f.y)<30); if(!ships.length) ships=grpLive(f.tgtG).filter(T=>Math.hypot(T.x-f.x,T.y-f.y)<20);
+  if(f.tgtG){ ships=grpLive(f.tgtG).filter(T=>Math.hypot(T.x-f.x,T.y-f.y)<Math.min(30,airEye(f)));   // the ships it can see from where it is
     if(!ships.length){ f.phase='back'; f.t0=t; trLog(`${f.name} finds nothing left of ${grpName(f.tgtG)} to attack: it turns for home.`,true); return; } }
   else if(f.tgt){ let T=R.tgts.find(q=>q.id===f.tgt&&q.status==='afloat'); if(!T) T=atkPick(f.tx,f.ty,25,R.side); if(!T){ f.phase='back'; f.t0=t; trLog(`${f.name} finds its target already going down and nothing else to attack: it turns for home.`,true); return; } ships=[T]; }
   // each aircraft picks its ship by size: a carrier draws more of them than a destroyer, but every ship may draw some
@@ -5220,8 +5233,12 @@ function atkBegin(f){ const R=TR, t=R.t; let ships=[];
   const c0=ships.length?ctr(ships):{x:f.tx,y:f.ty}, alt=1500, base={grp:f.tgtG||null,t0:t};
   const kind=p=>!p.armed||p.dropped?'escort':p.role==='fighter'?'escort':loadKind(p)==='torp'?'torp':p.role==='dive'?'dive':loadKind(p)==='bomb'?'level':'escort';
   const by={torp:[],dive:[],level:[],escort:[]}, at=new Map(), cnt=new Map();
+  // each aircraft starts its attack from where it was in the formation, on the formation's heading and at its height, so the break
+  // from formation into the attack is smooth on the chart (formation spacing about 35 m, as the chart draws it close in)
+  const s0=(typeof document!=='undefined'&&trScale())||1, gs0=Math.max(...f.planes.map(p=>Math.max(.6,p.d.span/2000*s0*(1+flAlt(f,p)/2200)))), spW=Math.max(gs0*2.3,.035*s0)/s0;   // the spacing the chart is drawing now
+  const hd0=trFlightHdg(f), slot=new Map(); for(const g of flightSpread(f)) for(const m of flightMarks(g.ps,g.x,-g.y,f.phase==='search'?f.shdg||hd0:hd0,spW)) slot.set(m.p,{x:m.x,y:-m.y});
   for(const p of f.planes){ const k=kind(p); by[k].push(p); const T=k==='escort'||!ships.length?null:pickT(); at.set(p,T); const key=(T?T.id:0)+k; cnt.set(key,(cnt.get(key)||0)+1);
-    p.ax=f.x; p.ay=f.y; p.alt=alt; p.ahdg=bearing((T||c0).x-f.x,(T||c0).y-f.y); p.av=p.st.cruise/3.6; p.pitchA=0; p.rollA=0; }
+    const sl=slot.get(p)||{x:f.x,y:f.y}; p.ax=sl.x; p.ay=sl.y; p.alt=flAlt(f,p); p.ahdg=hd0; p.av=p.st.cruise/3.6; p.pitchA=0; p.rollA=0; }
   const idx=new Map(), nth=(T,k)=>{ const key=(T?T.id:0)+k, n=idx.get(key)||0; idx.set(key,n+1); return n; };
   const aim=T=>({tgt:T?T.id:null,tx:T?T.x:c0.x,ty:T?T.y:c0.y,hdg:T?T.hdg:bearing(f.x-c0.x,f.y-c0.y),inb:bearing(f.x-(T||c0).x,f.y-(T||c0).y)});
   for(const p of by.torp){ const T=at.get(p), i=nth(T,'torp'), A=aim(T), off=[0,-90,90,-45,45][i%5]+((Math.floor(i/5)*13)%26-6), [sx,sy]=hdgV(A.hdg+off);
@@ -5276,7 +5293,7 @@ function strafeHit(T,p,f,lat){ const gk=Math.sqrt(Math.max(.3,p.st.fireRate||1)/
 function atkHome(p,a){ const R=TR, b=bearing(R.ship.x-a.tx,R.ship.y-a.ty), [hx,hy]=hdgV(b); a.ph='rally'; a.rx=a.tx+hx*18; a.ry=a.ty+hy*18; }
 function atkPlane(p,a,f,dt){ const R=TR, t=R.t, st=p.st, cru=st.cruise/3.6, vmax=st.speed/3.6*.95, vmin=st.stall/3.6*1.3, clb=Math.max(4,st.climb/60), T0=R.tgts.find(q=>q.id===a.tgt); let T=T0;
   if(T&&T.status==='afloat'){ a.tx=T.x; a.ty=T.y; }
-  else if(T&&!p.dropped&&a.kind!=='escort'&&!['escape','pull','rally','done'].includes(a.ph)){ const N=a.grp?grpLive(a.grp).sort((q,r)=>Math.hypot(q.x-a.tx,q.y-a.ty)-Math.hypot(r.x-a.tx,r.y-a.ty))[0]:atkPick(a.tx,a.ty,12,R.side);
+  else if(T&&!p.dropped&&a.kind!=='escort'&&!['escape','pull','rally','done'].includes(a.ph)){ const N=a.grp?grpLive(a.grp).filter(q=>Math.hypot(q.x-a.tx,q.y-a.ty)<12).sort((q,r)=>Math.hypot(q.x-a.tx,q.y-a.ty)-Math.hypot(r.x-a.tx,r.y-a.ty))[0]:atkPick(a.tx,a.ty,12,R.side);   // its ship gone, it takes another of the same force close by, not one out of sight
     if(N){ a.tgt=N.id; a.tx=N.x; a.ty=N.y; T=N; } else if(a.grp){ atkHome(p,a); return; } }
   if(a.ox!=null&&!['run','dive','pull','escape','rally','done'].includes(a.ph)){ a.sx=a.px=a.tx+a.ox; a.sy=a.py=a.ty+a.oy; }   // approach and pushover points ride with her
   const name=`${p.d.name} of ${f.name}`;
@@ -5343,7 +5360,7 @@ function atkWeapons(dt){ const R=TR, t=R.t;
     const o=outside(T,b.x,b.y), side=o.q.v>0?1:-1, x=clamp(T.L/2-o.q.u,0,T.L);
     if(o.in){ tgtHit(T,{kind:'bomb',kg:b.kg,pen:b.pen,ap:b.ap,x,side,v:o.q.v}); R.fx.push({kind:'hit',x:b.x,y:b.y,t}); }
     else { if(o.d<15) tgtHit(T,{kind:'near',kg:b.kg,x,side,d:o.d}); R.fx.push({kind:'splash',near:o.d<15,x:b.x,y:b.y,t,size:Math.cbrt(b.kg/250)}); } }
-  R.torps=R.torps.filter(q=>!q.done||t-q.doneT<60); R.bombs=R.bombs.filter(b=>!b.done); R.fx=R.fx.filter(f=>t-f.t<90); if(R.trc) R.trc=R.trc.filter(q=>t-q.t<q.dur*q.ext+.5); }
+  R.torps=R.torps.filter(q=>!q.done||t-q.doneT<60); R.bombs=R.bombs.filter(b=>!b.done); R.fx=R.fx.filter(f=>t-f.t<90); if(R.trc) R.trc=R.trc.filter(q=>t-q.t<q.dur*q.ext+(q.burst||0)+.5); }
 // In 3D, each attacking aircraft where its run has taken it.
 function atkPose(map,FE,FN,t){ for(const C of cvAll()) for(const f of C.flights) for(const p of f.planes){ if(!p.atk) continue;
   map.set(p.id,{par:'world',x:p.ax*1000-FE,y:p.alt,z:-(p.ay*1000-FN),yaw:(90-p.ahdg)*DEG,pitch:p.pitchA||0,roll:-(p.rollA||0),fold:0,spin:true,gear:1,snap:false}); } }
@@ -5352,7 +5369,7 @@ function atkPose(map,FE,FN,t){ for(const C of cvAll()) for(const f of C.flights)
 const BOXKM=480, KM3D=1.1, DIST2D=4200;
 // what the view centres on: your carrier, a ship you chose to watch (the view stays on her as she moves), or a fixed point
 const trLockT=()=>{ const v=TR.view; if(v.lock==null) return null; const T=TR.tgts.find(q=>q.id===v.lock); if(!T||T.status==='sunk'&&TR.t-T.sunkT>60){ v.lock=null; if(T){ v.x=T.x; v.y=T.y; } return null; } return T; };
-const trFocus=()=>{ const v=TR.view; if(v.chase&&TR3.chasePos) return {x:TR3.chasePos.x,y:TR3.chasePos.y}; if(v.follow) return {x:TR.ship.x,y:TR.ship.y}; const T=trLockT(); if(T){ v.x=T.x; v.y=T.y; return {x:T.x,y:T.y}; } return {x:v.x,y:v.y}; };
+const trFocus=()=>{ const v=TR.view; if(v.chase&&TR3.chasePos) return {x:TR3.chasePos.x,y:TR3.chasePos.y}; if(v.follow){ const TF=!v.d3&&trCurTF(); if(TF) return {x:TF.gx,y:TF.gy}; return {x:TR.ship.x,y:TR.ship.y}; } /* on the chart a task force is followed by its centre */ const T=trLockT(); if(T){ v.x=T.x; v.y=T.y; return {x:T.x,y:T.y}; } return {x:v.x,y:v.y}; };
 const trScale=()=>{ const r=$('#trmap').getBoundingClientRect(); return Math.min(r.width,r.height)/2/TR.view.km; };
 function trClampView(){ const v=TR.view; v.x=clamp(v.x,-BOXKM,BOXKM); v.y=clamp(v.y,-BOXKM,BOXKM); }
 // Zoom by a factor about a point (px, py from the centre of the chart), keeping that point under the pointer.
@@ -5361,7 +5378,7 @@ function trZoom(f,px,py){ const v=TR.view, c=trFocus(), s=trScale()||1, no3=trMa
   v.km=km; trClampView(); if(km<KM3D&&!no3) trEnter3D(); trZoomLabel(); }
 function trEnter3D(){ const v=TR.view; if(!window.THREE){ v.km=KM3D; return; } v.d3=true; TR3.dist=1300; TR3.pitch=.3; trView(); }
 function trLeave3D(){ const v=TR.view; if(v.chase){ const c=trFocus(); v.x=c.x; v.y=c.y; v.chase=null; v.follow=false; v.lock=null; } v.d3=false; v.km=KM3D*1.5; trView(); }
-function trZoomLabel(){ const v=TR.view; $('#trzoom').textContent=v.d3?'3D':(v.km*2>=10?f0(v.km*2):f1(v.km*2))+' km across'; $('#trfollow').setAttribute('aria-pressed',String(!!v.follow));
+function trZoomLabel(){ const v=TR.view; $('#trfollow').textContent=trCurTF()?'Follow fleet':'Follow ship'; $('#trzoom').textContent=v.d3?'3D':(v.km*2>=10?f0(v.km*2):f1(v.km*2))+' km across'; $('#trfollow').setAttribute('aria-pressed',String(!!v.follow));
   const MO=trMapOpts(); $('#trgrid').setAttribute('aria-pressed',String(MO.grid)); $('#trwind').setAttribute('aria-pressed',String(MO.wind)); $('#trrings').setAttribute('aria-pressed',String(MO.rings!==false)); $('#trallow3d').setAttribute('aria-pressed',String(MO.d3!==false));
   $('#trsight').hidden=!TR.adv; $('#trsight').setAttribute('aria-pressed',String(trS().sight!==false));
   $('#trturn').hidden=!v.d3||!(v.follow||v.lock!=null); $('#trturn').setAttribute('aria-pressed',String(!!TR3.follow));
@@ -5382,8 +5399,8 @@ function trMapClick(x,y){ const R=TR; if(!R.battle&&(Math.abs(x)>BOXKM||Math.abs
   if(R.spawn==='TF'){ R.spawn=null; trSpawnBtns(); tfSpawnRed(x,y); return; }
   if(R.spawn){ tgtSpawn(R.spawn,x,y); return; }
   if(SCP){ if(SCP.legs.length>=SCP.max){ toast(`No more than ${SCP.max} lines: one for each aircraft.`); return; } SCP.legs.push({kind:'area',x,y,r:12}); scoutPanel(); trDrawMap(); return; }
-  if(R.pick){ trPickAt(x,y); return; }
-  trOrder(Math.round(bearing(x-R.ship.x,y-R.ship.y))); trPanels(true); }
+  if(R.pick) return;   // a sortie's target is given by right-click
+  const TF=trCurTF(), ox=TF?TF.gx:R.ship.x, oy=TF?TF.gy:R.ship.y; trOrder(Math.round(bearing(x-ox,y-oy))); trPanels(true); }   // a task force steers from its centre
 // The task force under a click (or an anchored target ship, which is one on her own): its ships in sight, or the marker where it was
 // last seen. Returns where to send the aircraft, or null.
 function trGroupAt(x,y,s){ const R=TR, cand=[];
@@ -5425,12 +5442,27 @@ function fogDraw(c,PX,PY,s,W,H){ const R=TR, dpr=window.devicePixelRatio||1, o=R
   g.fillStyle='rgba(214,224,231,.34)'; g.fillRect(PX(-BOXKM),PY(BOXKM),2*BOXKM*s,2*BOXKM*s); g.globalCompositeOperation='destination-out';
   for(const e of eyes){ const x=PX(e.x), y=PY(e.y), r=Math.max(2,e.r*s), gr=g.createRadialGradient(x,y,r*.82,x,y,r); gr.addColorStop(0,'rgba(0,0,0,1)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.beginPath(); g.arc(x,y,r,0,2*Math.PI); g.fill(); }
   g.globalCompositeOperation='source-over'; c.drawImage(o,0,0,W,H);
-  c.strokeStyle='rgba(255,255,255,.22)'; c.lineWidth=1; for(const e of eyes) if(e.who==='ship'&&e.T.type==='CV'){ c.beginPath(); c.arc(PX(e.x),PY(e.y),e.r*s,0,2*Math.PI); c.stroke(); } }
+  // the edge of what your carriers can see, drawn only where it is the edge of what you can see at all: where two rings overlap, or
+  // aircraft see past one, that stretch of it is left out, so the outline runs round the whole seen area once
+  c.strokeStyle='rgba(255,255,255,.22)'; c.lineWidth=1; c.beginPath();
+  for(const e of eyes){ if(!(e.who==='ship'&&e.T.type==='CV')) continue; const r=e.r*s, n=Math.max(48,Math.min(360,Math.round(r*.6))), others=eyes.filter(q=>q!==e&&q.r>0&&Math.hypot(q.x-e.x,q.y-e.y)<q.r+e.r);
+    let pen=false; for(let i=0;i<=n;i++){ const a=i/n*2*Math.PI, wx=e.x+Math.cos(a)*e.r, wy=e.y+Math.sin(a)*e.r, hid=others.some(q=>Math.hypot(wx-q.x,wy-q.y)<q.r*.999);
+      if(hid){ pen=false; continue; } const X=PX(wx), Y=PY(wy); if(pen) c.lineTo(X,Y); else c.moveTo(X,Y); pen=true; } }
+  c.stroke(); }
 // Strike range rings round each of your carriers, one for each kind of aircraft she has aboard, in its colour.
+// Dashed lines and rings far bigger than the chart are costly to draw (every dash round a ring thousands of pixels across is laid
+// down whether it shows or not), so only the part on the chart is drawn.
+const visW=c=>c.canvas.width/(window.devicePixelRatio||1), visH=c=>c.canvas.height/(window.devicePixelRatio||1);
+function arcVis(c,x,y,r){ const W=visW(c), H=visH(c), cx=W/2, cy=H/2, half=Math.hypot(W,H)/2+4, d=Math.hypot(cx-x,cy-y);
+  if(d-r>half||r-d>half) return false; if(r<half*2){ c.arc(x,y,r,0,2*Math.PI); return true; }
+  const a0=Math.atan2(cy-y,cx-x), sp=Math.min(Math.PI,Math.asin(Math.min(1,half/r))*1.3+.02); c.arc(x,y,r,a0-sp,a0+sp); return true; }
+function segVis(c,x0,y0,x1,y1){ const W=visW(c)+20, H=visH(c)+20; let t0=0, t1=1; const dx=x1-x0, dy=y1-y0;   // Liang-Barsky against the chart (and a margin)
+  for(const [p,q] of [[-dx,x0+20],[dx,W-x0],[-dy,y0+20],[dy,H-y0]]){ if(p===0){ if(q<0) return false; continue; } const r=q/p; if(p<0){ if(r>t1) return false; if(r>t0) t0=r; } else { if(r<t0) return false; if(r<t1) t1=r; } }
+  c.moveTo(x0+dx*t0,y0+dy*t0); c.lineTo(x0+dx*t1,y0+dy*t1); return true; }
 function ringsDraw(c,PX,PY,s){ const R=TR; c.save(); c.setLineDash([7,5]); c.lineWidth=1.4; c.font='500 11px "IBM Plex Mono", monospace'; c.textAlign='left';
   for(const C of cvAll()){ if(C.side!=='blue'||C.gone||C.ship.status!=='afloat') continue; const x=PX(C.ship.x), y=PY(C.ship.y);
     [['fighter','Fighters'],['dive','Dive bombers'],['torpedo','Torpedo bombers']].forEach(([role,nm],i)=>{ const ps=C.planes.filter(p=>p.role===role&&p.state!=='lost'); if(!ps.length) return;
-      const km=Math.max(...ps.map(p=>strikeKm(p.st))), r=km*s; c.strokeStyle=ROLECOL[role]; c.globalAlpha=.8; c.beginPath(); c.arc(x,y,r,0,2*Math.PI); c.stroke();
+      const km=Math.max(...ps.map(p=>strikeKm(p.st))), r=km*s; c.strokeStyle=ROLECOL[role]; c.globalAlpha=.8; c.beginPath(); if(arcVis(c,x,y,r)) c.stroke();
       const a=-Math.PI/4; c.globalAlpha=1; c.fillStyle=ROLECOL[role]; c.fillText(`${nm} ${f0(km)} km`,x+r*Math.cos(a)+6,y+r*Math.sin(a)-4+i*14); }); }
   c.restore(); }
 // A force's ships counted by type, biggest first as they come: 1CV, 5DD
@@ -5449,9 +5481,11 @@ function lastSeenDraw(c,PX,PY,s){ const R=TR; if(!sightOn()) return; c.save(); c
 // A crosshair on each task force your aircraft are sent against, and the search going on where one is being looked for.
 function aimDraw(c,PX,PY,s){ const R=TR, done=new Set(), aims=[];
   const hit=new Set(); for(const C of cvAll()) if(C.side==='blue') for(const f of C.flights) if(f.tgtG&&f.phase==='attack') hit.add(f.tgtG.k+f.tgtG.id);
-  for(const C of cvAll()){ if(C.side!=='blue') continue; for(const so of C.sorties) if(so.tgtG&&(so.state==='ranging'||so.state==='out')) aims.push(so.tgtG);
+  // a sortie's mark stays while it is getting ready or still on its way or searching; once every aircraft left of it has turned for
+  // home, it goes
+  for(const C of cvAll()){ if(C.side!=='blue') continue; for(const so of C.sorties) if(so.tgtG&&(so.state==='ranging'||so.state==='out'&&C.flights.some(f=>f.sortie===so.id&&f.mission==='strike'&&['out','search'].includes(f.phase)&&f.planes.some(p=>p.state==='air')))) aims.push(so.tgtG);
     for(const f of C.flights){ if(f.tgtG&&['out','search'].includes(f.phase)) aims.push(f.tgtG);
-      if(f.phase==='search'&&f.srch){ const q=srchPt(f,R.t); c.save(); c.strokeStyle='rgba(255,210,74,.5)'; c.setLineDash([2,4]); c.beginPath(); c.arc(PX(f.srch.x),PY(f.srch.y),Math.max(6,(q.r+airEye(f))*s),0,2*Math.PI); c.stroke(); c.restore(); } } }
+      if(f.phase==='search'&&f.srch){ const q=srchPt(f,R.t); c.save(); c.strokeStyle='rgba(255,210,74,.5)'; c.setLineDash([2,4]); c.beginPath(); if(arcVis(c,PX(f.srch.x),PY(f.srch.y),Math.max(6,(q.r+airEye(f))*s))) c.stroke(); c.restore(); } } }
   for(const g of aims){ const k=g.k+g.id; if(done.has(k)||hit.has(k)) continue; done.add(k); const p=grpShow(g); if(!p) continue; const x=PX(p.x), y=PY(p.y);
     c.save(); c.strokeStyle='#FFD24A'; c.lineWidth=1.6; c.beginPath(); c.arc(x,y,13,0,2*Math.PI); for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ c.moveTo(x+dx*8,y+dy*8); c.lineTo(x+dx*19,y+dy*19); } c.stroke(); c.restore(); } }
 // The flight you clicked: how much farther it can go and still get home (an ellipse round it and its carrier), and its fuel.
@@ -5459,7 +5493,7 @@ function selDraw(c,PX,PY,s){ const R=TR; if(R.selF==null) return; let f=null, C0
   const live=f?f.planes.filter(p=>p.state==='air'):[]; if(!f||!live.length){ R.selF=null; return; }
   const slow=Math.min(...live.map(p=>p.st.cruise)), fuel=Math.min(...live.map(p=>p.fuel)), left=Math.max(0,(fuel-600)/3600*slow), H=C0.ship, dh=Math.hypot(H.x-f.x,H.y-f.y);
   const a=left/2, cc=dh/2, mx=(f.x+H.x)/2, my=(f.y+H.y)/2, ang=Math.atan2(H.y-f.y,H.x-f.x), col=ROLECOL[f.role]||'#fff';
-  c.save(); c.strokeStyle=col; c.lineWidth=1.5; c.setLineDash([6,4]); if(a>cc){ c.beginPath(); c.ellipse(PX(mx),PY(my),a*s,Math.sqrt(a*a-cc*cc)*s,-ang,0,2*Math.PI); c.stroke(); }
+  c.save(); c.strokeStyle=col; c.lineWidth=1.5; c.setLineDash(a*s>2500?[]:[6,4]); if(a>cc){ c.beginPath(); c.ellipse(PX(mx),PY(my),a*s,Math.sqrt(a*a-cc*cc)*s,-ang,0,2*Math.PI); c.stroke(); }   // a huge ring is drawn solid: dashes all the way round it would cost a frame
   c.setLineDash([]); c.font='500 11px "IBM Plex Mono", monospace'; c.textAlign='left'; c.fillStyle='rgba(0,0,0,.55)'; const x=PX(f.x)+14, y=PY(f.y)+16;
   const l1=`${f.name}: fuel for ${f0(left)} km more`, l2=a>cc?`${f0(dh)} km from home · the ring is as far as it can go and still get back`:`${f0(dh)} km from home: not enough fuel to get back`, l3='Right-click where it should go';
   c.fillRect(x-4,y-12,Math.max(c.measureText(l1).width,c.measureText(l2).width)+8,44); c.fillStyle='#fff'; c.fillText(l1,x,y); c.fillStyle=a>cc?'rgba(255,255,255,.8)':'#F08A7E'; c.fillText(l2,x,y+13); c.fillStyle='rgba(255,255,255,.6)'; c.fillText(l3,x,y+26); c.restore(); }
@@ -5487,11 +5521,11 @@ function trDrawMap(){
   lastSeenDraw(c,PX,PY,s); aimDraw(c,PX,PY,s); scoutDraw(c,PX,PY,s); routeDraw(c,PX,PY);
   // flights and their lines; close in, each aircraft of an attack on its own
   for(const C of cvAll()) for(const f of C.flights){ if(!f.planes.some(p=>p.state==='air')) continue; const red=C.side==='red', col=ROLECOL[f.role]||'#fff', x=PX(f.x), y=PY(f.y); if(red&&sightOn()&&!f.vis) continue;
-    if((f.mission==='scout'||f.mission==='strike')&&f.phase==='out'){ c.strokeStyle=col; c.setLineDash([5,4]); c.beginPath(); c.moveTo(x,y); c.lineTo(PX(f.tx),PY(f.ty)); c.stroke(); c.setLineDash([]); c.beginPath(); c.arc(PX(f.tx),PY(f.ty),5,0,Math.PI*2); c.stroke(); }
+    if((f.mission==='scout'||f.mission==='strike')&&f.phase==='out'){ c.strokeStyle=col; c.setLineDash([5,4]); c.beginPath(); if(segVis(c,x,y,PX(f.tx),PY(f.ty))) c.stroke(); c.setLineDash([]); c.beginPath(); c.arc(PX(f.tx),PY(f.ty),5,0,Math.PI*2); c.stroke(); }
     // each aircraft drawn as a little plane in its type's colour: on an attack run close in, where it is; otherwise in its flight's
     // formation, every squadron a box of fours, the squadrons of a sortie one behind another
     // each machine's size: to scale with the chart at every zoom, like the ships, and larger the higher it flies (nearer the eye)
-    const altOf=p=>p.atk&&p.alt!=null?p.alt:(FALT[f.mission]||800), szOf=p=>{ const k=1+Math.max(0,altOf(p))/2200; return Math.max(.6,p.d.span/2000*s*k); };
+    const altOf=p=>p.atk&&p.alt!=null?p.alt:flAlt(f,p), szOf=p=>{ const k=1+Math.max(0,altOf(p))/2200; return Math.max(.6,p.d.span/2000*s*k); };
     const pitchOf=p=>p.atk?(p.pitchA||0):f.mission==='form'?.2:0;
     const live=f.planes.filter(p=>p.state==='air'), solo=v.km<60, hd=trFlightHdg(f), gs=live.length?Math.max(...live.map(szOf)):4, sp=Math.max(gs*2.3,.035*s), marks=[];
     for(const p of live) if(solo&&p.atk) marks.push({p,x:PX(p.ax),y:PY(p.ay),h:p.ahdg});
@@ -5503,13 +5537,13 @@ function trDrawMap(){
   selDraw(c,PX,PY,s);
   if(R.circuit.length){ c.strokeStyle='rgba(255,255,255,.5)'; c.setLineDash([3,3]); c.beginPath(); c.arc(PX(sh.x),PY(sh.y),Math.max(10,3*s),0,Math.PI*2); c.stroke(); c.setLineDash([]); }
   // the ship, to scale when zoomed in
-  { const sx=PX(sh.x), sy=PY(sh.y); c.save(); c.translate(sx,sy); c.rotate(sh.hdg*Math.PI/180); cvChartDraw(c,R.cv,R.cs,s,sh.status==='burnt'?'#0B0C0D':'#E9EDF0',sh.status,k=>deckPlanesDraw(c,k)); c.restore(); }
+  if(!trCurTF()){ /* on trials, the one ship; in a task force she is drawn with the rest, in its colour */ const sx=PX(sh.x), sy=PY(sh.y); c.save(); c.translate(sx,sy); c.rotate(sh.hdg*Math.PI/180); cvChartDraw(c,R.cv,R.cs,s,sh.status==='burnt'?'#0B0C0D':'#E9EDF0',sh.status,k=>deckPlanesDraw(c,k)); c.restore(); }
   trSelBtns();
-  const msg=R.selF!=null&&!R.pick&&!R.spawn&&!SCP?'Right-click where it should go: enemy ships or aircraft to attack them, your carrier to patrol or land, or a point. Shift-right-click for more legs.':SCP?`Click the chart to place a circle for the scouts to search round (${SCP.legs.length} of ${SCP.max}), or type bearings below the chart.`:R.spawn==='TF'?'Click the chart to place the enemy task force there. Esc to stop.':R.spawn?`Click the chart to anchor a ${TGT[R.spawn]?TGT[R.spawn].name.toLowerCase():'carrier'} there. Esc to stop.`:R.pick?(R.pick.so!=null?'Click a task force (or where one was last seen), or a point, for the sortie to attack':'Click the map to send the flight there'):'';
+  const msg=R.selF!=null&&!R.pick&&!R.spawn&&!SCP?'Right-click where it should go: enemy ships or aircraft to attack them, your carrier to patrol or land, or a point. Shift-right-click for more legs.':SCP?`Click the chart to place a circle for the scouts to search round (${SCP.legs.length} of ${SCP.max}), or type bearings below the chart.`:R.spawn==='TF'?'Click the chart to place the enemy task force there. Esc to stop.':R.spawn?`Click the chart to anchor a ${TGT[R.spawn]?TGT[R.spawn].name.toLowerCase():'carrier'} there. Esc to stop.`:R.pick?(R.pick.so!=null?'Right-click a task force (or where one was last seen), or a point, for the sortie to attack. Esc to cancel.':'Right-click the map to send the flight there'):'';
   if(msg){ c.fillStyle='rgba(0,0,0,.45)'; c.fillRect(0,0,W,30); c.fillStyle='#fff'; c.textAlign='center'; c.fillText(msg,W/2,19); }
   // compass card with the wind
   c.textAlign='left'; c.fillStyle='rgba(0,0,0,.35)'; c.fillRect(8,msg?36:8,152,40); c.fillStyle='#fff'; const cy0=msg?52:24;
-  c.fillText(`Wind ${R.wind.kn} kn from ${String(R.wind.from).padStart(3,'0')}°`,14,cy0); c.fillText(`Ship ${String(Math.round(sh.hdg)).padStart(3,'0')}° at ${f0(sh.kn)} kn`,14,cy0+16);
+  { const TF=trCurTF(); c.fillText(`Wind ${R.wind.kn} kn from ${String(R.wind.from).padStart(3,'0')}°`,14,cy0); c.fillText(TF?`Task force ${String(Math.round(TF.ghdg)).padStart(3,'0')}° at ${f0(TF.gkn)} kn`:`Ship ${String(Math.round(sh.hdg)).padStart(3,'0')}° at ${f0(sh.kn)} kn`,14,cy0+16); }
   $('#trmap').style.cursor=R.spawn||R.pick?'crosshair':'grab';
 }
 /* ---------- Target ships: anchored hulks with full damage models, to work up attacks against ---------- */
@@ -5823,10 +5857,10 @@ function tgtStep(T,dt){ const t=TR.t;
 // A list in words: under 2° negligible, under 5° minor, under 10° moderate (aircraft start to shift), under 20° severe, then critical.
 const listWord=a=>a<2?'Negligible':a<5?'Minor':a<10?'Moderate':a<20?'Severe':'Critical', listText=a=>`${f0(a)}° (${listWord(a)})`;
 function tgtDrawMap(c,PX,PY,s){ const R=TR;
-  const hid=sightOn(); for(const T of R.tgts){ if(T===R.ship||hid&&T.side==='red'&&!T.vis) continue; const x=PX(T.x), y=PY(T.y), len=Math.max(10,T.L/1000*s), wid=Math.max(3,T.B/1000*s*1.2), base=T.side==='red'?'#F08A7E':T.side==='blue'?'#8EC1EA':'#D9DEE2';
+  const hid=sightOn(), inTF=!!trCurTF(); for(const T of R.tgts){ if(T===R.ship&&!inTF||hid&&T.side==='red'&&!T.vis) continue; const x=PX(T.x), y=PY(T.y), len=Math.max(10,T.L/1000*s), wid=Math.max(3,T.B/1000*s*1.2), base=T.side==='red'?'#F08A7E':T.side==='blue'?'#8EC1EA':'#D9DEE2';
     if(T.status==='sunk'){ c.strokeStyle='rgba(255,255,255,.3)'; c.beginPath(); c.arc(x,y,4,0,Math.PI*2); c.stroke(); c.fillStyle='rgba(255,255,255,.35)'; c.textAlign='left'; c.fillText(`${T.type} ${T.name} (sunk)`,x+8,y+4); continue; }
     const hurt=T.flood>1||T.fires||T.hits.bomb+T.hits.torp+T.hits.near>0, col=T.status==='burnt'?'#0B0C0D':T.status!=='afloat'?'#E0604E':base;
-    c.save(); c.translate(x,y); c.rotate(T.hdg*Math.PI/180); if(T.spec.cv){ const cv2=T.cvm||TR.cv, cs2=T.csm||cvStats(cv2); cvChartDraw(c,cv2,cs2,s,col,T.status,T.cvC&&T.side!=='red'?k=>withC(T.cvC,()=>deckPlanesDraw(c,k)):null); } else shipGlyph(c,T.spec.cv?'CV':T.type,T.L/1000*s,T.B/1000*s,col,T.spec.cv?{deckW:((T.cvm||TR.cv).deckW||T.B)/1000*s,port:(T.cvm||TR.cv).iside==='port'}:{tur:T.spec.tur,fun:T.spec.fun},T.status==='burnt'); c.restore();
+    c.save(); c.translate(x,y); c.rotate(T.hdg*Math.PI/180); if(T.spec.cv){ const cv2=T.cvm||TR.cv, cs2=T.csm||cvStats(cv2); cvChartDraw(c,cv2,cs2,s,col,T.status,T.cvC&&T.side!=='red'?k=>T.cvC===R.cur?deckPlanesDraw(c,k):withC(T.cvC,()=>deckPlanesDraw(c,k)):null); } else shipGlyph(c,T.spec.cv?'CV':T.type,T.L/1000*s,T.B/1000*s,col,T.spec.cv?{deckW:((T.cvm||TR.cv).deckW||T.B)/1000*s,port:(T.cvm||TR.cv).iside==='port'}:{tur:T.spec.tur,fun:T.spec.fun,real:s>=CHARTREAL},T.status==='burnt'); c.restore();
     if(T.tf&&R.view.km>15) continue;   // far out, a task force is labelled once, not ship by ship
     c.fillStyle=base; c.textAlign='left'; c.fillText(`${T.side==='red'?'Enemy ':''}${T.type} ${T.name}`,x+len/2+6,y-2);
     if(hurt) { c.fillStyle='rgba(255,255,255,.75)'; c.fillText(T.status!=='afloat'?{sinking:'sinking',capsizing:'capsizing',blown:'blown up',burnt:'consumed by fire, abandoned'}[T.status]:`List ${listText(Math.abs(T.list))}${T.fires?` · ${T.fires} compartment${T.fires>1?'s':''} on fire`:''}`,x+len/2+6,y+11); } }
@@ -5837,8 +5871,21 @@ function tgtDrawMap(c,PX,PY,s){ const R=TR;
   for(const f of R.fx){ const a=R.t-f.t; if(f.kind==='flak'){ if(a<6&&TR.view.km<60){ c.fillStyle='rgba(30,30,30,.55)'; c.fillRect(PX(f.x)-1.5,PY(f.y)-1.5,3,3); } continue; }
     const k=FXMAP[f.kind==='splash'&&f.near?'near':f.kind]; if(!k||a>k.life) continue; const u=a/k.life, r0=k.r*(f.kind==='boom'?1.6:clamp(f.size||1,.8,2.2))*clamp(s/120,1,2.4)*(.7+.6*Math.min(1,a/1.5))*(['hit','col','sec','boom'].includes(f.kind)?FXBIG:1);
     burstGlyph(c,PX(f.x),PY(f.y),r0,k.col,(1-u)*k.op); }
-  if(TR.view.km<60&&R.trc) for(const q of R.trc){ const u=(R.t-q.t)/q.dur; if(u<0||u>q.ext) continue; const u0=Math.max(0,u-(q.light?.1:.06));
-    c.strokeStyle=q.light?'rgba(255,214,120,.95)':'rgba(255,150,70,.85)'; c.lineWidth=q.light?1.2:1.6; c.beginPath(); c.moveTo(PX(q.x0+(q.x1-q.x0)*u0),PY(q.y0+(q.y1-q.y0)*u0)); c.lineTo(PX(q.x0+(q.x1-q.x0)*u),PY(q.y0+(q.y1-q.y0)*u)); c.stroke(); } }
+  // Tracer, as it would look from above: every round a short glowing streak at its true size (the eye smears a round going 850 m/s
+  // into about 30 m of light, a metre or two wide), each burst a line of them one after another out from the gun, spaced by its rate
+  // of fire. Zoomed out they shrink to faint sparks, as they would. All drawn in two strokes, so a sky full of it stays quick.
+  if(TR.view.km<60&&R.trc&&R.trc.length){ const lw=m=>Math.max(.5,m/1000*s), sl=30/1000, dpr=window.devicePixelRatio||1, W=c.canvas.width/dpr, H=c.canvas.height/dpr;
+    const path={light:new Path2D(),heavy:new Path2D()}; let nl=0, nh=0;
+    for(const q of R.trc){ const n=q.burst?Math.floor(q.burst*q.rps)+1:1, D=q.D||Math.hypot((q.x1-q.x0)*1000,(q.y1-q.y0)*1000,q.a1-q.a0)||1, du=Math.min(1,sl*1000/D);
+      const sx=PX(q.x0), sy=PY(q.y0), ex=PX(q.x1), ey=PY(q.y1); if(Math.max(sx,ex)<-40||Math.min(sx,ex)>W+40||Math.max(sy,ey)<-40||Math.min(sy,ey)>H+40) continue;
+      const P=q.light?path.light:path.heavy;
+      for(let j=0;j<n;j++){ const u=(R.t-q.t-j/q.rps)/q.dur; if(u<0||u>q.ext) continue; const u0=Math.max(0,u-du);
+        let x1=sx+(ex-sx)*u, y1=sy+(ey-sy)*u; const x0=sx+(ex-sx)*u0, y0=sy+(ey-sy)*u0; if(Math.hypot(x1-x0,y1-y0)<.6){ x1=x0+.6; }
+        P.moveTo(x0,y0); P.lineTo(x1,y1); if(q.light) nl++; else nh++; } }
+    c.save(); c.lineCap='round'; c.globalCompositeOperation='lighter';   // tracer burns: it brightens what is under it
+    if(nh){ c.strokeStyle='rgb(255,150,60)'; c.lineWidth=Math.max(.9,lw(2)); c.stroke(path.heavy); }
+    if(nl){ c.strokeStyle='rgb(255,220,120)'; c.lineWidth=Math.max(.9,lw(1.2)); c.stroke(path.light); }
+    c.restore(); } }
 // How each kind of explosion shows on the chart: colour, smallest size in pixels, how long it lasts in seconds and how bright.
 const FXBIG=1.3;   // fire and explosions drawn this much bigger than life-size glyphs would be
 const FXMAP={hit:{col:'255,214,40',r:5,life:22,op:.95},col:{col:'255,214,40',r:6,life:22,op:.95},near:{col:'245,248,250',r:4,life:14,op:.85},splash:{col:'220,230,236',r:2.2,life:10,op:.45},
@@ -5847,7 +5894,10 @@ const FXMAP={hit:{col:'255,214,40',r:5,life:22,op:.95},col:{col:'255,214,40',r:6
 // each type its own shape. A carrier is a long flat deck with her island to one side; a battleship broad, with her big turrets; a
 // battlecruiser long and lean with four; cruisers narrower with their turrets; a destroyer a slim needle.
 const SHIPMIN={CV:[18,4.2],BB:[17,4.2],BC:[17,3.4],CA:[14,3],CL:[13,2.8],DD:[10,1.9]};
-function shipGlyph(c,ty,L,B,col,o={},outline){ let [ml,mw]=SHIPMIN[ty]||[12,3]; if(o.Lm){ ml=Math.max(9,ml*o.Lm/250); mw=mw*o.Lm/250; } const k=L<ml?ml/L:1, len=L*k, wid=Math.max(mw,B*k*1.15), h=len/2, w=wid/2, dark='rgba(0,0,0,.38)';
+// CHARTREAL: pixels to the km past which the chart shows carriers as their detailed pictures (a 250 m carrier 7 px long); from there
+// in, every ship is drawn at her true size, with no smallest size to keep her readable.
+const CHARTREAL=28;
+function shipGlyph(c,ty,L,B,col,o={},outline){ let [ml,mw]=SHIPMIN[ty]||[12,3]; if(o.Lm){ ml=Math.max(9,ml*o.Lm/250); mw=mw*o.Lm/250; } if(o.real){ ml=0; mw=0; } const k=L<ml?ml/L:1, len=L*k, wid=Math.max(mw,B*k*1.15), h=len/2, w=wid/2, dark='rgba(0,0,0,.38)';
   c.fillStyle=col; c.beginPath();
   if(ty==='CV'){ const dw=Math.max(wid*1.15,(o.deckW||B)*k), d=dw/2; c.moveTo(0,-h); c.quadraticCurveTo(w*.9,-h*.6,w*.9,-h*.3); c.lineTo(w*.9,h*.9); c.lineTo(-w*.9,h*.9); c.lineTo(-w*.9,-h*.3); c.quadraticCurveTo(-w*.9,-h*.6,0,-h); c.fill();
     c.beginPath(); c.moveTo(-d*.75,-h*.86); c.lineTo(d*.75,-h*.86); c.lineTo(d,-h*.7); c.lineTo(d,h*.96); c.lineTo(-d,h*.96); c.lineTo(-d,-h*.7); c.closePath(); c.fill(); if(outline){ c.strokeStyle='rgba(255,255,255,.45)'; c.lineWidth=1; c.stroke(); }
@@ -5873,7 +5923,7 @@ function cvPlanImg(cv,cs){ if(!window.THREE) return null; const key=JSON.stringi
   if(PLANIMG.size>24) PLANIMG.clear(); PLANIMG.set(key,out); return out; }
 // The carrier drawn in place (the canvas already turned to her heading, centred on her): the picture when she is big enough to see,
 // otherwise a small mark kept in proportion to her length, so a light carrier stays smaller than a fleet carrier.
-function cvChartDraw(c,cv,cs,s,col,status,deck){ const len=cv.L/1000*s, P=len>=Math.max(5,7*cv.L/250)?cvPlanImg(cv,cs):null;   /* the picture from a long way out */ if(!P){ shipGlyph(c,'CV',len,cv.B/1000*s,col,{deckW:cv.deckW/1000*s,port:cv.iside==='port',Lm:cv.L,isl:cv.island!=='none'}); return; }
+function cvChartDraw(c,cv,cs,s,col,status,deck){ const len=cv.L/1000*s, P=s>=CHARTREAL&&len>=5?cvPlanImg(cv,cs):null;   /* the picture from a long way out */ if(!P){ shipGlyph(c,'CV',len,cv.B/1000*s,col,{deckW:cv.deckW/1000*s,port:cv.iside==='port',Lm:cv.L,isl:cv.island!=='none'}); return; }
   const k=s/1000; c.save(); c.imageSmoothingQuality='high'; if(status==='burnt') c.filter='brightness(.3)'; else if(status&&status!=='afloat') c.filter='sepia(1) saturate(3) hue-rotate(-25deg)';
   c.drawImage(P.img,-P.wh*k,-P.ex*k,2*P.wh*k,2*P.ex*k); c.restore();
   if(deck&&len>=14) deck(k); }
@@ -6037,11 +6087,21 @@ let trPT=0;
 function trPanels(force){ const now=performance.now(); if(!force&&now-trPT<250) return; trPT=now; const h=trPanelsHTML();
   morph($('#trship'),h.ship); morph($('#trflights'),h.flights); morph($('#trstats'),h.stats); morph($('#trlog'),h.log); morph($('#trtgts'),h.tgts); morph($('#trcvs'),h.cvs);
   const k=$('#trkn'); if(k&&document.activeElement!==k&&+k.value!==TR.ship.ordKn) k.value=TR.ship.ordKn; }
+// Your fleet under attack (its guns open fire): if you are looking somewhere else, in 3D, or in the Airgroups screen, the view goes
+// smoothly to the chart over your task force, about 40 km across, and follows it. Once there it is yours to move again. Not again
+// for the same attack: only after ten quiet minutes of game time.
+function trAttackCam(now){ const R=TR, TF=trCurTF(); if(!TF) return; const firing=TF.ships.some(T=>T.status==='afloat'&&T.firing), v=R.view;
+  if(firing&&!R.wasFiring&&!R.camAnim&&R.t-(R.camQuiet??-1e9)>600){ const fc=trFocus(), away=Math.hypot(fc.x-TF.gx,fc.y-TF.gy)>Math.max(8,v.km*.6)||v.km>40||v.d3||!!v.chase||AG.open;
+    if(away){ if(AG.open) agClose(); if(v.chase) trChaseStop(); if(v.d3) trLeave3D(); const f0c=trFocus(); v.follow=false; v.lock=null; v.x=f0c.x; v.y=f0c.y;
+      R.camAnim={t0:now,x0:f0c.x,y0:f0c.y,k0:v.km,k1:20}; trLog('Your fleet is under air attack.',true); } }
+  if(firing) R.camQuiet=R.t; R.wasFiring=firing;
+  const A=R.camAnim; if(A){ const u=clamp((now-A.t0)/1600,0,1), e=u*u*(3-2*u); v.follow=false; v.lock=null; v.x=A.x0+(TF.gx-A.x0)*e; v.y=A.y0+(TF.gy-A.y0)*e; v.km=Math.exp(Math.log(A.k0)+(Math.log(A.k1)-Math.log(A.k0))*e);
+    if(u>=1){ R.camAnim=null; v.follow=true; } trZoomLabel(); } }
 function trFrame(now){
   if(!TR||$('#tab-trials').hidden||$('#trrun').hidden){ if(TR) TR.loop=false; TSND.silence(); return; }
   const real=Math.min(.25,(now-TR.last)/1000); TR.last=now;
   if(!TR.pause){ let left=real*TR.speed; while(left>0){ const dt=Math.min(1,left); trStep(dt); left-=dt; } }
-  trDrawMap(); trDrawDeck(); trPanels(false); agRender(false);
+  trAttackCam(now); trDrawMap(); trDrawDeck(); trPanels(false); agRender(false);
   if(!TR.view.d3||TR.pause) TSND.silence();
   if(TR.view.d3) try{ tr3Frame(); }catch(e){ console.error(e); TR3.fails=(TR3.fails||0)+1; TR3.key=null; if(TR3.fails>3){ trLeave3D(); TR3.fails=0; toast('The 3D view hit a problem and went back to the chart. Zoom in again to retry.'); } }
   requestAnimationFrame(trFrame);
@@ -7254,7 +7314,7 @@ function agSortieAll(){ const cvs=agCvs().filter(C=>agSt(C).ssel.size); if(!cvs.
   const made=[]; for(const C of cvs) agWith(C,()=>{ const R=TR, sqs=R.sq.filter(q=>AG.ssel.has(q.id)); const so={id:++R.soid,sqs:sqs.map(q=>q.id),state:'pick',tgt:null,tx:0,ty:0}; R.sorties.push(so);
     for(const sq of sqs) sq.task=null; for(const p of R.planes) if(so.sqs.includes(p.sq)&&p.task==='cap') p.task=null; made.push({C,so:so.id}); AG.ssel.clear(); });
   TR.pick={so:made[0].so,C:made[0].C,also:made.slice(1)}; TR.spawn=null; trSpawnBtns(); agClose();
-  toast(`Click the target for the sortie${made.length>1?` from ${made.map(m=>m.C.name).join(', ')}`:''} on the chart: a target ship, or a point.`); }
+  toast(`Right-click the target for the sortie${made.length>1?` from ${made.map(m=>m.C.name).join(', ')}`:''} on the chart: a target ship, or a point.`); }
 $('#agsortie').addEventListener('click',agSortieAll);
 function agOpen(){ if(!TR) return; AG.open=true; $('#agd').hidden=false; const n=agCvs().length; $('#agtitle').textContent=n>1?`Airgroups · ${n} carriers`:`Airgroups · ${TR.name}`; agRender(true); $('#agclose').focus(); }
 function agClose(){ AG.open=false; $('#agd').hidden=true; $('#trair').focus(); }
@@ -7275,7 +7335,7 @@ function agAct(b,C){ const R=TR;
   if(b.dataset.agact==='sortie'){ if(busy.length){ toast(`${busy.map(q=>q.name).join(', ')} ${busy.length>1?'are':'is'} already on a sortie. Recall first.`); return; }
     const so={id:++R.soid,sqs:sqs.map(q=>q.id),state:'pick',tgt:null,tx:0,ty:0}; R.sorties.push(so); for(const sq of sqs) sq.task=null;
     for(const p of R.planes) if(so.sqs.includes(p.sq)&&p.task==='cap') p.task=null;
-    R.pick={so:so.id,C}; R.spawn=null; AG.ssel.clear(); return ()=>{ trSpawnBtns(); agClose(); toast(`Click the target for ${C.name}'s sortie ${so.id} on the chart: a target ship, or a point.`); }; }
+    R.pick={so:so.id,C}; R.spawn=null; AG.ssel.clear(); return ()=>{ trSpawnBtns(); agClose(); toast(`Right-click the target for ${C.name}'s sortie ${so.id} on the chart: a target ship, or a point.`); }; }
   if(b.dataset.agact==='scout'){ if(busy.length){ toast(`${busy.map(q=>q.name).join(', ')} ${busy.length>1?'are':'is'} on a sortie. Recall first.`); return; }
     const n=sqs.reduce((k,sq)=>k+sqPlanes(sq).filter(p=>p.state!=='lost').length,0); if(!n) return;
     SCP={C,sqs:sqs.map(q=>q.id),legs:[],max:n}; AG.ssel.clear(); return ()=>{ agClose(); scoutPanel(); trDrawMap(); $('#trscout').scrollIntoView({block:'nearest'}); }; }
@@ -7310,7 +7370,7 @@ function scoutGo(){ if(!SCP||!SCP.legs.length) return; const P=SCP; withC(P.C,()
     trLog(`${P.sqs.map(q=>(trSq(q)||{}).name).filter(Boolean).join(', ')}: ${ps.length} aircraft to scout along ${k} line${k>1?'s':''}${R.auto?'':'. Range and launch them from the flight deck'}.`); });
   SCP=null; scoutPanel(); trPanels(true); trDrawMap(); }
 function scoutDraw(c,PX,PY,s){ if(!SCP) return; const sh=withC(SCP.C,()=>TR.ship); c.save(); c.strokeStyle='rgba(255,240,170,.9)'; c.fillStyle='rgba(255,240,170,.95)'; c.lineWidth=1.4; c.font='500 11px "IBM Plex Mono", monospace'; c.textAlign='left';
-  SCP.legs.forEach((L,i)=>{ c.setLineDash([6,4]); c.beginPath(); c.moveTo(PX(sh.x),PY(sh.y)); c.lineTo(PX(L.x),PY(L.y)); c.stroke(); c.setLineDash([]);
+  SCP.legs.forEach((L,i)=>{ c.setLineDash([6,4]); c.beginPath(); if(segVis(c,PX(sh.x),PY(sh.y),PX(L.x),PY(L.y))) c.stroke(); c.setLineDash([]);
     if(L.kind==='area'){ c.beginPath(); c.arc(PX(L.x),PY(L.y),L.r*s,0,2*Math.PI); c.stroke(); } else { c.beginPath(); c.arc(PX(L.x),PY(L.y),3,0,2*Math.PI); c.fill(); }
     c.fillText(`Flight ${i+1}`,PX(L.x)+6,PY(L.y)-6); }); c.restore(); }
 $('#tab-trials').addEventListener('click',e=>{ const b=e.target.closest('[data-scact],[data-scdel]'); if(!b||!SCP) return;
@@ -7382,7 +7442,7 @@ $('#tab-trials').addEventListener('click',e=>{
   if(b.dataset.trtf!=null){ TR.curTF=+b.dataset.trtf; const TF=trCurTF(), C=TF&&cvAll().find(q=>q.tf===TF); if(C&&C!==TR.cur){ trKeep(); trUse(C); TR3.key=null; } renderTrials(); return; }
   if(b.dataset.trmis){ const C=b.dataset.flcv!=null?TR.cvs[+b.dataset.flcv]:TR.cur; if(C&&C!==TR.cur){ trKeep(); trUse(C); TR3.key=null; }   // a flight of another carrier: her deck comes up with it
     const f=TR.flights.find(x=>x.id===+b.dataset.fl); if(!f) return; const mi=b.dataset.trmis;
-    if(mi==='scout'||mi==='strike'){ TR.pick={f:f.id,mi}; trLog(`Choose on the map where ${f.name} should ${mi==='scout'?'search':'strike'}.`); }
+    if(mi==='scout'||mi==='strike'){ TR.pick={f:f.id,mi}; trLog(`Right-click on the map where ${f.name} should ${mi==='scout'?'search':'strike'}.`); }
     else { f.mission=mi; f.phase=''; trLog(`${f.name}: ${mi==='cap'?'patrol over the ship':'return and land'}.`); } renderTrials(); return; }
 });
 $('#tab-trials').addEventListener('input',e=>{ if(e.target.id==='trkn'&&TR){ trOrder(null,+e.target.value); trPanels(true); }
@@ -7391,7 +7451,9 @@ $('#tab-trials').addEventListener('change',e=>{ if(e.target.dataset.trn!=null) r
 // The chart: drag to move it, scroll or pinch to zoom about the pointer, click to act.
 { const cvs=$('#trmap'), pts=new Map(); let down=null, moved=false, pinch=null;
   // right-click: orders for the aircraft you are directing (the browser's own menu never comes up on the chart)
-  cvs.addEventListener('contextmenu',e=>{ e.preventDefault(); if(!TR||TR.selF==null||TR.spawn||TR.pick||SCP) return; const r=cvs.getBoundingClientRect(), c=trFocus(), s=trScale()||1, mx=e.clientX-r.left, my=e.clientY-r.top;
+  cvs.addEventListener('contextmenu',e=>{ e.preventDefault(); if(!TR) return; const r=cvs.getBoundingClientRect(), c=trFocus(), s=trScale()||1, mx=e.clientX-r.left, my=e.clientY-r.top;
+    if(TR.pick&&!TR.spawn&&!SCP){ trPickAt(c.x+(mx-r.width/2)/s,c.y-(my-r.height/2)/s); trDrawMap(); return; }   // where a sortie (or a flight sent from its panel) is to go
+    if(TR.selF==null||TR.spawn||TR.pick||SCP) return;
     const h=(TR.mapHits||[]).map(q=>({q,d:Math.hypot(q.x-mx,q.y-my)})).filter(o=>o.d<11&&o.q.C.side==='red').sort((a,b)=>a.d-b.d)[0];
     if(h) flightOrder({air:h.q.f},e.shiftKey); else flightOrder({x:c.x+(mx-r.width/2)/s,y:c.y-(my-r.height/2)/s},e.shiftKey); });
   cvs.addEventListener('pointerdown',e=>{ if(!TR||e.button===2) return; cvs.setPointerCapture(e.pointerId); pts.set(e.pointerId,[e.clientX,e.clientY]); if(pts.size===1){ down=[e.clientX,e.clientY]; moved=false; } else { down=null; moved=true; } });
@@ -7434,9 +7496,9 @@ function flightOrder(o,shift){ const R0=TR; let f=null, C=null; for(const Q of c
 // Your flights' courses: the legs still to fly, the point they hold at, or the aircraft they are chasing.
 function routeDraw(c,PX,PY){ c.save(); c.lineWidth=1.3; c.setLineDash([5,4]);
   for(const C of cvAll()){ if(C.side==='red') continue; for(const f of C.flights){ if(!f.planes.some(p=>p.state==='air')) continue; const col=ROLECOL[f.role]||'#fff'; c.strokeStyle=col; c.fillStyle=col;
-    if(f.mission==='move'&&f.route&&f.route.length){ c.beginPath(); c.moveTo(PX(f.x),PY(f.y)); for(const q of f.route) c.lineTo(PX(q.x),PY(q.y)); c.stroke(); for(const q of f.route){ c.beginPath(); c.arc(PX(q.x),PY(q.y),3.5,0,2*Math.PI); c.fill(); } }
+    if(f.mission==='move'&&f.route&&f.route.length){ c.beginPath(); let px=PX(f.x), py=PY(f.y); for(const q of f.route){ segVis(c,px,py,PX(q.x),PY(q.y)); px=PX(q.x); py=PY(q.y); } c.stroke(); for(const q of f.route){ c.beginPath(); c.arc(PX(q.x),PY(q.y),3.5,0,2*Math.PI); c.fill(); } }
     else if(f.mission==='hold'){ c.beginPath(); c.arc(PX(f.hx),PY(f.hy),5,0,2*Math.PI); c.stroke(); }
-    else if(f.mission==='intercept'&&f.itgt){ c.beginPath(); c.moveTo(PX(f.x),PY(f.y)); c.lineTo(PX(f.itgt.x),PY(f.itgt.y)); c.stroke(); } } }
+    else if(f.mission==='intercept'&&f.itgt){ c.beginPath(); if(segVis(c,PX(f.x),PY(f.y),PX(f.itgt.x),PY(f.itgt.y))) c.stroke(); } } }
   c.restore(); }
 function trSpawnBtns(){ for(const x of document.querySelectorAll('[data-trspawn]')) x.setAttribute('aria-pressed',String(TR&&TR.spawn===x.dataset.trspawn)); }
 
