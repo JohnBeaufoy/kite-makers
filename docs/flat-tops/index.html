@@ -220,6 +220,8 @@ legend{padding:0;margin-bottom:6px}
 .sqpanel .btn.ghost[aria-pressed="true"]{background:var(--sel);color:var(--ink)}
 .sqpanel h3{font-family:var(--f-display);font-weight:800;font-size:28px;margin:0;text-transform:uppercase;line-height:1}
 .sqrows{display:flex;flex-direction:column;gap:6px}
+.sqship{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.sqhead{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;border-bottom:1px solid var(--ink);padding-bottom:4px}
 .sqrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;border-bottom:1px dotted var(--line);padding-bottom:6px}
 .sqrow .st{font-size:12px;color:var(--muted);font-family:var(--f-mono,monospace)}
 .sqrow .cnt{display:flex;align-items:center;gap:6px}
@@ -1597,7 +1599,8 @@ function cvMotion(cv,cs,sea,o){
 /* ---------- Save state ---------- */
 const KEY='flat-tops-v1';
 const clone=o=>JSON.parse(JSON.stringify(o));
-// classes: carrier classes {id,name,tons}; ships: {id,name,cls,on}; air: the air group, {name,n} by hangar design name.
+// classes: carrier classes {id,name,tons}; ships: {id,name,cls,on,air}, air being her own air group, {name,n} by hangar design name
+// (a ship without one takes her class's planned air group). air: the old fleet-wide air group, no longer used.
 const DEFAULT={v:1,points:0,career:0,beaten:[],selected:0,plays:{},pinned:null,ghost:false,lib:[],tab:'air',classes:[],ships:[],air:[],design:clone(DESIGN2)};
 function load(){
   try{ const r=JSON.parse(localStorage.getItem(KEY)); if(r&&r.design){ const s=Object.assign(clone(DEFAULT),r); s.design=Object.assign(clone(DESIGN2),r.design);
@@ -1946,14 +1949,27 @@ const clsOf=id=>S.classes.find(c=>c.id===id);
 const unused=(list,taken,fallback)=>list.find(n=>!taken.includes(n))||`${fallback} ${taken.length+1}`;
 const sailing=()=>S.ships.filter(s=>s.on&&clsOf(s.cls));
 const fleetTons=()=>sailing().reduce((t,s)=>t+clsTons(clsOf(s.cls)),0);
-// The air group names hangar designs; a design deleted from the hangar drops out of it.
-const airRows=()=>(S.lib||[]).map(d=>({d,n:(S.air.find(a=>a.name===d.name)||{n:0}).n}));
-const airCount=()=>airRows().reduce((t,x)=>t+x.n,0);
+// Each carrier has her own air group, naming hangar designs; a design deleted from the hangar drops out of it. A ship starts with her
+// class's planned air group. With no ship given, the rows are the whole sailing fleet's.
+const shipAirPlan=s=>{ const c=clsOf(s.cls); return c?cvPlanRows(c.cv).filter(x=>(S.lib||[]).some(d=>d.name===x.d.name)).map(x=>({name:x.d.name,n:x.n})):[]; };
+// A save from before carriers had their own air groups has one for the fleet: it is shared out once among the carriers set to sail,
+// each taking what stowing would have put aboard her, and the ships left behind take their plans.
+function airMigrate(){ if(!(S.air||[]).length) return; const on=S.ships.filter(s=>s.on&&clsOf(s.cls)&&!s.air), lib=S.lib||[];
+  const rows=S.air.map(a=>({d:lib.find(d=>d.name===a.name),n:a.n})).filter(x=>x.d&&x.n>0); S.air=[];
+  if(on.length&&rows.length){ const r=stowOn(on.map(s=>clsOf(s.cls).cv),rows);
+    on.forEach((s,i)=>{ const L=[]; for(const x of r.lists[i]){ const a=L.find(q=>q.name===x.d.name); if(a) a.n++; else L.push({name:x.d.name,n:1}); } s.air=L; }); }
+  save(); }
+const shipAir=s=>{ if(!s.air) airMigrate(); return s.air||(s.air=shipAirPlan(s)); };
+const airRows=s=>(S.lib||[]).map(d=>({d,n:(s?[s]:sailing()).reduce((t,q)=>t+((shipAir(q).find(a=>a.name===d.name)||{n:0}).n),0)}));
+const airCount=s=>airRows(s).reduce((t,x)=>t+x.n,0);
 const airCost=r=>airRows().reduce((t,x)=>t+x.n*fieldCost(x.d,r.date),0);
-function setAir(name,n){ const a=S.air.find(x=>x.name===name); n=clamp(Math.round(n)||0,0,999); if(a) a.n=n; else S.air.push({name,n}); S.air=S.air.filter(x=>x.n>0); save(); }
-// Find a place for every aircraft in the sailing carriers: in a hangar if it fits the hangar and a lift, otherwise parked on deck,
-// and only on a carrier it can take off from and land on. The types that suit the fewest carriers are placed first.
-function stowAir(){ const r=stowOn(sailing().map(s=>clsOf(s.cls).cv),airRows().filter(x=>x.n)); r.total=airCount(); return r; }
+function setAir(s,name,n){ const L=shipAir(s), a=L.find(x=>x.name===name); n=clamp(Math.round(n)||0,0,999); if(a) a.n=n; else L.push({name,n}); s.air=L.filter(x=>x.n>0); save(); }
+// Find a place for every aircraft aboard the carrier she was given to: in a hangar if it fits the hangar and a lift, otherwise parked on deck,
+// and only if it can take off from and land on her. The result is as stowOn's, with one list for each sailing carrier.
+function stowAir(){ const R={placed:0,left:[],lists:[],total:airCount()};
+  for(const s of sailing()){ const r=stowOn([clsOf(s.cls).cv],airRows(s).filter(x=>x.n)); R.placed+=r.placed; R.lists.push(r.lists[0]);
+    for(const l of r.left) R.left.push(Object.assign({ship:s.name},l)); }
+  return R; }
 // The same for any carriers (cvs) and rows of {d, n}: each carrier's list of {d, a, f} as the trials take an air group, how many found a
 // place, and which did not and why. Each aircraft goes to the first carrier with room, which spreads them in the order the ships are given.
 function stowOn(cvs,rows){
@@ -2005,7 +2021,7 @@ function fleetChecks(r){
   if(!n) out.push({bad:true,t:'No aircraft in the air group.'});
   const ab=airBudget(r);
   if(n){ out.push(cost>ab?{bad:true,t:`£${fmtK(cost-ab)} over the aircraft budget.`}:{t:`${n} aircraft for £${fmtK(cost)}, within the budget.`});
-    if(ships.length){ const st=stowAir(); if(st.left.length) for(const l of st.left) out.push({bad:true,t:`${l.n} × ${l.name} will not fit: ${l.why}.`}); else out.push({t:`All ${n} aircraft have a place aboard.`}); } }
+    if(ships.length){ const st=stowAir(); if(st.left.length) for(const l of st.left) out.push({bad:true,t:`${l.n} × ${l.name} will not fit aboard ${l.ship}: ${l.why}.`}); else out.push({t:`All ${n} aircraft have a place aboard.`}); } }
   for(const x of airRows()) if(x.n&&compute(x.d).sm<-.04) out.push({bad:true,t:`${x.d.name} is unflyable.`});
   if(ships.length) out.push({note:true,t:`Fleet speed ${f1(Math.min(...ships.map(s=>cvStats(clsOf(s.cls).cv).speed)))} knots, set by the slowest carrier.`});
   if(!out.some(c=>c.bad)) out.push({note:true,t:`Ready to sail against ${r.title}.`});
@@ -2015,7 +2031,7 @@ function renderClassList(){
   $('#classes').innerHTML=S.classes.length?S.classes.map(c=>{ const k=S.ships.filter(s=>s.cls===c.id).length, cs=cvStats(c.cv), sel=cvSel()===c;
     return `<article class="cls${sel?' sel':''}"><div class="who"><strong>${esc(c.name)} class</strong>${cs.errs.length?`<span class="tag" style="color:var(--bad)">${cs.errs.length} fault${cs.errs.length>1?'s':''}</span>`:'<span class="tag won">Ready</span>'}</div>
       <span class="mono muted" style="font-size:12px">${fmtK(cs.std)} t · ${f1(cs.speed)} kn · about ${cs.N} aircraft · ${k} ship${k===1?'':'s'}</span>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn${sel?' ghost':''}" data-cvsel="${c.id}">${sel?'Being designed below':'Design'}</button><button class="btn ghost" data-lay="${c.id}">Lay down a ship</button><button class="btn ghost" data-cdel="${c.id}">${k?'Scrap the class and its ships':'Delete the class'}</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn${sel?' ghost':''}" data-cvsel="${c.id}">${sel?'Being designed below':'Design'}</button><button class="btn ghost" data-lay="${c.id}">Lay down a ship</button><button class="btn ghost" data-ccopy="${c.id}" title="A new class with this one’s design, to improve on">Copy</button><button class="btn ghost" data-cdel="${c.id}">${k?'Scrap the class and its ships':'Delete the class'}</button></div>
     </article>`; }).join(''):'<p class="muted" style="margin:0">No classes yet.</p>';
   $('#ships').innerHTML=S.ships.length?S.ships.map(s=>`<li><input type="text" data-sname="${s.id}" maxlength="24" value="${esc(s.name)}" aria-label="Ship name"><span class="cl">${esc(clsOf(s.cls).name)} class · ${fmtK(clsTons(clsOf(s.cls)))} t</span><button class="btn ghost" data-sdel="${s.id}">Scrap</button></li>`).join('')
     :'<li class="muted">No ships yet.</li>';
@@ -2031,18 +2047,26 @@ function renderFleet(){
   const fc=fleetChecks(r); $('#checks').innerHTML=fc.map(c=>`<li class="${c.bad?'bad':c.note?'note':'ok'}">${esc(c.t)}</li>`).join('');
   { let g=$('#fleetgo'); if(!g){ g=document.createElement('div'); g.id='fleetgo'; g.style.margin='10px 0'; $('#checks').after(g); }
     const ok=rivalOpen(S.selected)&&!fc.some(c=>c.bad); g.innerHTML=`<button class="btn" data-fight="${S.selected}"${ok?'':' disabled'}>${rivalOpen(S.selected)?`Sail into battle against ${esc(r.title)}`:`Beat ${esc(RIVALS[S.selected-1].title)} first`}</button>`; }
-  const rows=airRows();
-  $('#airgroup').innerHTML=rows.length?rows.map((x,i)=>{ const st=compute(x.d), each=fieldCost(x.d,r.date);
-    return `<div class="sqrow"><div><strong>${esc(x.d.name||'Untitled')}</strong><div class="st">${part('role',navalise(x.d).role).name} · £${fmtK(each)} each · ${f0(st.speed)} km/h · folded ${f1(st.foldSpan)} × ${f1(x.d.fusLen)} × ${f1(st.foldHeight)} m</div></div>
-      <div class="cnt"><button data-air="${i}" data-step="-1" aria-label="One fewer ${esc(x.d.name)}">−</button><input type="number" min="0" max="999" data-airn="${i}" value="${x.n}" aria-label="Number of ${esc(x.d.name)}"><button data-air="${i}" data-step="1" aria-label="One more ${esc(x.d.name)}">+</button></div></div>`; }).join('')
-    :'<p class="muted" style="margin:0">The hangar is empty. Save a design on the Aircraft tab first.</p>';
+  const lib=S.lib||[], sl=sailing();
+  $('#airgroup').innerHTML=!lib.length?'<p class="muted" style="margin:0">The hangar is empty. Save a design on the Aircraft tab first.</p>'
+    :!sl.length?'<p class="muted" style="margin:0">Choose a carrier to sail, and her air group is chosen here.</p>'
+    :sl.map((s,j)=>{ const rows=airRows(s), k=airCount(s), pl=shipAirPlan(s), same=pl.length===shipAir(s).length&&pl.every(p=>(shipAir(s).find(a=>a.name===p.name)||{}).n===p.n), placed=st.lists?st.lists[j].length:0;
+      return `<div class="sqship"><div class="sqhead"><strong>${esc(s.name)}</strong> <span class="mono muted" style="font-size:12px">${esc(clsOf(s.cls).name)} class · ${k} aircraft${placed<k?` · <span style="color:var(--bad)">${k-placed} with no place</span>`:''}</span>
+        ${same?'<span class="mono muted" style="font-size:12px">· planned air group</span>':`<button class="btn ghost" data-airplan="${s.id}">Back to the planned air group</button>`}</div>`
+      +rows.map((x,i)=>{ const sp=compute(x.d), each=fieldCost(x.d,r.date);
+        return `<div class="sqrow"><div><strong>${esc(x.d.name||'Untitled')}</strong><div class="st">${part('role',navalise(x.d).role).name} · £${fmtK(each)} each · ${f0(sp.speed)} km/h · folded ${f1(sp.foldSpan)} × ${f1(x.d.fusLen)} × ${f1(sp.foldHeight)} m</div></div>
+        <div class="cnt"><button data-air="${i}" data-ship="${s.id}" data-step="-1" aria-label="One fewer ${esc(x.d.name)} aboard ${esc(s.name)}">−</button><input type="number" min="0" max="999" data-airn="${i}" data-ship="${s.id}" value="${x.n}" aria-label="Number of ${esc(x.d.name)} aboard ${esc(s.name)}"><button data-air="${i}" data-ship="${s.id}" data-step="1" aria-label="One more ${esc(x.d.name)} aboard ${esc(s.name)}">+</button></div></div>`; }).join('')+'</div>'; }).join('');
 }
 $('#addclass').addEventListener('click',()=>{ const id=newId(), name=unused(CLASSNAMES,S.classes.map(c=>c.name),'Class');
   S.classes.push({id,name,cv:newCV(Math.min(20000,RIVALS[S.selected].tons*.55))}); S.cvSel=id; save(); renderYard(); renderFleet(); $('#cvbench').scrollIntoView({block:'start'}); $('#cvname').focus(); $('#cvname').select(); });
 $('#classes').addEventListener('click',e=>{
   const pick=e.target.closest('[data-cvsel]'), lay=e.target.closest('[data-lay]'), del=e.target.closest('[data-cdel]');
   if(pick){ S.cvSel=+pick.dataset.cvsel; save(); renderYard(); $('#cvbench').scrollIntoView({block:'start'}); }
-  if(lay){ const c=clsOf(+lay.dataset.lay), taken=S.ships.map(s=>s.name), first=!S.ships.some(s=>s.cls===c.id)&&c.name&&!taken.includes(c.name), name=first?c.name:unused(SHIPNAMES,taken,'Carrier'); { const s={id:newId(),name,cls:c.id,on:true}; S.ships.push(s); fleetAirPlan(s,1); } save(); renderClassList(); renderFleet(); toast(`${name} laid down, a ${c.name}-class carrier.`); }
+  const cp=e.target.closest('[data-ccopy]');
+  if(cp){ const c=clsOf(+cp.dataset.ccopy), id=newId(), name=unused(CLASSNAMES,S.classes.map(x=>x.name),'Class');
+    S.classes.push({id,name,cv:clone(c.cv)}); S.cvSel=id; save(); renderYard(); renderFleet(); toast(`${name} class copied from the ${c.name} class.`);
+    $('#cvbench').scrollIntoView({block:'start'}); $('#cvname').focus(); $('#cvname').select(); }
+  if(lay){ const c=clsOf(+lay.dataset.lay), taken=S.ships.map(s=>s.name), first=!S.ships.some(s=>s.cls===c.id)&&c.name&&!taken.includes(c.name), name=first?c.name:unused(SHIPNAMES,taken,'Carrier'); { const s={id:newId(),name,cls:c.id,on:true}; S.ships.push(s); s.air=shipAirPlan(s); } save(); renderClassList(); renderFleet(); toast(`${name} laid down, a ${c.name}-class carrier.`); }
   if(del){ const id=+del.dataset.cdel, c=clsOf(id), k=S.ships.filter(s=>s.cls===id).length;
     if(k&&!del.dataset.armed){ del.dataset.armed='1'; del.textContent=`Click again to scrap ${k} ship${k>1?'s':''}`; return; }   // a second click confirms
     S.classes=S.classes.filter(x=>x.id!==id); S.ships=S.ships.filter(s=>s.cls!==id); if(S.cvSel===id) S.cvSel=(S.classes[0]||{}).id; save(); renderYard(); renderFleet(); toast(`${c.name} class ${k?'and its ships ':''}scrapped.`); }
@@ -2402,12 +2426,12 @@ $('#ships').addEventListener('input',e=>{ const id=e.target.dataset.sname; if(id
 $('#ships').addEventListener('change',()=>renderFleet());
 $('#ships').addEventListener('click',e=>{ const b=e.target.closest('[data-sdel]'); if(!b) return; const s=S.ships.find(q=>q.id===+b.dataset.sdel);
   S.ships=S.ships.filter(q=>q!==s); save(); renderYard(); renderFleet(); toast(`${s.name} scrapped.`); });
-// Choosing a carrier to sail adds her planned air group to the fleet's; leaving her behind takes it off again. The numbers can still be
-// changed before sailing.
-function fleetAirPlan(s,sign){ const c=clsOf(s.cls); if(!c) return; for(const x of cvPlanRows(c.cv)) if((S.lib||[]).some(d=>d.name===x.d.name)){ const a=S.air.find(q=>q.name===x.d.name); setAir(x.d.name,(a?a.n:0)+sign*x.n); } }
-$('#fships').addEventListener('change',e=>{ const id=e.target.dataset.son; if(id){ const s=S.ships.find(s=>s.id===+id); if(s.on!==e.target.checked) fleetAirPlan(s,e.target.checked?1:-1); s.on=e.target.checked; save(); renderFleet(); } });
-$('#airgroup').addEventListener('click',e=>{ const b=e.target.closest('[data-air]'); if(!b) return; const x=airRows()[+b.dataset.air]; setAir(x.d.name,x.n+(+b.dataset.step)*(e.shiftKey?10:1)); renderFleet(); });
-$('#airgroup').addEventListener('change',e=>{ const i=e.target.dataset.airn; if(i==null) return; setAir(airRows()[+i].d.name,+e.target.value); renderFleet(); });
+// Each carrier keeps her own air group, which starts as her class's planned one; leaving her behind keeps it for next time.
+$('#fships').addEventListener('change',e=>{ const id=e.target.dataset.son; if(id){ const s=S.ships.find(s=>s.id===+id); s.on=e.target.checked; save(); renderFleet(); } });
+const shipById=id=>S.ships.find(s=>s.id===+id);
+$('#airgroup').addEventListener('click',e=>{ const p=e.target.closest('[data-airplan]'); if(p){ const s=shipById(p.dataset.airplan); s.air=shipAirPlan(s); save(); renderFleet(); return; }
+  const b=e.target.closest('[data-air]'); if(!b) return; const s=shipById(b.dataset.ship), x=airRows(s)[+b.dataset.air]; setAir(s,x.d.name,x.n+(+b.dataset.step)*(e.shiftKey?10:1)); renderFleet(); });
+$('#airgroup').addEventListener('change',e=>{ const i=e.target.dataset.airn; if(i==null) return; const s=shipById(e.target.dataset.ship); setAir(s,airRows(s)[+i].d.name,+e.target.value); renderFleet(); });
 
 $('#controls').addEventListener('click',e=>{
   const ab=e.target.closest('[data-armour]');
@@ -3999,6 +4023,10 @@ const DROPS=[
   {at:'2026-11-25T22:30:00+13:00',items:[
     'Carrier tonnage and the aircraft budget trade against each other. Sail with less than the year’s tonnage limit and the tonnage left unused is paid into your aircraft budget; go over it and the excess is paid for out of the budget, at the same rate both ways (the year’s aircraft money for each ton the limit allows: leave a tenth of the tonnage unused and the budget is a tenth bigger). A fleet over the limit can now sail. The Fleet tab shows how much the tonnage adds or costs.',
   ]},
+  {at:'2026-11-26T12:00:00+13:00',items:[
+    'A carrier class can be copied: the new class starts with every part of the original’s design and its planned air group, ready to be improved on, as Hiryū was on Sōryū.',
+    'Each carrier has her own air group, chosen on the Fleet tab before sailing. It starts as her class’s planned air group, and a button puts it back. She takes exactly those aircraft into battle.',
+  ]},
 ];
 const dropTime=at=>new Date(at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 { let n=0; const html=DROPS.map(d=>{ const lines=d.items.map(t=>`<li><span class="num">#${++n}</span><span>${t}</span></li>`).reverse().join(''); return `<section><h4>${dropTime(d.at)}</h4><ul>${lines}</ul></section>`; }).reverse().join('');
@@ -4804,7 +4832,7 @@ function battleStart(rid){
   const sea=seaOf([3,4,4,4,5,5,6][Math.floor(Math.random()*7)]), wind=Math.round(Math.random()*36)*10;
   TR={sea,wx:wxMake(sea),t:0,speed:5,pause:false,log:[],wind:{from:wind,kn:sea.wind},zoom:1,pick:null,fid:0,pid:0,view:{follow:true,x:0,y:0,km:30,d3:false},tgts:[],torps:[],bombs:[],fx:[],tid:0,spawn:null,
     cvs:[],tfs:[],adv:true,pfx:'',quiet:false,eng:[],battle:{rid,over:false,res:null,next:0}};
-  const ships=sailing(), mine=stowOn(ships.map(s=>clsOf(s.cls).cv),airRows().filter(x=>x.n));
+  const ships=sailing(), mine=stowAir();
   const theirs=rivalShips(r), rl=rivalStow(r,theirs);
   // Where each fleet starts. Neither knows where the other is: you start somewhere in the area steaming roughly toward its middle, and the
   // enemy anywhere in the area ahead of you (never astern), far enough off that only searching will find it.
